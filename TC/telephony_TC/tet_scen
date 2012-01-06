@@ -1,0 +1,25 @@
+all
+	^common
+	^sim
+	^sat
+	^sound
+	^ss
+	^sms
+	^gprs
+	^net
+sim
+	:include:/sim/unit/tslist
+sms
+	:include:/sms/unit/tslist
+net
+	:include:/network/unit/tslist
+ss
+	:include:/ss/unit/tslist
+sat
+	:include:/sat/unit/tslist
+gprs
+	:include:/gprs/unit/tslist
+sound
+	:include:/sound/unit/tslist
+common
+	:include:/common/unit/tslist

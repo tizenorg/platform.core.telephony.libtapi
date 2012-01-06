@@ -1,0 +1,8 @@
+#/power/unit/uts_tel_process_power_command
+#/power/unit/uts_tapi_power_get_phone_power_status
+/power/unit/uts_tel_set_flight_mode
+/power/unit/uts_tapi_power_reboot_modem
+#/power/unit/uts_tapi_display_get_icon_info
+#/power/unit/uts_tapi_power_battery_compansation_set
+#/power/unit/uts_tapi_power_charger_indication_set
+

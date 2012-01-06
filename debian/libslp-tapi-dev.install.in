@@ -1,0 +1,5 @@
+@PREFIX@/include/telephony/tapi/I*
+@PREFIX@/include/telephony/common/T*
+@PREFIX@/lib/libSLP-tapi.la
+#@PREFIX@/lib/libSLP-tapi.a
+@PREFIX@/lib/pkgconfig/tapi.pc

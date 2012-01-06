@@ -1,0 +1,2 @@
+@PREFIX@/lib/libSLP-tapi.so.*
+@PREFIX@/lib/libSLP-tapi.so

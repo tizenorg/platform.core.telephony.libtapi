@@ -1,0 +1,82 @@
+=================================================================================
+*                                    README                                     *
+=================================================================================
+
+1. The EMAIL Test Script directory (TestCases) includes:
+
+	call/
+		|-- README                                         ; This file
+		`-- Unit                                           ; contains Unit TCs
+		    |-- makefile
+		    |-- tslist
+		    `-- Unit test case source codes
+	2 directories, 44 files
+	
+
+2. The $(TEST_ROOT) directory must includes following files:
+
+	/$(TEST_ROOT)
+		|-- tet_scen
+		|-- tetbuild.cfg
+		|-- tetclean.cfg
+		`-- tetexec.cfg
+
+=================================================================================
+*                                Preconditions                                  *
+---------------------------------------------------------------------------------
+|  Before Testing Call Module, you should check the following conditions        |
+=================================================================================
+
+1. Prepare Three valid SIM cards .
+
+2. One target phone and two other phones are required to create MO/MT Call.Two extra phones are required for SWAP, HOLD, CONFERENCE and SPLIT etc functioality.
+
+3. Call waiting must be enabled if not then enable it manually.
+
+4. Modify the mobile number
+	- call_common.h [LINE 40]
+	- Followings are the macro for mobile number customized as per the country.
+		// Mobile numbers
+
+                 #define MOB_NUM1     "+919999146715"   //Used for MO call creation. Change the number according to your country.
+                 #define MOB_NUM2     "+919810971703"   //Used to divert a call to specified number. Change the number according to your country.
+                 #define DTMF_STRING  "12345"        // User can change as per their choice	
+
+5. During execution continuously watch the log file at Putty or whatever terminal used for target logging and as per the log instruction, user has to provide
+   the MT call or disconnect the call.
+
+         e,g.: log will be printed in the following fashion:
+
+
+              /****************************************/ 
+              Give a MT Call within 20 secs 
+             /****************************************/
+
+              If user sees this kind of log in putty or used terminal, user has to give a MT call within the specified time [e.g. 20 secs].
+            
+             /****************************************/ 
+             As call is answered disconnect the call
+            /****************************************/
+
+            If user see this kind of log in putty or used terminal , user has to disconnect after the call is received[ Not through target but through end user phone]
+
+            /****************************************/
+            disconnect the call
+           /****************************************/
+
+	   If user see this kind of log in putty or used terminal , user has to disconnect in MO & MT scenario’s[ Not through target but through end user phone]
+
+=================================================================================
+*                                  Change log                                   *
+=================================================================================
+1. 18-Dec-2008
+	- Initial draft.
+2. 10-Oct-2010
+	- Revised
+	
+=================================================================================
+*                                      NOTE                                     *
+=================================================================================
+1. In order to ensure successful working of the Test Scripts, please ensure that all of the IPKG files are installed normally.
+2. Testing Call Module can be executed under target system environment (not simulator).
+

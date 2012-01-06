@@ -1,0 +1,6 @@
+telephony_TC/sim/unit/tslist
+telephony_TC/call/unit/tslist
+telephony_TC/common/unit/tslist
+telephony_TC/network/unit/tslist
+telephony_TC/gprs/unit/tslist
+telephony_TC/ss/unit/tslist

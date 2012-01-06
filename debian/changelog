@@ -1,0 +1,31 @@
+libslp-tapi (0.5.78) unstable; urgency=low
+
+  * Removed fast dormancy api
+  * Git: pkgs/l/libslp-tapi
+  * Tag: libslp-tapi_0.5.78
+
+ -- Inho Oh <inho48.oh@samsung.com>  Wed, 28 Dec 2011 16:05:18 +0900
+
+libslp-tapi (0.5.77) unstable; urgency=low
+
+  * code clean up
+  * Git: pkgs/l/libslp-tapi
+  * Tag: libslp-tapi_0.5.77
+
+ -- Kyeongchul Kim <kyeongchul.kim@samsung.com>  Fri, 23 Dec 2011 18:04:11 +0900
+
+libslp-tapi (0.5.76) unstable; urgency=low
+
+  * Factory Omission Avoidance Bug Fix ( Confirm Message Broadcasting Problem )
+  * Git: pkgs/l/libslp-tapi
+  * Tag: libslp-tapi_0.5.76
+
+ -- Youngman Park <youngman.park@samsung.com>  Fri, 09 Dec 2011 19:19:47 +0900
+
+libslp-tapi (0.5.75) unstable; urgency=low
+
+  * TIZEN initial version
+  * Git: pkgs/l/libslp-tapi
+  * Tag: libslp-tapi_0.5.75
+
+ -- Kyeongchul Kim <kyeongchul.kim@samsung.com>  Wed, 07 Dec 2011 20:19:47 +0900

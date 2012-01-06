@@ -1,0 +1,12 @@
+prefix=@PREFIX@
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: Telephony Server
+Description: Telephony Framework
+Requires: dbus-1 glib-2.0 vconf dbus-glib-1
+Version: 1.80
+Libs: -L${libdir} -lSLP-tapi
+Cflags: -I${includedir}/telephony/tapi -I${includedir}/telephony/common
+
