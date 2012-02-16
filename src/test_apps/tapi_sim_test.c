@@ -1306,10 +1306,11 @@ void sim_async_event_callback(TelTapiEvent_t* sim_event)
 
 			/** will be tested later **/
 #if 1
-		case TAPI_EVENT_SIM_ISIM_AUTHENTICATION_CNF: {
+		case TAPI_EVENT_SIM_AUTHENTICATION_CNF: {
 			TEST_DEBUG("*****************IMS Authentication **********************");
-			TelSimIsimAuthenticationResponse_t *auth_resp =
-					(TelSimIsimAuthenticationResponse_t*) sim_event->pData;
+#if 0
+			TelSimAuthenticationResponse_t *auth_resp =
+					(TelSimAuthenticationResponse_t*) sim_event->pData;
 
 			TEST_DEBUG("SIM ISIM authentication event status = [0x%x]", sim_event->Status);
 
@@ -1317,6 +1318,7 @@ void sim_async_event_callback(TelTapiEvent_t* sim_event)
 			TEST_DEBUG("  auth string [%s]",auth_resp->AuthenticationString);
 			TEST_DEBUG(" auth cipher key [%s]",auth_resp->CipherKey);
 			TEST_DEBUG(" auth integrity key [%s]",auth_resp->IntegrityKey);
+#endif
 		}
 			break;
 
@@ -3597,23 +3599,23 @@ int sim_read_key_input(void) {
 
 	else if (memcmp(buf, "isimauth", sizeof("isimauth") - 1) == 0) {
 		TEST_DEBUG("ISIM Authentication ");
-
+#if 0
 		getchar();
 
-		TelSimIsimAuthenticationData_t auth_req = { 0, };
+		TelSimAuthenticationData_t auth_req = { 0, };
 
-		memset(&auth_req, 0, sizeof(TelSimIsimAuthenticationData_t));
+		memset(&auth_req, 0, sizeof(TelSimAuthenticationData_t));
 
 		TEST_DEBUG(" Enter  RAND data ");
-		_fgets((char *) &auth_req.RandomAccessData, 20);
+		_fgets((char *) &auth_req.rand_data, 20);
 
-		auth_req.RandomAccessLength
-				= strlen((char *) auth_req.RandomAccessData);
+		auth_req.rand_length
+				= strlen((char *) auth_req.rand_data);
 
 		TEST_DEBUG(" Enter Authentication  data ");
-		_fgets((char *) &auth_req.AuthData, 20);
+		_fgets((char *) &auth_req.autn_data, 20);
 
-		auth_req.AuthDataLength = strlen((char *) auth_req.AuthData);
+		auth_req.autn_length = strlen((char *) auth_req.autn_data);
 
 		TEST_DEBUG("TelTapiSimIsimAuthenticationRequest is not tested yet!");
 		/*
@@ -3628,7 +3630,7 @@ int sim_read_key_input(void) {
 		 TEST_DEBUG("TAPI API FAIL: Error Code [0x%x]",err_code);
 		 }
 		 */
-
+#endif
 	}
 
 	else if (memcmp(buf, "sapcon", sizeof("sapcon") - 1) == 0) {

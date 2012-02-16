@@ -39,7 +39,7 @@
 #define SMDATA_SIZE_MAX 160
 
 #define FAIL			0x00
-#define SUCCESS			0x01
+#define SUCCESS		0x01
 
 //////////////////////////////////TPDU type////////////////////////////////
 typedef enum {

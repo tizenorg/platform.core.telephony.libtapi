@@ -80,7 +80,7 @@ extern "C"
 /*================================================================================================*/
 
  /**
- * @breif Sends the user choice of the main menu options to the USIM.
+ * @brief Sends the user choice of the main menu options to the USIM.
  *
  * @par Notes:
  * A set of possible menu options is supplied by the USIM

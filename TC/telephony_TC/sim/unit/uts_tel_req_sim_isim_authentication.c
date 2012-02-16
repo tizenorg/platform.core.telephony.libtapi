@@ -31,11 +31,11 @@
 
 /**
 * @ingroup  UTS_SIM_SAT
-* @addtogroup UTS_TAPI_SIM_SAP_AUTH tel_req_sim_isim_authentication
+* @addtogroup UTS_TAPI_SIM_SAP_AUTH tel_req_sim_authentication
 *
-* @brief Unit test code for tel_req_sim_isim_authentication()
+* @brief Unit test code for tel_req_sim_authentication()
 * @par Test function Prototype:
-* 	TapiResult_t tel_req_sim_isim_authentication(TelSimIsimAuthenticationData_t* AuthReqData, int *pRequestId);
+* 	TapiResult_t tel_req_sim_authentication(TelSimAuthenticationData_t* AuthReqData, int *pRequestId);
 * @par Test function description:
 * 	This function is a used to do the authentication proceedure of ISIM for IMS application
 * @par Important Notes:
@@ -47,19 +47,19 @@
 // This is used for IMS Authentication proceedure.
 typedef struct
 {
-	UINT8 RandomAccessLength;	// ISIM random access length
-	UINT8 AuthDataLength; // ISIM Boot straping transaction ID len
-	UINT8 RandomAccessData[TAPI_SIM_ISIM_AUTH_MAX_REQ_DATA_LEN];	// ISIM random data
-	UINT8 AuthData[TAPI_SIM_ISIM_AUTH_MAX_REQ_DATA_LEN];	// ISIM autherisation data
-}TelSimIsimAuthenticationData_t;
+	UINT8 rand_length;	// ISIM random access length
+	UINT8 autn_length; // ISIM Boot straping transaction ID len
+	UINT8 rand_data[TAPI_SIM_AUTH_MAX_REQ_DATA_LEN];	// random data
+	UINT8 autn_data[TAPI_SIM_AUTH_MAX_REQ_DATA_LEN];	// autherisation data
+}TelSimAuthenticationData_t;
 * @endcode
 * @param [out] pRequestId
 *   - Unique identifier for a particular request.
 *   - request_id value can be any value from 0 to 255 if the API is returned successfully
 *   - -1 (INVALID_REQUEST_ID) will be sent in case of failure.
 * @par Async Response Message:
-* The event associated is below and the event data is #TelSimIsimAuthenticationResponse_t. \n
-* 	- TAPI_EVENT_SIM_ISIM_AUTHENTICATION_CNF
+* The event associated is below and the event data is #TelSimAuthenticationResponse_t. \n
+* 	- TAPI_EVENT_SIM_AUTHENTICATION_CNF
 * @pre
 *	SAP supported sim used to testing
 * @post
@@ -73,7 +73,7 @@ typedef struct
 
 /**
 * @file		uts_tel_req_sim_isim_authentication.c
-* @brief	Test for the tel_req_sim_isim_authentication() API that is used to isim authentication request
+* @brief	Test for the tel_req_sim_authentication() API that is used to isim authentication request
 * @author	
 * @version	Initial Creation V0.1
 * @date		2008.07.30
@@ -96,8 +96,8 @@ static void cleanup();
 void (*tet_startup) () = startup;
 void (*tet_cleanup) () = cleanup;
 struct tet_testlist tet_testlist[] = {
-	{utc_tel_req_sim_isim_authentication_01, 1},
-	{utc_tel_req_sim_isim_authentication_02, 2},
+	{utc_tel_req_sim_authentication_01, 1},
+	{utc_tel_req_sim_authentication_02, 2},
 	{NULL, 0}
 };
 
@@ -155,9 +155,9 @@ static int  sim_app_callback  (TelTapiEvent_t *sim_event)
     switch(sim_event->EventType)
       {
 
-    	case TAPI_EVENT_SIM_ISIM_AUTHENTICATION_CNF:
+    	case TAPI_EVENT_SIM_AUTHENTICATION_CNF:
     	{
-            tet_printf("\n[SIM APP]*****************TAPI_EVENT_SIM_ISIM_AUTHENTICATION_CNF***************************\n");
+            tet_printf("\n[SIM APP]*****************TAPI_EVENT_SIM_AUTHENTICATION_CNF***************************\n");
             gAsyncResult = TRUE;
             bReceived = TRUE;
         }
@@ -167,7 +167,7 @@ static int  sim_app_callback  (TelTapiEvent_t *sim_event)
         {
             bReceived = TRUE;
             gAsyncResult = FALSE;
-            tet_printf(" TAPI_EVENT_SIM_ISIM_AUTHENTICATION_CNF = %d", TAPI_EVENT_SIM_ISIM_AUTHENTICATION_CNF);
+            tet_printf(" TAPI_EVENT_SIM_AUTHENTICATION_CNF = %d", TAPI_EVENT_SIM_AUTHENTICATION_CNF);
             tet_printf("[SIM APP]***************** Undhandled event type [%d] *****************\n",sim_event->EventType);
             tet_printf("[SIM APP]Undhandled event state [%d]\n",sim_event->Status);
             break;
@@ -189,10 +189,10 @@ static unsigned int subscription_id = 0;
 
 static void startup()
 {
-    tet_infoline("uts_tel_req_sim_isim_authentication Test Start");
+    tet_infoline("uts_tel_req_sim_authentication Test Start");
 	if ( tel_init() == TAPI_API_SUCCESS)
 	{
-		if (TAPI_API_SUCCESS == tel_register_event(TAPI_EVENT_SIM_ISIM_AUTHENTICATION_CNF,&subscription_id,(TelAppCallback)sim_app_callback,NULL) )
+		if (TAPI_API_SUCCESS == tel_register_event(TAPI_EVENT_SIM_AUTHENTICATION_CNF,&subscription_id,(TelAppCallback)sim_app_callback,NULL) )
 			gStartupSuccess = TRUE;
 		else
 			tet_infoline("startup fail. tel_register_event() failed");
@@ -206,7 +206,7 @@ static void startup()
 
 static void cleanup()
 {
-    tet_infoline("uts_tel_req_sim_isim_authentication Finished");
+    tet_infoline("uts_tel_req_sim_authentication Finished");
     if (gStartupSuccess == TRUE)
 	{
 		tel_deregister_event(subscription_id);
@@ -221,27 +221,27 @@ static void cleanup()
 */
 
 /**
-* @brief tel_req_sim_isim_authentication() API : Negative condition(Parameter is Null)
+* @brief tel_req_sim_authentication() API : Negative condition(Parameter is Null)
 * @par ID: UTC_TEL_REQ_SIM_ISIM_AUTHENTICATION_01
 * @param [in] pAuthenticationData
 * @param [out] &pRequestId = NULL
 * @return TAPI_API_INVALID_PTR
 */
-void utc_tel_req_sim_isim_authentication_01()
+void utc_tel_req_sim_authentication_01()
 {
     TET_STAMP_START("NULL Test 1");
-    TelSimIsimAuthenticationData_t pAuthenticationData;
+    TelSimAuthenticationData_t pAuthenticationData;
 
     tet_printf(" Enter  RAND data \n");
-    strcpy((char*)pAuthenticationData.RandomAccessData, "username@operator.com");
-    pAuthenticationData.RandomAccessLength= strlen("username@operator.com");
+    strcpy((char*)pAuthenticationData.rand_data, "username@operator.com");
+    pAuthenticationData.rand_length= strlen("username@operator.com");
 
     tet_printf(" Enter Authentication  data \n");
-    strcpy((char*)pAuthenticationData.AuthData,  "+1-212-555-12345");
-    pAuthenticationData.AuthDataLength = strlen("+1-212-555-12345");
+    strcpy((char*)pAuthenticationData.autn_data,  "+1-212-555-12345");
+    pAuthenticationData.autn_length = strlen("+1-212-555-12345");
 
     /* Calling TAPI API */
-    TapiResult_t err = tel_req_sim_isim_authentication(&pAuthenticationData,NULL);
+    TapiResult_t err = tel_req_sim_authentication(&pAuthenticationData,NULL);
     tet_printf("%s[%d] %s(): error code =%d [%s] ",__FILE__,__LINE__,__FUNCTION__, err, TET_ERROR_TO_STRING(err) );
     if (err == TAPI_API_INVALID_PTR )
         TET_STAMP_PASS();
@@ -252,19 +252,19 @@ void utc_tel_req_sim_isim_authentication_01()
 }
 
 /**
-* @brief tel_req_sim_isim_authentication() API : Negative condition(Parameter is Null)
+* @brief tel_req_sim_authentication() API : Negative condition(Parameter is Null)
 * @par ID: UTC_TEL_REQ_SIM_ISIM_AUTHENTICATION_02
 * @param [in] pAuthenticationData = NULL
 * @param [out] &pRequestId
 * @return TAPI_API_INVALID_PTR
 */
-void utc_tel_req_sim_isim_authentication_02()
+void utc_tel_req_sim_authentication_02()
 {
     TET_STAMP_START("NULL Test 2");
     int pRequestId=0;
 
     /* Calling TAPI API */
-    TapiResult_t err = tel_req_sim_isim_authentication(NULL,&pRequestId);
+    TapiResult_t err = tel_req_sim_authentication(NULL,&pRequestId);
     tet_printf("%s[%d] %s(): error code =%d [%s] ",__FILE__,__LINE__,__FUNCTION__, err, TET_ERROR_TO_STRING(err) );
     if (err == TAPI_API_INVALID_PTR )
         TET_STAMP_PASS();

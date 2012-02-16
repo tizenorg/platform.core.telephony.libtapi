@@ -2088,15 +2088,24 @@ EXPORT_API int tel_req_sap_cardreader_status(int *req_id)
 	return api_err;
 }
 
-EXPORT_API int tel_req_sim_isim_authentication(TelSimIsimAuthenticationData_t *authentication_data, int *req_id)
+EXPORT_API int tel_req_sim_authentication(TelSimAuthenticationData_t *authentication_data, int *req_id)
 {
 	TS_BOOL ret = FALSE;
 	int api_err = TAPI_API_SUCCESS;
 
-	TAPI_RETURN_VAL_IF_FAIL(req_id , TAPI_API_INVALID_PTR);
-	TAPI_RETURN_VAL_IF_FAIL(authentication_data , TAPI_API_INVALID_PTR);
+	TAPI_RETURN_VAL_IF_FAIL(req_id, TAPI_API_INVALID_PTR);
+	TAPI_RETURN_VAL_IF_FAIL(authentication_data, TAPI_API_INVALID_PTR);
 
-	if(_tel_check_tapi_state() != 0 )
+	if (authentication_data->auth_type < TAPI_SIM_AUTH_TYPE_IMS || authentication_data->auth_type > TAPI_SIM_AUTH_TYPE_3G)
+		return TAPI_API_INVALID_INPUT;
+
+	if (authentication_data->rand_length == 0)
+		return TAPI_API_INVALID_INPUT;
+
+	if (authentication_data->auth_type != TAPI_SIM_AUTH_TYPE_GSM	&& authentication_data->autn_length == 0)
+		return TAPI_API_INVALID_INPUT;
+
+	if (_tel_check_tapi_state() != 0)
 		return TAPI_API_SERVICE_NOT_READY;
 
 	if (conn_name.length_of_name == 0) {
@@ -2106,32 +2115,32 @@ EXPORT_API int tel_req_sim_isim_authentication(TelSimIsimAuthenticationData_t *a
 
 	TAPI_GLIB_INIT_PARAMS();
 
-	TAPI_LIB_DEBUG(LEVEL_INFO, " AuthDataLength [%d]", authentication_data->AuthDataLength);
-	TAPI_LIB_DEBUG(LEVEL_INFO, " AuthData [%s]", authentication_data->AuthData);
-	TAPI_LIB_DEBUG(LEVEL_INFO, " RandomAccessLength [%d]", authentication_data->RandomAccessLength);
-	TAPI_LIB_DEBUG(LEVEL_INFO, " RandomAccessData [%s]", authentication_data->RandomAccessData);
+	TAPI_LIB_DEBUG(LEVEL_INFO, "rand_length[%d]", authentication_data->rand_length);
+	TAPI_LIB_DEBUG(LEVEL_INFO, "rand_data[0][0x%x]", authentication_data->rand_data[0]);
 
-	if (FALSE == tapi_check_dbus_status()) {
-		return TAPI_API_SYSTEM_RPC_LINK_DOWN;
+	if (authentication_data->autn_length) {
+		TAPI_LIB_DEBUG(LEVEL_INFO, "autn_length [%d]", authentication_data->autn_length);
+		TAPI_LIB_DEBUG(LEVEL_INFO, "autn_data[0][0x%x]", authentication_data->autn_data[0]);
 	}
+
+	if (FALSE == tapi_check_dbus_status())
+		return TAPI_API_SYSTEM_RPC_LINK_DOWN;
 
 	TAPI_GLIB_ALLOC_PARAMS(in_param1,in_param2,in_param3,in_param4,out_param1,out_param2,out_param3,out_param4);
 
-	g_array_append_vals(in_param1, authentication_data, sizeof(TelSimIsimAuthenticationData_t));
+	g_array_append_vals(in_param1, authentication_data, sizeof(TelSimAuthenticationData_t));
 	g_array_append_vals(in_param4, &conn_name, sizeof(tapi_dbus_connection_name));
 
-	ret = tapi_send_request(TAPI_CS_SERVICE_SIM, TAPI_CS_SIM_ISIMAUTHENTICATION, in_param1, in_param2, in_param3,
+	ret = tapi_send_request(TAPI_CS_SERVICE_SIM, TAPI_CS_SIM_AUTHENTICATION, in_param1, in_param2, in_param3,
 			in_param4, &out_param1, &out_param2, &out_param3, &out_param4);
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
 		*req_id = g_array_index(out_param2, int ,0);
 
-		if (api_err != TAPI_API_SUCCESS) {
+		if (api_err != TAPI_API_SUCCESS)
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 

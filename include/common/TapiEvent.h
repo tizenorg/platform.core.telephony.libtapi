@@ -173,7 +173,7 @@ extern "C" {
 #define TAPI_EVENT_SIM_SET_MAILBOX_CNF			(TAPI_EVENT_SIM_CONFIRMATION + 13)		/**<	update sim mailbox information*/
 #define TAPI_EVENT_SIM_SET_LANGUAGE_CNF			(TAPI_EVENT_SIM_CONFIRMATION + 14)		/**<	update sim language information*/
 #define TAPI_EVENT_SIM_RSIM_ACCESS_CNF			(TAPI_EVENT_SIM_CONFIRMATION + 15)		/**<	rsim operation*/
-#define TAPI_EVENT_SIM_ISIM_AUTHENTICATION_CNF	(TAPI_EVENT_SIM_CONFIRMATION + 16)		/**<	ISIM authentication confirmation*/
+#define TAPI_EVENT_SIM_AUTHENTICATION_CNF	(TAPI_EVENT_SIM_CONFIRMATION + 16)		/**<	ISIM authentication confirmation*/
 #define TAPI_EVENT_SIM_PB_STORAGE_COUNT_CNF		(TAPI_EVENT_SIM_CONFIRMATION + 17)		/**<	Phonebook storage count*/
 #define TAPI_EVENT_SIM_PB_ENTRY_INFO_CNF		(TAPI_EVENT_SIM_CONFIRMATION + 18)		/**<	Phonebook entry information*/
 #define TAPI_EVENT_SIM_PB_ACCESS_READ_CNF		(TAPI_EVENT_SIM_CONFIRMATION + 19)		/**<	Phonebook access read*/

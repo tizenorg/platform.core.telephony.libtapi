@@ -103,7 +103,7 @@ extern "C"
  *  The event data is #TelSsBarringStatusInfo_t. \n
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -182,7 +182,7 @@ int   tel_set_ss_barring(const  TelSsCallBarringInfo_t *pBarringInfo,int * req_i
  *  The event data is #TelSsBarringStatusInfo_t.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -267,7 +267,7 @@ int   tel_get_ss_barring_status(TelSsCallBarType_t  BarType, TelSsCallType_t  Ca
  *  There is no event data with this event.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -347,7 +347,7 @@ int   tel_change_ss_barring_password(const char*  pOldPassword, const char*  pNe
  *  The event data will be #TelSsForwardingStatusInfo_t.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -443,7 +443,7 @@ int   tel_set_ss_forward( const  TelSsForwardInfo_t *pForwardInfo,int * req_id);
  *  The event data is #TelSsForwardingStatusInfo_t.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -516,7 +516,7 @@ int   tel_get_ss_forward_status(TelSsForwardType_t Type, TelSsForwardWhen_t  Con
  *  The event data is #TelSsWaitingStatusInfo_t.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -591,7 +591,7 @@ int   tel_set_ss_waiting( const TelSsWaitingInfo_t *waitInfo, int * req_id);
  *  The event data is #TelSsWaitingInfo_t.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -681,7 +681,7 @@ int   tel_get_ss_waiting_status( const TelSsCallType_t CallType,int * req_id);
  *  The event data is #TelCliStatusInfo_t.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -764,7 +764,7 @@ int   tel_get_ss_cli_status(TelSsCliType_t CliType,int * req_id);
  *  is #TelSsUssdMsgInfo_t.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -848,7 +848,7 @@ int tel_send_ss_ussd_request(const TelSsUssdMsgInfo_t *ussd_info, int *req_id);
  *  is #TelSsUssdMsgInfo_t.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -929,7 +929,7 @@ int  tel_send_ss_ussd_response(const TelSsUssdMsgInfo_t *ussd_info, int *req_id)
  *  is #TelSsUssdMsgInfo_t.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events

@@ -7804,7 +7804,7 @@ static void app_callback (TelTapiEvent_t *event)
 <strong>[Note] Telephony Emulator does not support this feature.</strong>
 
 @code
-int tel_req_sim_isim_authentication( TelSimIsimAuthenticationData_t *authentication_data, int *req_id);
+int tel_req_sim_authentication( TelSimAuthenticationData_t *authentication_data, int *req_id);
 @endcode
 
 Application uses this API to send the ISIM authentication request to telephony.
@@ -7819,14 +7819,14 @@ SAMPLE CODE
 void isimauthreq()
 {
 	int ret_status;
-	TelSimIsimAuthenticationData_t authenticationData;
-	authenticationData.RandomAccessLength = 100;
-	authenticationData.RandomAccessLength = 100;
-	authenticationData.RandomAccessData = "test data";
-	authenticationData.AuthData = "test data";
+	TelSimAuthenticationData_t authenticationData;
+	authenticationData.rand_length = 100;
+	authenticationData.rand_length = 100;
+	authenticationData.rand_data = "test data";
+	authenticationData.autn_data = "test data";
 	int pRequestId = 0;
 
-	ret_status = tel_req_sim_isim_authentication (&authenticationData, &pRequestId);
+	ret_status = tel_req_sim_authentication (&authenticationData, &pRequestId);
 	if (ret_status == TAPI_API_SUCCESS)
 		printf("successful\n");
 	else
@@ -7855,8 +7855,8 @@ static void app_callback (TelTapiEvent_t *event)
 
 	switch (EventType)
 	{
-		case TAPI_EVENT_SIM_ISIM_AUTHENTICATION_CNF:
-			printf("TAPI_EVENT_SIM_ISIM_AUTHENTICATION_CNF");
+		case TAPI_EVENT_SIM_AUTHENTICATION_CNF:
+			printf("TAPI_EVENT_SIM_AUTHENTICATION_CNF");
 			break;
 			//...
 	}

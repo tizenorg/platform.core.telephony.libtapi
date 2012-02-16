@@ -105,11 +105,11 @@ extern "C"
 /** CSP profile entry count max length */
 #define TAPI_SIM_CPHS_CUSTOMER_SERVICE_PROFILE_ENTRY_COUNT_MAX	11
 
-/** ISIM authentication code max length */
-#define TAPI_SIM_ISIM_AUTH_MAX_REQ_DATA_LEN 256
+/** Authentication code max length */
+#define TAPI_SIM_AUTH_MAX_REQ_DATA_LEN 256
 
-/** ISIM authentication response data max length */
-#define TAPI_SIM_ISIM_AUTH_MAX_RESP_DATA_LEN 128
+/** Authentication response data max length */
+#define TAPI_SIM_AUTH_MAX_RESP_DATA_LEN 128
 
 /** SAP Answer to Reset data max length */
 #define TAPI_SIM_SAP_ATR_DATA	256
@@ -829,17 +829,30 @@ typedef enum
 }TelSimSapProtocol_t;
 
 /**
- * @enum TelSimIsimAuthenticationResult_t
- * This is used for IMS Authentication Procedure.
+ * @enum TelSimAuthenticationType_t
+ * This is used for Authentication Procedure by using SIM.
  */
-typedef enum
-{
-	TAPI_SIM_ISIM_NO_ERROR,									/**< ISIM no error */
-	TAPI_SIM_ISIM_AUTH_CAN_NOT_PERFORM_AUTHENTICATION,	/**< status - can't perform authentication */
-	TAPI_SIM_ISIM_AUTH_SKIP_AUTHENTICATION_RESPONSE,		/**< status - skip authentication response */
-	TAPI_SIM_ISIM_AUTH_SQN_FAILURE							/**< status - authentication SQN failure */
-}TelSimIsimAuthenticationResult_t;
+typedef enum {
+	TAPI_SIM_AUTH_TYPE_IMS = 0x00, /**< IMS Authentication */
+	TAPI_SIM_AUTH_TYPE_GSM, /**< GSM Authentication */
+	TAPI_SIM_AUTH_TYPE_3G, /**< 3G Authentication */
+	TAPI_SIM_AUTH_TYPE_MAX /**< TBD */
+} TelSimAuthenticationType_t;
 
+/**
+ * @enum TelSimAuthenticationResult_t
+ * This is used for Authentication Procedure.
+ */
+typedef enum {
+	TAPI_SIM_AUTH_NO_ERROR = 0x00, /**< ISIM no error */
+	TAPI_SIM_AUTH_CANNOT_PERFORM, /**< status - can't perform authentication */
+	TAPI_SIM_AUTH_SKIP_RESPONSE, /**< status - skip authentication response */
+	TAPI_SIM_AUTH_MAK_CODE_FAILURE, /**< status - MAK(Multiple Activation Key) code failure */
+	TAPI_SIM_AUTH_SQN_FAILURE, /**< status - SQN(SeQuenceNumber) failure */
+	TAPI_SIM_AUTH_SYNCH_FAILURE, /**< status - synch failure */
+	TAPI_SIM_AUTH_UNSUPPORTED_CONTEXT, /**< status - unsupported context */
+	TAPI_SIM_AUTH_MAX /**< TBD */
+} TelSimAuthenticationResult_t;
 
 /**
  * @enum TelSimFileType_t
@@ -852,7 +865,6 @@ typedef enum {
 	TAPI_SIM_FTYPE_CYCLIC = 0x04, /**< Cyclic - record type*/
 	TAPI_SIM_FTYPE_INVALID_TYPE = 0xFF /**< Invalid type */
 } TelSimFileType_t;
-
 
 /**
  * @enum TelSimLockType_t
@@ -1879,35 +1891,32 @@ typedef struct
 	char name[TAPI_SIM_XDN_ALPHA_ID_MAX_LEN+1]; /**< MSISDN name. If not exist, Null string will be returned*/
 }TelSimSubscriberInfo_t;
 
+/**
+ *This is used for authentication request procedure.
+ */
+typedef struct {
+	TelSimAuthenticationType_t auth_type; /**< Authentication type */
+	int rand_length; /**< the length of RAND */
+	int autn_length; /**< the length of AUTN. it is not used in case of GSM AUTH */
+	char rand_data[TAPI_SIM_AUTH_MAX_REQ_DATA_LEN]; /**< RAND data */
+	char autn_data[TAPI_SIM_AUTH_MAX_REQ_DATA_LEN]; /**< AUTN data. it is not used in case of GSM AUTH */
+} TelSimAuthenticationData_t;
 
 /**
-*GBA - Generic Bootstrapping architecture.
-*This is used for IMS Authentication Procedure.
-*/
-typedef struct
-{
-	unsigned char RandomAccessLength;	/**< AKA Random access length*/
-	unsigned char AuthDataLength; /**< Bootstrapping transaction ID length*/
-	unsigned char RandomAccessData[TAPI_SIM_ISIM_AUTH_MAX_REQ_DATA_LEN];	/**< Random access data */
-	unsigned char	AuthData[TAPI_SIM_ISIM_AUTH_MAX_REQ_DATA_LEN];		/**< Authorized data */
-}TelSimIsimAuthenticationData_t;
-
-/**
-* This struct gives input data for ISIM authentication
-*/
-typedef struct
-{
-	unsigned char AuthenticationResult;					/**< authentication result */
-	unsigned char ResponseLength;							/**< response length*/
-	unsigned char	ResponeData[TAPI_SIM_ISIM_AUTH_MAX_RESP_DATA_LEN];	/**< response data */
-	unsigned char AuthenticationStringLenght;									/**< authentication string length*/
-	unsigned char AuthenticationString[TAPI_SIM_ISIM_AUTH_MAX_RESP_DATA_LEN];	/**< authentication string */
-	unsigned char CipherKeyLength;										/**< cipher key length */
-	unsigned char CipherKey[TAPI_SIM_ISIM_AUTH_MAX_RESP_DATA_LEN];		/**< cipher key */
-	unsigned char IntegrityKeyLength;												/**< integrity key length */
-	unsigned char IntegrityKey[TAPI_SIM_ISIM_AUTH_MAX_RESP_DATA_LEN];			/**< integrity key */
-}TelSimIsimAuthenticationResponse_t;
-
+ * This is used for result data of authentication.
+ */
+typedef struct {
+	TelSimAuthenticationType_t auth_type; /**< authentication type */
+	TelSimAuthenticationResult_t auth_result; /**< authentication result */
+	int resp_length; /**< response length. IMS and 3G case, it stands for RES_AUTS. GSM case, it stands for SRES. */
+	char resp_data[TAPI_SIM_AUTH_MAX_RESP_DATA_LEN]; /**< response data. IMS and 3G case, it stands for RES_AUTS. GSM case, it stands for SRES. */
+	int authentication_key_length; /**< the length of authentication key, Kc*/
+	char authentication_key[TAPI_SIM_AUTH_MAX_RESP_DATA_LEN]; /**< the data of of authentication key, Kc*/
+	int cipher_length; /**< the length of cipher key length */
+	char cipher_data[TAPI_SIM_AUTH_MAX_RESP_DATA_LEN]; /**< cipher key */
+	int integrity_length; /**< the length of integrity key length */
+	char integrity_data[TAPI_SIM_AUTH_MAX_RESP_DATA_LEN]; /**< integrity key */
+} TelSimAuthenticationResponse_t;
 
 /**OPLMN list**/
 typedef struct

@@ -22,8 +22,8 @@
 #ifndef _uts_tapi_isim_auth_req_H_
 #define _uts_tapi_isim_auth_req_H_
 
-	static void utc_tel_req_sim_isim_authentication_01();
-	static void utc_tel_req_sim_isim_authentication_02();
+	static void utc_tel_req_sim_authentication_01();
+	static void utc_tel_req_sim_authentication_02();
 
 #endif
 

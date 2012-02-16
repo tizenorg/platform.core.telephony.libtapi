@@ -394,9 +394,9 @@ typedef struct {
  *
  *
  * @pre
- *  - A dbus connection is established with #tel_init or #tel_init_at_ecore_loop
+ *  - A dbus connection is established with #tel_init
  *  - The application name is registered with #tel_register_app_name
- *  - The application is registered events to listen asynchronous response with #tel_register_event or #tel_register_event_at_ecore_loop
+ *  - The application is registered events to listen asynchronous response with #tel_register_event
  *  - A event loop is running to listen events
  *
  * @post
@@ -461,9 +461,9 @@ int	tel_activate_gprs_pdp(const tapi_ps_net_start_req_t *pNet_start_req_info, in
  *
  *
  * @pre
- *  - A dbus connection is established with #tel_init or #tel_init_at_ecore_loop
+ *  - A dbus connection is established with #tel_init
  *  - The application name is registered with #tel_register_app_name
- *  - The application is registered events to listen asynchronous response with #tel_register_event or #tel_register_event_at_ecore_loop
+ *  - The application is registered events to listen asynchronous response with #tel_register_event
  *  - A event loop is running to listen events
  *
  * @post
@@ -530,9 +530,9 @@ int	tel_deactivate_gprs_pdp(const tapi_ps_net_stop_req_t *net_stop_req_info, int
  *   In fail, the event associated is TAPI_EVENT_PS_ERROR_IND  and the event data is #tapi_gprs_error_info_t.
  *
  * @pre
- *  - A dbus connection is established with #tel_init or #tel_init_at_ecore_loop
+ *  - A dbus connection is established with #tel_init
  *  - The application name is registered with #tel_register_app_name
- *  - The application is registered events to listen asynchronous response with #tel_register_event or #tel_register_event_at_ecore_loop
+ *  - The application is registered events to listen asynchronous response with #tel_register_event
  *  - A event loop is running to listen events
  *
  * @post

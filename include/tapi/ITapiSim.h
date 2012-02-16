@@ -2711,11 +2711,12 @@ int tel_req_sap_cardreader_status(int *req_id);
 
 
 /**
- * @brief  This API is used to execute ISIM verification.
+ * @brief  This API is used to execute the authentication procedure by using SIM.
  *
  * This function makes Dbus method call to Telephony Sever and returns immediate value.
  * However it just means that the API request has been transfered to the CP successfully.
  * The actual operation result is being delivered in the corresponding event asynchronously.
+ * This function supports IMS, 3G and GSM authentication.
  *
  * @par Sync (or) Async:
  * This is an Asynchronous API.
@@ -2727,7 +2728,7 @@ int tel_req_sap_cardreader_status(int *req_id);
  * - None.
  *
  * @param[in] authentication_data
- * - This input has the authentication code to be validated by ISIM application in the SIM card. #TelSimIsimAuthenticationData_t
+ * - This input has the authentication code to be validated by ISIM,3G and GSM application in the SIM card. #TelSimAuthenticationData_t
  *
  * @param [out] req_id
  *   - Unique identifier for a particular request.
@@ -2735,7 +2736,7 @@ int tel_req_sap_cardreader_status(int *req_id);
  *   - -1 (INVALID_REQUEST_ID) will be sent in case of failure.
  *
  * @par Async Response Message:
- * -The event associated is TAPI_SIM_EVENT_ISIM_AUTHENTICATION_CNF  and the event data is #TelSimIsimAuthenticationResponse_t.
+ * -The event associated is TAPI_SIM_EVENT_AUTHENTICATION_CNF  and the event data is #TelSimAuthenticationResponse_t.
  * Asynchronous return status is indicated by #TelSimAccessResult_t.
  *
  *
@@ -2761,19 +2762,19 @@ int tel_req_sap_cardreader_status(int *req_id);
  * #include <ITapiSim.h>
  * int err_code = 0;
  * int request_id = 0;
- * TelSimIsimAuthenticationData_t pAuthenticationData;
- * strcpy((char*)pAuthenticationData.RandomAccessData, "username@operator.com"); //access data
- * pAuthenticationData.RandomAccessLength= strlen("username@operator.com");
- * strcpy((char*)pAuthenticationData.AuthData,  "+1-212-555-12345"); // auth data
- * pAuthenticationData.AuthDataLength = strlen("+1-212-555-12345");
- * err_code = tel_req_sim_isim_authentication(&pAuthenticationData,&request_id);
+ * TelSimAuthenticationData_t pAuthenticationData;
+ * strcpy((char*)pAuthenticationData.rand_data, "username@operator.com"); //access data
+ * pAuthenticationData.rand_length= strlen("username@operator.com");
+ * strcpy((char*)pAuthenticationData.autn_data,  "+1-212-555-12345"); // auth data
+ * pAuthenticationData.autn_length = strlen("+1-212-555-12345");
+ * err_code = tel_req_sim_authentication(&pAuthenticationData,&request_id);
  * @endcode
  *
  * @remarks None
  *
  */
 /*================================================================================================*/
-int tel_req_sim_isim_authentication( TelSimIsimAuthenticationData_t *authentication_data, int *req_id);
+int tel_req_sim_authentication( TelSimAuthenticationData_t *authentication_data, int *req_id);
 
 
 #ifdef __cplusplus

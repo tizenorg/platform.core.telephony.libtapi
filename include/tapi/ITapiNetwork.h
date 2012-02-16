@@ -92,9 +92,9 @@ extern "C"
  * is indicated by #TelNetworkOperationCause_t.
  *
  * @pre
- *  - A dbus connection is established with #tel_init or #tel_init_at_ecore_loop
+ *  - A dbus connection is established with #tel_init
  *  - The application name is registered with #tel_register_app_name
- *  - The application is registered events to listen asynchronous response with #tel_register_event or #tel_register_event_at_ecore_loop
+ *  - The application is registered events to listen asynchronous response with #tel_register_event
  *  - A event loop is running to listen events
  *
  * @post
@@ -122,7 +122,6 @@ extern "C"
  *
  * @remarks
  *  - None.
- *
  *
  *
  */
@@ -159,9 +158,9 @@ int tel_select_network_automatic(int *pRequestId);
  * is indicated by #TelNetworkOperationCause_t.
  *
  * @pre
- *  - A dbus connection is established with #tel_init or #tel_init_at_ecore_loop
+ *  - A dbus connection is established with #tel_init
  *  - The application name is registered with #tel_register_app_name
- *  - The application is registered events to listen asynchronous response with #tel_register_event or #tel_register_event_at_ecore_loop
+ *  - The application is registered events to listen asynchronous response with #tel_register_event
  *  - A event loop is running to listen events
  *
  * @post
@@ -190,7 +189,6 @@ int tel_select_network_automatic(int *pRequestId);
  *
  * @remarks
  *  - None.
- *
  *
  *
  */
@@ -225,9 +223,9 @@ int tel_select_network_manual(unsigned int Plmn, int *pRequestId);
  * Asynchronous return status is indicated by #TelNetworkOperationCause_t.
  *
  * @pre
- *  - A dbus connection is established with #tel_init or #tel_init_at_ecore_loop
+ *  - A dbus connection is established with #tel_init
  *  - The application name is registered with #tel_register_app_name
- *  - The application is registered events to listen asynchronous response with #tel_register_event or #tel_register_event_at_ecore_loop
+ *  - The application is registered events to listen asynchronous response with #tel_register_event
  *  - A event loop is running to listen events
  *
  * @post
@@ -254,7 +252,6 @@ int tel_select_network_manual(unsigned int Plmn, int *pRequestId);
  *
  * @remarks
  *  - None.
- *
  *
  *
  */
@@ -288,9 +285,9 @@ int tel_search_network(int *pRequestId);
  * Asynchronous return status is indicated by #TelNetworkOperationCause_t.
  *
  * @pre
- *  - A dbus connection is established with #tel_init or #tel_init_at_ecore_loop
+ *  - A dbus connection is established with #tel_init
  *  - The application name is registered with #tel_register_app_name
- *  - The application is registered events to listen asynchronous response with #tel_register_event or #tel_register_event_at_ecore_loop
+ *  - The application is registered events to listen asynchronous response with #tel_register_event
  *  - A event loop is running to listen events
  *
  * @post
@@ -355,9 +352,9 @@ int tel_get_network_selection_mode(int *pRequestId);
  * and asynchronous return status is indicated by #TelNetworkOperationCause_t.
  *
  * @pre
- *  - A dbus connection is established with #tel_init or #tel_init_at_ecore_loop
+ *  - A dbus connection is established with #tel_init
  *  - The application name is registered with #tel_register_app_name
- *  - The application is registered events to listen asynchronous response with #tel_register_event or #tel_register_event_at_ecore_loop
+ *  - The application is registered events to listen asynchronous response with #tel_register_event
  *  - A event loop is running to listen events
  *
  * @post
@@ -387,7 +384,6 @@ int tel_get_network_selection_mode(int *pRequestId);
  *
  * @remarks
  *  - None.
- *
  *
  *
  */
@@ -422,9 +418,9 @@ int tel_set_network_service_domain(TelNetworkServiceDomain_t ServiceDomain,
  * Asynchronous return status is indicated by #TelNetworkOperationCause_t.
  *
  * @pre
- *  - A dbus connection is established with #tel_init or #tel_init_at_ecore_loop
+ *  - A dbus connection is established with #tel_init
  *  - The application name is registered with #tel_register_app_name
- *  - The application is registered events to listen asynchronous response with #tel_register_event or #tel_register_event_at_ecore_loop
+ *  - The application is registered events to listen asynchronous response with #tel_register_event
  *  - A event loop is running to listen events
  *
  * @post
@@ -452,7 +448,6 @@ int tel_set_network_service_domain(TelNetworkServiceDomain_t ServiceDomain,
  *
  * @remarks
  *  - None.
- *
  *
  *
  */
@@ -489,9 +484,9 @@ int tel_get_network_service_domain(int *pRequestId);
  * return status is indicated by #TelNetworkOperationCause_t.
  *
  * @pre
- *  - A dbus connection is established with #tel_init or #tel_init_at_ecore_loop
+ *  - A dbus connection is established with #tel_init
  *  - The application name is registered with #tel_register_app_name
- *  - The application is registered events to listen asynchronous response with #tel_register_event or #tel_register_event_at_ecore_loop
+ *  - The application is registered events to listen asynchronous response with #tel_register_event
  *  - A event loop is running to listen events
  *
  * @post
@@ -553,9 +548,9 @@ int tel_set_network_mode(TelNetworkMode_t NwMode, int *pRequestId);
  * Asynchronous return status is indicated by #TelNetworkOperationCause_t.
  *
  * @pre
- *  - A dbus connection is established with #tel_init or #tel_init_at_ecore_loop
+ *  - A dbus connection is established with #tel_init
  *  - The application name is registered with #tel_register_app_name
- *  - The application is registered events to listen asynchronous response with #tel_register_event or #tel_register_event_at_ecore_loop
+ *  - The application is registered events to listen asynchronous response with #tel_register_event
  *  - A event loop is running to listen events
  *
  * @post
@@ -621,9 +616,9 @@ int tel_get_network_mode(int *pRequestId);
  * return status is indicated by #TelNetworkOperationCause_t.
  *
  * @pre
- *  - A dbus connection is established with #tel_init or #tel_init_at_ecore_loop
+ *  - A dbus connection is established with #tel_init
  *  - The application name is registered with #tel_register_app_name
- *  - The application is registered events to listen asynchronous response with #tel_register_event or #tel_register_event_at_ecore_loop
+ *  - The application is registered events to listen asynchronous response with #tel_register_event
  *  - A event loop is running to listen events
  *
  * @post
@@ -689,9 +684,9 @@ int tel_set_network_band(TelNetworkBandPreferred_t BandMode,
  * Asynchronous return status is indicated by #TelNetworkOperationCause_t.
  *
  * @pre
- *  - A dbus connection is established with #tel_init or #tel_init_at_ecore_loop
+ *  - A dbus connection is established with #tel_init
  *  - The application name is registered with #tel_register_app_name
- *  - The application is registered events to listen asynchronous response with #tel_register_event or #tel_register_event_at_ecore_loop
+ *  - The application is registered events to listen asynchronous response with #tel_register_event
  *  - A event loop is running to listen events
  *
  * @post
@@ -757,9 +752,9 @@ int tel_get_network_band(int *pRequestId);
  * return status is indicated by #TelNetworkOperationCause_t.
  *
  * @pre
- *  - A dbus connection is established with #tel_init or #tel_init_at_ecore_loop
+ *  - A dbus connection is established with #tel_init
  *  - The application name is registered with #tel_register_app_name
- *  - The application is registered events to listen asynchronous response with #tel_register_event or #tel_register_event_at_ecore_loop
+ *  - The application is registered events to listen asynchronous response with #tel_register_event
  *  - A event loop is running to listen events
  *
  * @post
@@ -832,9 +827,9 @@ int tel_set_network_preferred_plmn(TelNetworkPrefferedPlmnOp_t Operation,
  * and asynchronous  return status is indicated by #TelNetworkOperationCause_t.
  *
  * @pre
- *  - A dbus connection is established with #tel_init or #tel_init_at_ecore_loop
+ *  - A dbus connection is established with #tel_init
  *  - The application name is registered with #tel_register_app_name
- *  - The application is registered events to listen asynchronous response with #tel_register_event or #tel_register_event_at_ecore_loop
+ *  - The application is registered events to listen asynchronous response with #tel_register_event
  *  - A event loop is running to listen events
  *
  * @post
@@ -900,9 +895,9 @@ int tel_get_network_preferred_plmn(int *pRequestId);
  * and asynchronous  return status is indicated by #TelNetworkOperationCause_t.
  *
  * @pre
- *  - A dbus connection is established with #tel_init or #tel_init_at_ecore_loop
+ *  - A dbus connection is established with #tel_init
  *  - The application name is registered with #tel_register_app_name
- *  - The application is registered events to listen asynchronous response with #tel_register_event or #tel_register_event_at_ecore_loop
+ *  - The application is registered events to listen asynchronous response with #tel_register_event
  *  - A event loop is running to listen events
  *
  * @post
@@ -970,9 +965,9 @@ int tel_set_network_roaming(TelNetworkRoamingMode_t *RoamingMode,
  * and asynchronous  return status is indicated by #TelNetworkOperationCause_t.
  *
  * @pre
- *  - A dbus connection is established with #tel_init or #tel_init_at_ecore_loop
+ *  - A dbus connection is established with #tel_init
  *  - The application name is registered with #tel_register_app_name
- *  - The application is registered events to listen asynchronous response with #tel_register_event or #tel_register_event_at_ecore_loop
+ *  - The application is registered events to listen asynchronous response with #tel_register_event
  *  - A event loop is running to listen events
  *
  * @post
@@ -1038,9 +1033,9 @@ int tel_get_network_roaming(int *pRequestId);
  * and asynchronous  return status is indicated by #TelNetworkOperationCause_t.
  *
  * @pre
- *  - A dbus connection is established with #tel_init or #tel_init_at_ecore_loop
+ *  - A dbus connection is established with #tel_init
  *  - The application name is registered with #tel_register_app_name
- *  - The application is registered events to listen asynchronous response with #tel_register_event or #tel_register_event_at_ecore_loop
+ *  - The application is registered events to listen asynchronous response with #tel_register_event
  *  - A event loop is running to listen events
  *
  * @post
@@ -1107,9 +1102,9 @@ int tel_set_network_hybrid_in_cdma(TelNetworkCDMAHybridMode_t CDMAHybridMode,
  * and asynchronous  return status is indicated by #TelNetworkOperationCause_t.
  *
  * @pre
- *  - A dbus connection is established with #tel_init or #tel_init_at_ecore_loop
+ *  - A dbus connection is established with #tel_init
  *  - The application name is registered with #tel_register_app_name
- *  - The application is registered events to listen asynchronous response with #tel_register_event or #tel_register_event_at_ecore_loop
+ *  - The application is registered events to listen asynchronous response with #tel_register_event
  *  - A event loop is running to listen events
  *
  * @post

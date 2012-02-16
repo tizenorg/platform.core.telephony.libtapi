@@ -120,7 +120,7 @@ extern "C"
  * Various asynchronous indications are described in the unsolicited notifications section . [Refer, \ref page8]
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -197,7 +197,7 @@ int tel_exe_call_mo(const TelCallSetupParams_t *pParams,  unsigned int  *pCallHa
  * - TAPI_EVENT_CALL_CONNECTED_IND / TAPI_EVENT_CALL_END_IND event will be notified in case of call is accepted/rejected.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -276,7 +276,7 @@ int tel_answer_call(unsigned int CallHandle, TelCallAnswerType_t AnsType, int * 
  *    Asynchronous return status is indicated by #TelCallCause_t.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -346,7 +346,7 @@ int tel_release_call(unsigned int  CallHandle, int * pRequestId);
  *    associated event data.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -410,7 +410,7 @@ int tel_release_call_all (int * pRequestId);
  * -
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -473,7 +473,7 @@ int tel_release_call_all_active(int *pRequestId);
  * -
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -542,7 +542,7 @@ int tel_release_call_all_active(int *pRequestId);
  *    indicated by #TelCallCause_t and call handle is sent in the event data.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -612,7 +612,7 @@ int tel_release_call_all_active(int *pRequestId);
  *    by #TelCallCause_t and call handle is sent in the event data.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -686,7 +686,7 @@ int tel_retrieve_call(unsigned int CallHandle, int * pRequestId);
  * -
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -761,7 +761,7 @@ int tel_retrieve_call(unsigned int CallHandle, int * pRequestId);
  *    is indicated by #TelCallCause_t and call handle is sent in the event data.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -838,7 +838,7 @@ int tel_retrieve_call(unsigned int CallHandle, int * pRequestId);
  *    status is indicated by #TelCallCause_t and call handle of the MPTY call is sent in the event data.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -913,7 +913,7 @@ int tel_retrieve_call(unsigned int CallHandle, int * pRequestId);
  *    is indicated by #TelCallCause_t and call handle for the split call is sent in the event data.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -986,7 +986,7 @@ int tel_retrieve_call(unsigned int CallHandle, int * pRequestId);
  *   - -1 (INVALID_REQUEST_ID) will be sent in case of failure.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -1046,7 +1046,7 @@ int tel_retrieve_call(unsigned int CallHandle, int * pRequestId);
  *   - -1 (INVALID_REQUEST_ID) will be sent in case of failure.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -1190,7 +1190,7 @@ int tel_retrieve_call(unsigned int CallHandle, int * pRequestId);
  *   - None.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -1261,7 +1261,7 @@ int tel_retrieve_call(unsigned int CallHandle, int * pRequestId);
  *  - None.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -1300,7 +1300,7 @@ int tel_retrieve_call(unsigned int CallHandle, int * pRequestId);
  int tel_get_call_duration(unsigned int CallHandle, unsigned int * pDurationInSecs) ;
 
  /**
-  * \breif Deflect the incoming call to other subscriber
+  *@brief Deflect the incoming call to other subscriber
   *
   * If informed about an incoming call this call may be redirected to an another destination by
   * entering the destination Number. The cleint spcifies the dstiantion number to which the current
@@ -1332,7 +1332,7 @@ int tel_retrieve_call(unsigned int CallHandle, int * pRequestId);
   * -
   *
   * @pre
-  *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+  *  - Initialize Dbus connection with #tel_init
   *  - Register caller's application name with #tel_register_app_name
   *  - Register telephony events to listen
   *  - A event loop is running to listen events
@@ -1412,7 +1412,7 @@ int tel_retrieve_call(unsigned int CallHandle, int * pRequestId);
   * -
   *
   * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -1480,7 +1480,7 @@ int tel_retrieve_call(unsigned int CallHandle, int * pRequestId);
  *  -None.
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -1550,7 +1550,7 @@ int tel_retrieve_call(unsigned int CallHandle, int * pRequestId);
  *
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
@@ -1625,7 +1625,7 @@ int tel_retrieve_call(unsigned int CallHandle, int * pRequestId);
  *
  *
  * @pre
- *  - Initialize Dbus connection with #tel_init or #tel_init_at_ecore_loop
+ *  - Initialize Dbus connection with #tel_init
  *  - Register caller's application name with #tel_register_app_name
  *  - Register telephony events to listen
  *  - A event loop is running to listen events
