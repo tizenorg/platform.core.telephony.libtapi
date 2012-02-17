@@ -1,7 +1,0 @@
-/sat/unit/uts_tel_download_sat_event
-/sat/unit/uts_tel_get_sat_main_menu_info
-/sat/unit/uts_tel_select_sat_menu
-/sat/unit/uts_tel_send_sat_app_exec_result
-/sat/unit/uts_tel_send_sat_ui_user_confirm
-/sat/unit/uts_tel_send_ui_display_status
-
