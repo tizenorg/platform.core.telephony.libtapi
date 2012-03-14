@@ -1,10 +1,9 @@
-
 Name:       libslp-tapi
 Summary:    Telephony client API
-Version:    0.5.67
+Version:    0.5.79
 Release:    1
 Group:      System/Libraries
-License:    LGPLv2
+License:    Apache-2.0
 Source0:    libslp-tapi-%{version}.tar.gz
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
@@ -42,7 +41,6 @@ cmake . -DCMAKE_INSTALL_PREFIX=%{_prefix}
 make %{?jobs:-j%jobs}
 
 %install
-rm -rf %{buildroot}
 %make_install
 
 rm -rf %{buildroot}/usr/include/telephony/tapi/.gitignore
@@ -58,13 +56,10 @@ rm -rf %{buildroot}/usr/include/telephony/tapi/.gitignore
 
 
 %files
-%defattr(-,root,root,-)
-%doc COPYING
 %{_libdir}/*.so.*
 
 
 %files devel
-%defattr(-,root,root,-)
 %{_includedir}/telephony/common/*.h
 %{_includedir}/telephony/tapi/*.h
 %exclude %{_includedir}/telephony/tapi/tapi-lib-proxy.h
