@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
- * Contact: Kyeongchul Kim <kyeongchul.kim@samsung.com>
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,9 +36,6 @@
 #ifndef	_ITAPI_SOUND_H_
 #define _ITAPI_SOUND_H_
 
-/*==================================================================================================
-                                         INCLUDE FILES
-==================================================================================================*/
 #include <TelDefines.h>
 #include <TelErr.h>
 #include <TelUtility.h>
@@ -48,18 +45,8 @@ extern "C"
 {
 #endif
 
-/*==================================================================================================
-                                           CONSTANTS
-==================================================================================================*/
-
-/*==================================================================================================
-                                            MACROS
-==================================================================================================*/
 #define TAPI_SOUND_VOLUME_TYPE		20	/**<Sound volume type	length is 20*/
 
-/*==================================================================================================
-                                             ENUMS
-==================================================================================================*/
 /**
 * @enum tapi_sound_type_t
 *Sound type
@@ -163,10 +150,6 @@ typedef struct {
 	TelAudioLoopbackStatus_t status;
 } TelAudioLoopbackMode_t;
 
-/*==================================================================================================
-                                 STRUCTURES AND OTHER TYPEDEFS
-==================================================================================================*/
-
 /**
 * This structure defines sound volume info result control type.
 */
@@ -196,15 +179,11 @@ typedef struct {
 	tapi_phone_err_t	cause;
 } tapi_sound_error_info_t;
 
-
-/*==================================================================================================
-                                     FUNCTION PROTOTYPES
-==================================================================================================*/
-
 /**
  *
  * @brief  This function is used to send to Telephony Server to get the volume status of the phone.
  * Application can make use this API.
+ * This is permitted to the Samsung inhouse application only.
  *
  * This function makes Dbus method call to Telephony Sever and returns immediate value.
  * However it just means that the API request has been transfered to the CP successfully.
@@ -270,6 +249,7 @@ int	tel_get_sound_volume_info(tapi_sound_volume_type_t vol_control_type, int *pR
  *
  * @brief  This function is used to send to Telephony Server to control the phone volume .
  * Application can make use this API.
+ * This is permitted to the Samsung inhouse application only.
  *
  * @par Sync (or) Async:
  * - This is an Asynchronous API
@@ -327,6 +307,7 @@ int tel_set_sound_volume_info(tapi_sound_volume_control_t vol_control, int *pReq
 /**
  * @brief  This function is used to Send to Telephony Server to set voice path .
  * Application can make use this API.
+ * This is permitted to the Samsung inhouse application only.
  *
  * @par Sync (or) Async:
  * - This is an Asynchronous API
@@ -382,6 +363,7 @@ int tel_set_sound_path(tapi_sound_audio_path_t  vc_path, int *pRequestId);
 /**
  * @brief  This function is used to Send to Telephony Server to control  the microphone as mute during the call.
  * Application can make use this API.
+ * This is permitted to the Samsung inhouse application only.
  *
  * @par Sync (or) Async:
  * - This is an Asynchronous API
@@ -566,6 +548,7 @@ int tel_set_sound_clock(int bEnable, int *pRequestId);
 /**
  * @brief  This function is used to send to Telephony Server to control whether Voice recording is started or not.
  * Application can make use this API.
+ * This is permitted to the Samsung inhouse application only.
  *
  * @par Sync (or) Async:
  * - This is an Asynchronous API
@@ -612,4 +595,3 @@ int tel_control_sound_voice_recording(tapi_sound_voice_recording_status_t voice_
 /**
 * @}
 */
-

@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
- * Contact: Kyeongchul Kim <kyeongchul.kim@samsung.com>
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,6 @@
 #ifndef	_ITAPI_PS_H_
 #define _ITAPI_PS_H_
 
-/*==================================================================================================
-                                         INCLUDE FILES
-==================================================================================================*/
 #include <TelDefines.h>
 #include <TelErr.h>
 #include <TelUtility.h>
@@ -44,15 +41,6 @@ extern "C"
 {
 #endif
 
-/*==================================================================================================
-                                           CONSTANTS
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                            MACROS
-==================================================================================================*/
-
 /* Defining macros for PSMAN profiles */
 #define TAPI_PDP_ADDR_LEN_MAX		20
 #define TAPI_PDP_APN_LEN_MAX		101
@@ -61,10 +49,7 @@ extern "C"
 #define TAPI_PDP_MAX_PASSWORD_LEN	32
 #define TAPI_PDP_MAX_DNS_LEN		16
 #define MAX_PDP_CONTEXTS_ALLOWED	3
-
-/*==================================================================================================
-                                             ENUMS
-==================================================================================================*/
+#define MAX_GPRS_PORT_LIST			200
 
 typedef enum {
      TAPI_GPRS_DEFINE_PDP_CONTEXT=0x01,		/* 0x01 : Define PDP Context */
@@ -80,8 +65,10 @@ typedef enum {
      TAPI_GSM_GPRS_TFT,							/* 0X0B : AT+CGTFT	05.10.07 ky.doo EDIT */
      TAPI_GSM_GPRS_HSDPA_STATUS,				/* 0x0C : HSDPA status */
      TAPI_GSM_GPRS_CURRENT_SESSION_DATA_COUNTER,/* 0x0D : Current data session tx/rx total bytes */
+     TAPI_GSM_GPRS_DATA_DORMANT,                /* 0x0E : Force to set Dormant */
      TAPI_GSM_GPRS_DUN_PIN_CTRL ,               /* 0x0F : Dial up Networking Pin Control Message */
      TAPI_GSM_GPRS_CALL_STATUS,			    /* 0x10 : DS TE2 Data Call result(Multiple PDP) */
+     TAPI_GSM_GPRS_PORT_SEL,				/* 0x11 : PORT SEL */
      TAPI_GSM_GPRS_MAX
 } tapi_gprs_type_t;
 
@@ -204,6 +191,12 @@ typedef enum {
 	PDP_DEVICE_INFO_SET = 0x01
 } tapi_gprs_device_info;
 
+typedef enum{
+    TAPI_GPRS_PORT_LIST_NOT_USE,    // 0x00
+	TAPI_GPRS_PORT_LIST_WHITE,      // 0x01
+	TAPI_GPRS_PORT_LIST_BLACK,      // 0x02
+} tapi_gprs_port_list_type;
+
 typedef enum {
 	TAPI_PDP_STATE_NONE,             /* 0x00 Default state for a given PDP context*/
     TAPI_PDP_STATE_ACTIVATING,		 /* 0x01 TS will be in this state when there is a START PDP Request until it is  activated by modem - This state PDP is not yet UP*/
@@ -229,10 +222,6 @@ typedef enum {
   TAPI_PDP_TRANSFER_STATUS_MAX
 } tapi_gprs_suspend_type;
 
-
-/*==================================================================================================
-                                 STRUCTURES AND OTHER TYPEDEFS
-==================================================================================================*/
 typedef struct {
 	tapi_gprs_type_t type;
 	tapi_phone_err_t cause;
@@ -359,10 +348,16 @@ typedef struct {
 	unsigned char				external;
 } tapi_gprs_pdp_status_reason_info;
 
-/*==================================================================================================
-                                     FUNCTION PROTOTYPES
-==================================================================================================*/
+typedef struct {
+    tapi_gprs_port_list_type type;
+    unsigned char len;
+    unsigned short list[MAX_GPRS_PORT_LIST];
+} tapi_gprs_port_list;
 
+typedef struct {
+    tapi_gprs_port_list tcp_list;
+    tapi_gprs_port_list udp_list;
+} tapi_gprs_pdp_port_list_setting_info_t;
 
 /**
  * @brief  This API is used to request to Telephony Server to set PDP context define info, PDP activation.
@@ -500,6 +495,197 @@ int	tel_activate_gprs_pdp(const tapi_ps_net_start_req_t *pNet_start_req_info, in
 int	tel_deactivate_gprs_pdp(const tapi_ps_net_stop_req_t *net_stop_req_info, int *pRequestID);
 
 /**
+ * @brief  This API is used to send modem data channels to dormant state for power saving when there is no data flowing for certain time
+ *         Access to this API is limited, we recommend you use Data Network API
+ *
+ * This function makes Dbus method call to Telephony Sever and returns immediate value.
+ * However it just means that the API request has been transfered to the CP successfully.
+ * The actual operation result is being delivered in the corresponding event asynchronously.
+ *
+ * @par Sync (or) Async:
+ * This is an Asynchronous API.
+ *
+ * @par Important Notes:
+ * -NONE
+ *
+ * @warning
+ * - None.
+ *
+ * @param [out] pRequestID
+ *   - Unique identifier for a particular request.
+ *   - request_id value can be any value from 0 to 255 if the API is returned successfully
+ *   - -1 (INVALID_REQUEST_ID) will be sent in case of failure.
+ *
+ * @par Async Response Message:
+ *  -The event associated is TAPI_EVENT_PS_DATA_DORMANT_RESP  and the event data is #TelTapiGprsDataDormancy_t.
+ *
+ * @pre
+ *  - A dbus connection is established with #tel_init
+ *  - The application name is registered with #tel_register_app_name
+ *  - The application is registered events to listen asynchronous response with #tel_register_event
+ *  - A event loop is running to listen events
+ *
+ * @post
+ *  - None.
+ *
+ * @return Return Type (int) \n
+ * - Integer '0' - indicating that the operation has completed successfully. \n
+ * - Negative integer : it provides an error code (Refer #TapiResult_t)
+ *
+ * @par Prospective Clients:
+ * External Apps.
+ *
+ * @code
+ * #include <ITapiPS.h>
+ *
+ * int ret_status;
+ * int request_id = 0;
+ *
+ * ret_status = tel_set_gprs_dormant(&request_id); //if user want to dormant state
+ * @endcode
+ *
+ * @see
+ *  - None.
+ *
+ * @remarks
+ *  - None.
+ */
+/*================================================================================================*/
+int	tel_set_gprs_dormant(int *pRequestID);
+
+/**
+ * @brief  This API is used to get port list
+ *         Access to this API is limited, we recommend you use Data Network API
+ *
+ * This function makes Dbus method call to Telephony Sever and returns immediate value.
+ * However it just means that the API request has been transfered to the CP successfully.
+ * The actual operation result is being delivered in the corresponding event asynchronously.
+ *
+ * @par Sync (or) Async:
+ * This is an Asynchronous API.
+ *
+ * @par Important Notes:
+ * -NONE
+ *
+ * @warning
+ * - None.
+ *
+ * @param [out] pRequestID
+ *   - Unique identifier for a particular request.
+ *   - request_id value can be any value from 0 to 255 if the API is returned successfully
+ *   - -1 (INVALID_REQUEST_ID) will be sent in case of failure.
+ *
+ * @par Async Response Message:
+ *  -The event associated is TAPI_EVENT_PS_PDP_GET_PORTLIST_RSP  and the event data is #tapi_gprs_pdp_port_list_setting_info_t.
+ *
+ * @pre
+ *  - A dbus connection is established with #tel_init
+ *  - The application name is registered with #tel_register_app_name
+ *  - The application is registered events to listen asynchronous response with #tel_register_event
+ *  - A event loop is running to listen events
+ *
+ * @post
+ *  - None.
+ *
+ * @return Return Type (int) \n
+ * - Integer '0' - indicating that the operation has completed successfully. \n
+ * - Negative integer : it provides an error code (Refer #TapiResult_t)
+ *
+ * @par Prospective Clients:
+ * External Apps.
+ *
+ * @code
+ * #include <ITapiPS.h>
+ *
+ * int ret_val;
+ * int requestId = 0;
+ *
+ * ret_val = tel_get_gprs_port_list(&requestId); //get port list with async response. current return value means whether request send low layer properly or not
+ * @endcode
+ *
+ * @see
+ *  - None.
+ *
+ * @remarks
+ *  - None.
+ */
+/*================================================================================================*/
+int	tel_get_gprs_port_list(int *pRequestID);
+
+/**
+ * @brief  This API is used to set port list
+ *         Access to this API is limited, we recommend you use Data Network API
+ *
+ * This function makes Dbus method call to Telephony Sever and returns immediate value.
+ * However it just means that the API request has been transfered to the CP successfully.
+ * The actual operation result is being delivered in the corresponding event asynchronously.
+ *
+ * @par Sync (or) Async:
+ * This is an Asynchronous API.
+ *
+ * @par Important Notes:
+ * -NONE
+ *
+ * @warning
+ * - None.
+ *
+ * @param[in] info
+ * - This input has the TCP/UDP port list information info #tapi_gprs_pdp_port_list_setting_info_t
+ *
+ * @param [out] pRequestID
+ *   - Unique identifier for a particular request.
+ *   - request_id value can be any value from 0 to 255 if the API is returned successfully
+ *   - -1 (INVALID_REQUEST_ID) will be sent in case of failure.
+ *
+ * @par Async Response Message:
+ *  -None
+ *
+ * @pre
+ *  - A dbus connection is established with #tel_init
+ *  - The application name is registered with #tel_register_app_name
+ *  - The application is registered events to listen asynchronous response with #tel_register_event
+ *  - A event loop is running to listen events
+ *
+ * @post
+ *  - None.
+ *
+ * @return Return Type (int) \n
+ * - Integer '0' - indicating that the operation has completed successfully. \n
+ * - Negative integer : it provides an error code (Refer #TapiResult_t)
+ *
+ * @par Prospective Clients:
+ * External Apps.
+ *
+ * @code
+ * #include <ITapiPS.h>
+ *
+ * int ret_val;
+ * int requestId = 0;
+ * tapi_gprs_pdp_port_list_setting_info_t test;
+ *
+ * memset(&test, 0, sizeof(tapi_gprs_pdp_port_list_setting_info_t));
+ * test.tcp_list.type = TAPI_GPRS_PORT_LIST_NOT_USE;
+ * test.tcp_list.len = 1;
+ * test.tcp_list.list[0] = 1004;
+ * test.udp_list.type = TAPI_GPRS_PORT_LIST_NOT_USE;
+ * test.udp_list.len = 1;
+ * test.udp_list.list[i] = 1111;
+ *
+ * ret_val = tel_set_gprs_port_list(&test, &requestId); //get operation result with async response. current return value means whether request send low layer properly or not
+ *
+ * @endcode
+ *
+ * @see
+ *  - None.
+ *
+ * @remarks
+ *  - None.
+ */
+/*================================================================================================*/
+int	tel_set_gprs_port_list(tapi_gprs_pdp_port_list_setting_info_t *info, int *pRequestID);
+
+
+/**
  * @brief  This API is used to request BT Dun enable or disable
  *         Access to this API is limited, we recommend you use Data Network API
  *
@@ -576,4 +762,3 @@ int tel_control_gprs_btdun_pin(tapi_ps_btdun_pincontrol pincontrol, int *pReques
 /**
    *  @}
    */
-

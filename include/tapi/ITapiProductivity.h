@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
- * Contact: Kyeongchul Kim <kyeongchul.kim@samsung.com>
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,9 +33,6 @@
 #ifndef _ITAPI_SERVICE_MODE_H_
 #define _ITAPI_SERVICE_MODE_H_
 
-/*==================================================================================================
- INCLUDE FILES
- ==================================================================================================*/
 #include <TelDefines.h>
 #include <TelErr.h>
 #include <TelUtility.h>
@@ -44,13 +41,6 @@
 extern "C" {
 #endif
 
-/*==================================================================================================
- CONSTANTS
- ==================================================================================================*/
-
-/*==================================================================================================
- MACROS
- ==================================================================================================*/
 #define TAPI_MAX_SERVICE_LINES		16	/** service information display max length */
 #define TAPI_MAX_LCD_WIDTH			31	/** LCD max width for display */
 
@@ -69,10 +59,6 @@ extern "C" {
 
 #define SMS_NUM_SIZE	64	/**< sms number max size for factory dft*/
 #define SMS_DATA_SIZE	255	/**< sms data max size for factory dft*/
-
-/*==================================================================================================
- ENUMS
- ==================================================================================================*/
 
 /**
  * @enum tapi_service_mode_t
@@ -240,10 +226,6 @@ typedef enum {
 	TAPI_FACTORY_OMISSION_AVOIDANCE_FAILDATA_READ_FULL,
 } tapi_factory_omission_avoidance_read_cmd_t;
 
-/*==================================================================================================
- STRUCTURES AND OTHER TYPEDEFS
- ==================================================================================================*/
-
 /**
  * This structure contains service mode end information.
  */
@@ -311,10 +293,6 @@ typedef struct {
 	unsigned int data_cnt;
 	tapi_factory_omission_avoidance_data_t data[MAX_FACTORY_OMISSION_AVOIDANCE_DATA_CNT];
 } tapi_factory_omission_avoidance_info_t;
-
-/*==================================================================================================
- FUNCTION PROTOTYPES
- ==================================================================================================*/
 
 /**
  *
@@ -601,4 +579,3 @@ int tel_set_factory_omission_avoidance(tapi_factory_omission_avoidance_info_t *i
 /**
  * @}
  */
-

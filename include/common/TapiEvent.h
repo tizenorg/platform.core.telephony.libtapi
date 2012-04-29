@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
- * Contact: Kyeongchul Kim <kyeongchul.kim@samsung.com>
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,17 +31,10 @@
 #ifndef _TAPI_EVENT_H_
 #define _TAPI_EVENT_H_
 
-/*==================================================================================================
- INCLUDE FILES
- ==================================================================================================*/
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/*==================================================================================================
- CONSTANTS
- ==================================================================================================*/
 /**
  *   This value defines the Telephony Event Class. Class is nothing but a group of events
  *   related to a particular subsystem. Example of one Event Class is TAPI_EVENT_CLASS_CALL_VOICE.
@@ -319,6 +312,9 @@ extern "C" {
 #define TAPI_EVENT_PS_CONFIRMATION				(TAPI_EVENT_TYPE_CONFIRMATION + (TAPI_EVENT_CLASS_DATA << 8))
 #define TAPI_EVENT_PS_PDP_ACT_RSP				(TAPI_EVENT_PS_CONFIRMATION + 0)			/**< 0x0B00,   -  PDP activation response event */
 #define TAPI_EVENT_PS_PDP_DEACT_RSP				(TAPI_EVENT_PS_CONFIRMATION + 1)			/**<      PDP deactivation response event */
+#define TAPI_EVENT_PS_DATA_DORMANT_RESP			(TAPI_EVENT_PS_CONFIRMATION + 2)			/**<  Dormant response event  */
+#define TAPI_EVENT_PS_PDP_SET_PORTLIST_RSP		(TAPI_EVENT_PS_CONFIRMATION + 3)			/**<  Port List set response event  */
+#define TAPI_EVENT_PS_PDP_GET_PORTLIST_RSP		(TAPI_EVENT_PS_CONFIRMATION + 4)			/**<  Port List get response event  */
 #define TAPI_EVENT_PS_CNF_MAX					(TAPI_EVENT_PS_CONFIRMATION + 5)
 
 #define TAPI_EVENT_PS_NOTIFICATION				(TAPI_EVENT_TYPE_NOTIFICATION + (TAPI_EVENT_CLASS_DATA << 8))
@@ -534,18 +530,6 @@ extern "C" {
 #define	TAPI_EVENT_DATA_DS_TE2_DATA_RATE_INFO_NOTI	(TAPI_EVENT_CDMA_DATA_NOTIFICATION + 1)		/**< CDMA Data DS TE2 Data Rate changed indication event type. */
 #define	TAPI_EVENT_DATA_INTERNAL_IND_MAX			(TAPI_EVENT_CDMA_DATA_NOTIFICATION + 2)
 
-/*==================================================================================================
- MACROS
- ==================================================================================================*/
-
-/*==================================================================================================
- ENUMS
- ==================================================================================================*/
-
-/*==================================================================================================
- STRUCTURES AND OTHER TYPEDEFS
- ==================================================================================================*/
-
 /**
  *This structure defines the Telephony Event.
  */
@@ -594,10 +578,6 @@ typedef struct TapiSubscription {
 	struct TapiSubscription * next; /**< Link to the next subscription */
 } TapiSubscriptionList;
 
-/*==================================================================================================
- FUNCTION PROTOTYPES
- ==================================================================================================*/
-
 #ifdef __cplusplus
 }
 #endif
@@ -607,4 +587,3 @@ typedef struct TapiSubscription {
 /**
  *  @}
  */
-

@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
- * Contact: Kyeongchul Kim <kyeongchul.kim@samsung.com>
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,36 +28,17 @@
 
      @brief This file serves as a "C" header file defines structures for Tapi Sat envelope command Services. \n
       It contains a sample set of constants, enums, structs that would be required by applications.
-
-
  */
 
 #ifndef _TEL_SAT_ENVELOPE_H_
 #define _TEL_SAT_ENVELOPE_H_
 
-/*==================================================================================================
-                                         INCLUDE FILES
-==================================================================================================*/
 #include <TelSatObj.h>
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-
-/*==================================================================================================
-                                           CONSTANTS
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                            MACROS
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                             ENUMS
-==================================================================================================*/
 
 /**
  * @enum TelSatCallType_t
@@ -98,13 +79,7 @@ typedef enum
 
 }TelSatEnvelopeResp_t;
 
-/*==================================================================================================
-                                 STRUCTURES AND OTHER TYPEDEFS
-==================================================================================================*/
-
-//////////////////////////////////////////////////////////////////////////////////////////
 //	8.	MENU SELECTION
-//////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure contains the data objects for MENU SELECTION envelope.
  */
@@ -114,9 +89,7 @@ typedef struct
 	int				bIsHelpRequested;	/**<	flag to check whether help information required or not	*/
 } TelSatMenuSelectionReqInfo_t;
 
-//////////////////////////////////////////////////////////////////////////////////////////
 //	9.1 CALL CONTROL BY SIM
-//////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This struct contains the data objects for Call Control result data sent by USIM.
  */
@@ -168,9 +141,7 @@ typedef struct
 	}u;													/**<	Union		*/
 } TelSatCallCtrlIndInfo_t;
 
-//////////////////////////////////////////////////////////////////////////////////////////
 //	9.2 MO SHORT MESSAGE CONTROL BY SIM RESULT
-//////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This struct contains SAT mo ss control request data
  */
@@ -181,9 +152,7 @@ typedef struct
 	TelSatMoSmsCtrlIndInfo_t		smsData;			/**<	sms control data	*/
 }TelSatMoSMCtrlResult_t;
 
-//////////////////////////////////////////////////////////////////////////////////////////
 //	11.5 EVENT DOWNLOAD - USER ACTIVITY EVENT
-//////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This struct contains SAT user activity event request data
  */
@@ -194,9 +163,7 @@ typedef struct
 
 } TelSatUserActivityEventReqInfo_t;
 
-//////////////////////////////////////////////////////////////////////////////////////////
 //	11.6 EVENT DOWNLOAD - IDLE SCREEN AVAILABLE EVENT
-//////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure contains the data objects for IDLE SCREEN AVAILABLE event download.
  */
@@ -205,10 +172,7 @@ typedef struct
 	TelSatEventDownloadType_t	eventData;	/**<	event type	*/
 } TelSatIdleScreenAvailableEventReqInfo_t;
 
-
-//////////////////////////////////////////////////////////////////////////////////////////
 //	11.8 EVENT DOWNLOAD - LANGUAGE SELECTION EVENT
-//////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure contains the data objects for LANGUAGE SELECTION event download.
  */
@@ -217,10 +181,7 @@ typedef struct
 	TelSatLanguageType_t	 language;		/**<	selected language info	*/
 } TelSatLanguageSelectionEventReqInfo_t;
 
-
-//////////////////////////////////////////////////////////////////////////////////////////
 //	11.9 EVENT DOWNLOAD - BROWSER TERMINATION EVENT
-//////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure contains the data objects for BROWSER TERMINATION event download.
  */
@@ -229,10 +190,7 @@ typedef struct
 	TelSatBrowserTerminationCauseType_t		browserTerminationCause;	/**<	browser Termination Cause	*/
 } TelSatBrowserTerminationEventReqInfo_t;
 
-
-//////////////////////////////////////////////////////////////////////////////////////////
 //	11.10 EVENT DOWNLOAD - DATA AVAILABLE EVENT
-//////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This struct contains SAT data available event request data
  */
@@ -245,9 +203,7 @@ typedef struct
 
 } TelSatDataAvailableEventReqInfo_t;
 
-//////////////////////////////////////////////////////////////////////////////////////////
 //	11.11 EVENT DOWNLOAD - CHANNEL STATUS EVENT
-//////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This struct contains SAT channel status even request data
  */
@@ -258,10 +214,6 @@ typedef struct
 	TelSatChannelStatusInfo_t		channelStatus;		/**<	channel Status	*/
 } TelSatChannelStatusEventReqInfo_t;
 
-/*==================================================================================================
-                                     FUNCTION PROTOTYPES
-==================================================================================================*/
-
 #ifdef __cplusplus
 }
 #endif
@@ -271,4 +223,3 @@ typedef struct
 /**
  * @}
  */
-

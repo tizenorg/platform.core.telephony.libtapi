@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
- * Contact: Kyeongchul Kim <kyeongchul.kim@samsung.com>
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,7 +71,6 @@ EXPORT_API int tel_get_sim_init_info(TelSimCardStatus_t *sim_status, int *card_c
 
 	if (CardStatus != TAPI_SIM_STATUS_SIM_INIT_COMPLETED) {
 		*sim_status = CardStatus;
-
 		if (card_changed != NULL)
 			*card_changed = 0;
 
@@ -91,12 +90,12 @@ EXPORT_API int tel_get_sim_init_info(TelSimCardStatus_t *sim_status, int *card_c
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*sim_status = g_array_index(out_param2, TelSimCardStatus_t ,0);
-
-		if (card_changed != NULL)
-			*card_changed = g_array_index(out_param3, int ,0);
-	}
-	else {
+		if(api_err == TAPI_API_SUCCESS) {
+			*sim_status = g_array_index(out_param2, TelSimCardStatus_t ,0);
+			if (card_changed != NULL)
+				*card_changed = g_array_index(out_param3, int ,0);
+		}
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -154,13 +153,12 @@ EXPORT_API int tel_verifiy_sim_pins(const TelSimSecPw_t *pin_data, int *req_id)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
 
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -226,13 +224,11 @@ EXPORT_API int tel_verify_sim_puks(const TelSimSecPw_t *puk_data, const TelSimSe
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -301,13 +297,11 @@ EXPORT_API int tel_change_sim_pins(const TelSimSecPw_t *old_pin, const TelSimSec
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -345,11 +339,11 @@ EXPORT_API int tel_get_sim_security_status(TelSimPinType_t type, TelSimPinStatus
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*status = g_array_index(out_param2,TelSimPinStatus_t ,0);
-
-		TAPI_LIB_DEBUG(LEVEL_ALERT, "api_err[%d],PIN type[%d], Status[%d]",api_err, type,*status);
-	}
-	else {
+		if(api_err == TAPI_API_SUCCESS ) {
+			*status = g_array_index(out_param2,TelSimPinStatus_t ,0);
+			TAPI_LIB_DEBUG(LEVEL_ALERT, "api_err[%d],PIN type[%d], Status[%d]",api_err, type,*status);
+		}
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -403,13 +397,11 @@ EXPORT_API int tel_disable_sim_security(TelSimSecPw_t *sec_data, int *req_id)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -463,13 +455,11 @@ EXPORT_API int tel_enable_sim_security(TelSimSecPw_t *sec_data, int *req_id)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -512,13 +502,11 @@ EXPORT_API int tel_get_sim_personalization_status(TelSimPersType_t type, int *re
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -574,13 +562,11 @@ EXPORT_API int tel_disable_sim_personalization(TelSimPersPw_t *pers_data, int *r
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -636,13 +622,11 @@ EXPORT_API int tel_enable_sim_personalization(TelSimPersPw_t *pers_data, int *re
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -674,9 +658,10 @@ EXPORT_API int tel_get_sim_fdn_status(int *fdn_status)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*fdn_status = g_array_index(out_param2,TS_BOOL ,0);
-
-		TAPI_LIB_DEBUG(LEVEL_ALERT, "FDN Status [%d]", *fdn_status);
+		if(api_err == TAPI_API_SUCCESS) {
+			*fdn_status = g_array_index(out_param2,TS_BOOL ,0);
+			TAPI_LIB_DEBUG(LEVEL_ALERT, "FDN Status [%d]", *fdn_status);
+		}
 	}
 	else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
@@ -726,13 +711,11 @@ EXPORT_API int tel_disable_sim_fdn(const unsigned char *pin2, int *pin2_len, int
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -781,13 +764,11 @@ EXPORT_API int tel_enable_sim_fdn(const unsigned char *pin2, int *pin2_len, int 
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -833,13 +814,11 @@ EXPORT_API int tel_req_sim_access(const TelSimRSimReq_t *rsim_data, int *req_id)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -882,13 +861,11 @@ EXPORT_API int tel_req_sim_apdu(TelSimApdu_t* apdu_data, int *req_id)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -928,13 +905,11 @@ EXPORT_API int tel_req_sim_atr(int *req_id)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -967,14 +942,15 @@ EXPORT_API int tel_get_sim_ecc(TelSimEccData_t *ecc_data, int *ecc_count)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*ecc_data = g_array_index(out_param2, TelSimEccData_t ,0);
-		*ecc_count = g_array_index(out_param3, int ,0);
+		if(api_err == TAPI_API_SUCCESS ){
+			*ecc_data = g_array_index(out_param2, TelSimEccData_t ,0);
+			*ecc_count = g_array_index(out_param3, int ,0);
 
-		TAPI_LIB_DEBUG(LEVEL_ALERT, "ECC count [%d]", *ecc_count);
-		TAPI_LIB_DEBUG(LEVEL_ALERT, "1st ECC data is  [%s]", ecc_data->EccInfo.szEcc1);
-		TAPI_LIB_DEBUG(LEVEL_ALERT, "1st UECC data is  [%s]", ecc_data->UeccInfo[0].szEcc);
-	}
-	else {
+			TAPI_LIB_DEBUG(LEVEL_ALERT, "ECC count [%d]", *ecc_count);
+			TAPI_LIB_DEBUG(LEVEL_ALERT, "1st ECC data is  [%s]", ecc_data->EccInfo.szEcc1);
+			TAPI_LIB_DEBUG(LEVEL_ALERT, "1st UECC data is  [%s]", ecc_data->UeccInfo[0].szEcc);
+		}
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -1005,11 +981,11 @@ EXPORT_API int tel_get_sim_language(TelSimLanguageInfo_t *sim_language)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*sim_language = g_array_index(out_param2, TelSimLanguageInfo_t ,0);
-
-		TAPI_LIB_DEBUG(LEVEL_ALERT, "Language count [%lu]", sim_language->LpCount);
-	}
-	else {
+		if(api_err == TAPI_API_SUCCESS ){
+			*sim_language = g_array_index(out_param2, TelSimLanguageInfo_t ,0);
+			TAPI_LIB_DEBUG(LEVEL_ALERT, "Language count [%lu]", sim_language->LpCount);
+		}
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -1051,13 +1027,11 @@ EXPORT_API int tel_set_sim_language(TelSimLanguagePreferenceCode_t language, int
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -1089,11 +1063,11 @@ EXPORT_API int tel_get_sim_type(TelSimCardType_t *card_type)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*card_type = g_array_index(out_param2,int ,0);
-
-		TAPI_LIB_DEBUG(LEVEL_ALERT, "Card type [%d]", *card_type);
-	}
-	else {
+		if(api_err == TAPI_API_SUCCESS ) {
+			*card_type = g_array_index(out_param2,int ,0);
+			TAPI_LIB_DEBUG(LEVEL_ALERT, "Card type [%d]", *card_type);
+		}
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -1125,11 +1099,11 @@ EXPORT_API int tel_get_sim_imsi(TelSimImsiInfo_t *imsi)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*imsi = g_array_index(out_param2, TelSimImsiInfo_t ,0);
-
-		TAPI_LIB_DEBUG(LEVEL_ALERT, "IMSI valid [%d]", imsi->bValid);
-	}
-	else {
+		if(api_err == TAPI_API_SUCCESS ) {
+			*imsi = g_array_index(out_param2, TelSimImsiInfo_t ,0);
+			TAPI_LIB_DEBUG(LEVEL_ALERT, "IMSI valid [%d]", imsi->bValid);
+		}
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -1161,19 +1135,13 @@ EXPORT_API int tel_get_sim_iccid(TelSimIccIdInfo_t *iccid)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-
-		if(api_err == TAPI_API_SUCCESS)
-		{
+		if(api_err == TAPI_API_SUCCESS)	{
 			*iccid = g_array_index(out_param2, TelSimIccIdInfo_t ,0);
 			TAPI_LIB_DEBUG(LEVEL_ALERT, "ICCID length[%d]", iccid->icc_length);
-		}
-		else
-		{
+		} else {
 			TAPI_LIB_DEBUG(LEVEL_ALERT, "api_err[%d]",api_err);
 		}
-	}
-	else
-	{
+	} else 	{
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -1205,10 +1173,11 @@ EXPORT_API int tel_get_sim_mailbox_info(TelSimMailboxNumbers_s *mbox)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*mbox = g_array_index(out_param2, TelSimMailboxNumbers_s ,0);
-		TAPI_LIB_DEBUG(LEVEL_DEBUG, "chps?[%d]",mbox->b_cphs);
-	}
-	else {
+		if(api_err == TAPI_API_SUCCESS) {
+			*mbox = g_array_index(out_param2, TelSimMailboxNumbers_s ,0);
+			TAPI_LIB_DEBUG(LEVEL_DEBUG, "chps?[%d]",mbox->b_cphs);
+		}
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -1240,10 +1209,11 @@ EXPORT_API int tel_get_sim_callforwarding_info(TelSimCallForwarding_s *cf)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*cf = g_array_index(out_param2, TelSimCallForwarding_s ,0);
-		TAPI_LIB_DEBUG(LEVEL_DEBUG, "chps?[%d]",cf->b_cphs);
-	}
-	else {
+		if(api_err == TAPI_API_SUCCESS ) {
+			*cf = g_array_index(out_param2, TelSimCallForwarding_s ,0);
+			TAPI_LIB_DEBUG(LEVEL_DEBUG, "chps?[%d]",cf->b_cphs);
+		}
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -1275,10 +1245,11 @@ EXPORT_API int tel_get_sim_messagewaiting_info(TelSimMessageWaiting_s *mw)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*mw = g_array_index(out_param2, TelSimMessageWaiting_s ,0);
-		TAPI_LIB_DEBUG(LEVEL_DEBUG, "chps?[%d]",mw->b_cphs);
-	}
-	else {
+		if(api_err == TAPI_API_SUCCESS) {
+			*mw = g_array_index(out_param2, TelSimMessageWaiting_s ,0);
+			TAPI_LIB_DEBUG(LEVEL_DEBUG, "chps?[%d]",mw->b_cphs);
+		}
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -1310,10 +1281,11 @@ EXPORT_API int tel_get_sim_cphs_info(TelSimCphsLocalInfo_t *cphs)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*cphs = g_array_index(out_param2, TelSimCphsLocalInfo_t ,0);
-		TAPI_LIB_DEBUG(LEVEL_DEBUG, "chps?[%d]",cphs->b_used);
-	}
-	else {
+		if(api_err == TAPI_API_SUCCESS ) {
+			*cphs = g_array_index(out_param2, TelSimCphsLocalInfo_t ,0);
+			TAPI_LIB_DEBUG(LEVEL_DEBUG, "chps?[%d]",cphs->b_used);
+		}
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -1399,14 +1371,14 @@ EXPORT_API int tel_get_sim_pb_init_info(int *init_completed, TelSimPbList_t *pb_
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*init_completed = g_array_index(out_param2, int, 0);
-		*pb_list = g_array_index(out_param3, TelSimPbList_t, 0);
-		*first_index = g_array_index(out_param4, int, 0);
-
-		TAPI_LIB_DEBUG(LEVEL_ALERT, "PB INIT Completed[%d]", *init_completed);
-		TAPI_LIB_DEBUG(LEVEL_ALERT, "First Valid Index [%d]", *first_index);
-	}
-	else {
+		if(api_err == TAPI_API_SUCCESS ){
+			*init_completed = g_array_index(out_param2, int, 0);
+			*pb_list = g_array_index(out_param3, TelSimPbList_t, 0);
+			*first_index = g_array_index(out_param4, int, 0);
+			TAPI_LIB_DEBUG(LEVEL_ALERT, "PB INIT Completed[%d]", *init_completed);
+			TAPI_LIB_DEBUG(LEVEL_ALERT, "First Valid Index [%d]", *first_index);
+		}
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -1454,13 +1426,11 @@ EXPORT_API int tel_get_sim_pb_count(TelSimPbFileType_t pb_type, int* req_id)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -1508,13 +1478,11 @@ EXPORT_API int tel_get_sim_pb_meta_info(TelSimPbFileType_t pb_type, int* req_id)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -1553,13 +1521,11 @@ EXPORT_API int tel_get_sim_pb_3g_meta_info(int *req_id)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -1613,13 +1579,11 @@ EXPORT_API int tel_read_sim_pb_record(TelSimPbFileType_t pb_type, unsigned short
 			&out_param1, &out_param2, &out_param3, &out_param4);
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -1674,13 +1638,11 @@ EXPORT_API int tel_update_sim_pb_record(const TelSimPbRecordData_t *req_data, in
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -1735,13 +1697,11 @@ EXPORT_API int tel_delete_sim_pb_record(TelSimPbFileType_t pb_type, unsigned sho
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -1785,13 +1745,11 @@ EXPORT_API int tel_req_sap_connection(TelSimSapConnect_t *req_data, int *req_id)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -1830,13 +1788,11 @@ EXPORT_API int tel_req_sap_connection_status(int *req_id)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -1875,13 +1831,11 @@ EXPORT_API int tel_req_sap_transfer_atr(int *req_id)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -1924,13 +1878,11 @@ EXPORT_API int tel_req_sap_transfer_apdu(TelSimSapApduData_t *apdu_data, int *re
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -1976,13 +1928,11 @@ EXPORT_API int tel_req_sap_transport_protocol(TelSimSapProtocol_t protocol, int 
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -2028,13 +1978,11 @@ EXPORT_API int tel_req_sap_power_operation(TelSimSapMsgId_t req_data, int *req_i
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -2073,13 +2021,11 @@ EXPORT_API int tel_req_sap_cardreader_status(int *req_id)
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS) {
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
-		}
-	}
-	else {
+	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
 	}
 
@@ -2136,9 +2082,9 @@ EXPORT_API int tel_req_sim_authentication(TelSimAuthenticationData_t *authentica
 
 	if (TRUE == ret) {
 		api_err = g_array_index(out_param1, int ,0);
-		*req_id = g_array_index(out_param2, int ,0);
-
-		if (api_err != TAPI_API_SUCCESS)
+		if(api_err == TAPI_API_SUCCESS )
+			*req_id = g_array_index(out_param2, int ,0);
+		else
 			*req_id = INVALID_REQUEST_ID;
 	} else {
 		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;

@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
- * Contact: Kyeongchul Kim <kyeongchul.kim@samsung.com>
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,22 +41,12 @@
 #ifndef _ITAPI_GPS_H_
 #define _ITAPI_GPS_H_
 
-/*==================================================================================================
- INCLUDE FILES
- ==================================================================================================*/
 #include <TapiCommon.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/*==================================================================================================
- CONSTANTS
- ==================================================================================================*/
-
-/*==================================================================================================
- MACROS
- ==================================================================================================*/
 #define	TAPI_GPS_FIX_PARAM_TAG_MAX		0x0F
 #define	TAPI_GPS_PARAMETERS_TAG_MAX		0x11
 #define	TAPI_GPS_ADDR_LEN_MAX			16
@@ -69,9 +59,6 @@ extern "C" {
 #define	TAPI_GPS_MAX_SATELLITES			12
 #define	TAPI_GPS_DNS_LEN_MAX			256
 
-/*==================================================================================================
- ENUMS
- ==================================================================================================*/
 typedef enum {
 	TAPI_GPS_FIX_REQ_SESSION_TYPE			= 0x01,
 	TAPI_GPS_FIX_REQ_SESSION_OPERATION,
@@ -504,10 +491,7 @@ typedef enum {
 } tapi_gps_error_code_t;
 
 
-/*****************************************************************************************************/
 /*                                    GPS Chipset on AP - START                                      */
-/*****************************************************************************************************/
-
 //GPS CP MO Location
 
 /* MOLR Type */
@@ -701,15 +685,8 @@ typedef enum {
 	TAPI_GPS_FREQ_AIDING_ENABLE,
 } tapi_gps_freq_aiding_e_type;
 
-
-/*****************************************************************************************************/
 /*                                     GPS Chipset on AP - END                                       */
-/*****************************************************************************************************/
 
-
-/*==================================================================================================
- STRUCTURES AND OTHER TYPEDEFS
- ==================================================================================================*/
 typedef struct {
 	unsigned char NumOfRecord;
 	tapi_gps_fix_req_param_type_t ParamType[TAPI_GPS_FIX_PARAM_TAG_MAX];
@@ -893,10 +870,7 @@ typedef struct {
 	int pd_cmd_err;
 } tapi_gps_pd_cmd_callback_t;
 
-/*****************************************************************************************************/
 /*                                    GPS Chipset on AP - START                                      */
-/*****************************************************************************************************/
-
 typedef struct {
 	unsigned long int qosFlag;
 	unsigned char horizontalAccuracy;
@@ -1047,9 +1021,7 @@ typedef struct {
 }__attribute__ ((packed)) tapi_gps_mtlr_notification_confirm_t; //AGPS - MTLR Notification message - confirm
 
 
-/**********************************************************************/
 //RX part
-/**********************************************************************/
 typedef struct {
 	unsigned short arfcn; //ARFCN of GSM network
 	unsigned char bsic; //Base Station Identity Code
@@ -1332,14 +1304,7 @@ typedef struct {
 	tapi_gps_r_time_int_t r_time_int;
 }__attribute__ ((packed)) tapi_gps_assist_data_noti_t; //APGPS -  GPS Assist Data Message - Notification
 
-
-/*****************************************************************************************************/
 /*                                     GPS Chipset on AP - END                                       */
-/*****************************************************************************************************/
-
-/*==================================================================================================
- FUNCTION PROTOTYPES
- ==================================================================================================*/
 
 /**
  *
@@ -1849,4 +1814,3 @@ int tel_set_gps_frequency_aiding(unsigned char state);
 /**
  * @}
  */
-

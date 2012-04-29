@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
- * Contact: Kyeongchul Kim <kyeongchul.kim@samsung.com>
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,9 +34,6 @@
 #ifndef _TAPI_COMMON_H_
 #define _TAPI_COMMON_H_
 
-/*==================================================================================================
- INCLUDE FILES
- ==================================================================================================*/
 #include <TelDefines.h>
 #include <TelUtility.h>
 #include <TapiEvent.h>
@@ -45,26 +42,10 @@
 extern "C" {
 #endif
 
-/*==================================================================================================
- CONSTANTS
- ==================================================================================================*/
-
-/*==================================================================================================
- MACROS
- ==================================================================================================*/
-
 #define TAPI_EVENT_NAME_MAX_LEN			128		/**< Maximum length of theevent name */
 #define TAPI_REQUEST_NOTI_ID			0xff	/**< Request id for notification message */
 #define TAPI_REQUEST_INVALID_ID			-1		/**< Invalid request id */
 #define TAPI_DBUS_CONNECTION_NAME_LEN_MAX	255
-
-/*==================================================================================================
- ENUMS
- ==================================================================================================*/
-
-/*==================================================================================================
- STRUCTURES AND OTHER TYPEDEFS
- ==================================================================================================*/
 
 /**
  *This structure retrieves current application name registered in DBUS.
@@ -81,10 +62,6 @@ typedef struct {
 	unsigned int TunnelDataLen; /**<Length of tunnel data*/
 	void *pTunnelData; /**<Tunneling information exchanged between OEM and application(Not Null terminated string)*/
 } TelTunnelInfo_t;
-
-/*==================================================================================================
- FUNCTION PROTOTYPES
- ==================================================================================================*/
 
 /**
  * @brief This API shall be used to initialize TAPI library.
@@ -481,7 +458,7 @@ int tel_check_service_ready(int *bStatus);
  * GMainLoop *loop = g_main_loop_new(NULL, false);
  *
  * tel_init();
- * tel_register_app_name("org.tizen.test"); //register application name. the format of name is not fixed
+ * tel_register_app_name("com.samsung.test"); //register application name. the format of name is not fixed
  * g_main_loop_run(loop);
  *
  * @endcode
@@ -612,4 +589,3 @@ int tel_request_tunnel(const TelTunnelInfo_t *pTunnelInfo, int *pRequestId);
 /**
  *  @}
  */
-

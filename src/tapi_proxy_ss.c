@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
- * Contact: Kyeongchul Kim <kyeongchul.kim@samsung.com>
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -597,6 +597,16 @@ EXPORT_API int tel_get_ss_cli_status(TelSsCliType_t CliType, int *req_id)
 	return api_err;
 }
 
+/**********************************************************************************************
+ *
+ * This function is used to send a USSD string and also the User response for a NW intiated USSD.
+ *
+ * @param	pAppMsg[IN] of type TelSsUssdMsgInfo_t which specifies the USSD String,length of the string, format of the string.
+ * @return	enum type TapiResult_t Specifies the API's Return result.
+ * @remark	TelSsUssdMsgInfo_t ->IndType is not used while calling this function, This is used for sending the response.
+ *			Limo standard defines only one structure for Request and response.
+ *
+ ***********************************************************************************************/
 EXPORT_API int tel_send_ss_ussd_request(const TelSsUssdMsgInfo_t *ussd_info, int *req_id)
 {
 	TS_BOOL ret = FALSE;

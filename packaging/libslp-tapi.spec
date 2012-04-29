@@ -1,6 +1,6 @@
 Name:       libslp-tapi
 Summary:    Telephony client API
-Version:    0.5.79
+Version:    0.5.81
 Release:    1
 Group:      System/Libraries
 License:    Apache-2.0

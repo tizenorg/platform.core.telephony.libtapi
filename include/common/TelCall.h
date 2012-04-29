@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
- * Contact: Kyeongchul Kim <kyeongchul.kim@samsung.com>
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,7 @@
 
 #ifndef _TEL_CALL_H_
 #define _TEL_CALL_H_
-/*==================================================================================================
- INCLUDE FILES
- ==================================================================================================*/
+
 #include <TelSs.h>
 #include <TelUtility.h>
 #include <TelDefines.h>
@@ -44,13 +42,6 @@
 extern "C" {
 #endif
 
-/*==================================================================================================
- CONSTANTS
- ==================================================================================================*/
-
-/*==================================================================================================
- MACROS
- ==================================================================================================*/
 #define TAPI_CALLING_NAME_SIZE_MAX      80      /**< The maximum length of the string for calling party name.   */
 #define TAPI_CALL_UUS_DATA_LEN_MAX      131     /**< The Maximum length of the user to user singnalling data string.   */
 #define TAPI_CALL_DISPLAY_RECORD_MAX    32      /**< The maximum length of the string for display record in CDMA   */
@@ -67,11 +58,6 @@ extern "C" {
 
 #define TAPI_INVALID_CONTEXTHANDLE		(HTapiContext)-1
 #define TAPI_CLIENT_SIZE_MAX			30
-
-
-/*==================================================================================================
- ENUMS
- ==================================================================================================*/
 
 /**
  * @enum TelCallCause_t
@@ -629,11 +615,6 @@ typedef enum {
 	TAPI_CALL_TSTATE_DTMF_PENDING,		/**< DTMF Timer */
 } TelTapiCallTimerState;
 
-
-/*==================================================================================================
- STRUCTURES AND OTHER TYPEDEFS
- ==================================================================================================*/
-
 typedef struct {
 	TS_BOOL bRequestedBySAT;			/** This flag is to indicate whether the request has been initiated by SAT or not.Possible values are 0 and 1. This flag should be updated only when originating a setup request */
 	TelCallIdentityMode_t IdentityMode; /**< Sets Calling Line Identity mode. If default value  TAPI_IDENTITY_DEFAULT is set, OEM will set the default value. */
@@ -832,10 +813,6 @@ typedef struct {
 	TelCallActiveLine_t active_line;
 } TelCallAllContext_info_t;
 
-/*==================================================================================================
- FUNCTION PROTOTYPES
- ==================================================================================================*/
-
 #ifdef __cplusplus
 }
 #endif
@@ -844,4 +821,3 @@ typedef struct {
 /**
  * @}
  */
-

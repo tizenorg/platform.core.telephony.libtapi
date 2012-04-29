@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
- * Contact: Kyeongchul Kim <kyeongchul.kim@samsung.com>
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,20 +34,12 @@
 #ifndef _TEL_MISC_H_
 #define _TEL_MISC_H_
 
-/*==================================================================================================
- INCLUDE FILES
- ==================================================================================================*/
-
 #include <sys/time.h>
 #include <TelDefines.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/*==================================================================================================
- MACROS
- ==================================================================================================*/
 
 #define MAX_VERSION_LEN	32    /**< Maximum version length *///sw version, hw version, rf cal date, me sn
 #define FUS_DUMMY_DATA_SIZE 2     /**< Data Size*/
@@ -67,10 +59,6 @@ extern "C" {
 #define TAPI_MISC_MIN_LEN_MAX				10
 #define TAPI_MISC_MDN_LEN_MAX				15
 #define TAPI_MISC_NAME_LEN_MAX				17
-
-/*==================================================================================================
- ENUMS
- ==================================================================================================*/
 
 /**
  * @enum TelMiscApplicationKey_t
@@ -251,11 +239,6 @@ typedef enum {
 	TAPI_MISC_NITZ_NO_TIME_INFO	= 0x05  /**< No time info */
 } tapi_misc_nitz_timeinfo_t;
 
-
-/*==================================================================================================
- STRUCTURES AND OTHER TYPEDEFS
- ==================================================================================================*/
-
 /**
  * Mobile Equipment Version Information
  */
@@ -356,10 +339,6 @@ typedef struct {
 	unsigned long plmn; /**< day of week */
 } tapi_misc_time_zone_info_type;
 
-/*==================================================================================================
- FUNCTION PROTOTYPES
- ==================================================================================================*/
-
 #ifdef __cplusplus
 }
 #endif
@@ -368,4 +347,3 @@ typedef struct {
 /**
  *  @}
  */
-

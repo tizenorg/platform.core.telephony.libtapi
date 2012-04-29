@@ -1,3 +1,19 @@
+libslp-tapi (0.5.81) unstable; urgency=low
+
+  * add defence code in case of api return error
+  * Git: pkgs/l/libslp-tapi
+  * Tag: libslp-tapi_0.5.81
+
+ -- Kyeongchul Kim <kyeongchul.kim@samsung.com>  Wed, 21 Mar 2012 21:52:04 +0900
+
+libslp-tapi (0.5.80) unstable; urgency=low
+
+  * Remove useless comments and update phonebook record data struct 
+  * Git: pkgs/l/libslp-tapi
+  * Tag: libslp-tapi_0.5.80
+
+ -- Kyeongchul Kim <kyeongchul.kim@samsung.com>  Tue, 20 Mar 2012 15:48:23 +0900
+
 libslp-tapi (0.5.79) unstable; urgency=low
 
   * code clean up and update SIM-authentication feature 

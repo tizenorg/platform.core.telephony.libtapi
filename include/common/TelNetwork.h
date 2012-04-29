@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
- * Contact: Kyeongchul Kim <kyeongchul.kim@samsung.com>
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,7 @@
 
 #ifndef _TEL_NETWORK_H_
 #define _TEL_NETWORK_H_
-/*==================================================================================================
-                                         INCLUDE FILES
-==================================================================================================*/
+
 #include <TapiCommon.h>
 
 #ifdef __cplusplus
@@ -42,15 +40,6 @@ extern "C"
 {
 #endif
 
-
-/*==================================================================================================
-                                           CONSTANTS
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                            MACROS
-==================================================================================================*/
 #define TAPI_NETWORK_ORDER_MAX					5		/**< Maximum network order */
 #define TAPI_NETWORK_LIST_MAX					15		/**< Maximum network list */
 #define TAPI_NETWORK_NAME_LEN_MAX				40		/**< Maximum network name or PLMN name length*/
@@ -65,11 +54,6 @@ extern "C"
 #define TAPI_NETWORK_SUBS_SVC_NUM_MAX			6		/**< Maximum number of the Subscriber's services */
 #define TAPI_NETWORK_SUBS_NUM_LEN_MAX			40		/**< Maximum Subscriber Number Length */
 #define TAPI_NETWORK_SUBS_ALPHA_LEN_MAX			16		/**< Maximum Subscriber Name Length */
-
-
-/*==================================================================================================
-                                             ENUMS
-==================================================================================================*/
 
 /**
  * @enum TelNetworkSelectionMode_t
@@ -375,10 +359,6 @@ typedef enum
     TAPI_NETWORK_CDMA_EVDO_ONLY,		/**< 0x03 : EVDO ONLY */
 }TelNetworkCDMAHybridMode_t;
 
-/*==================================================================================================
-                                 STRUCTURES AND OTHER TYPEDEFS
-==================================================================================================*/
-
 /**
  * This structure defines the network time and zone information.
  */
@@ -595,10 +575,6 @@ typedef struct {
 	TelNetworkPrlPrefOnly_t prl_pref_only; /**< CDMA PRL Preferred Only */
 } TelNetworkRoamingMode_t;
 
-/*==================================================================================================
- FUNCTION PROTOTYPES
- ==================================================================================================*/
-
 #ifdef __cplusplus
 }
 #endif
@@ -608,4 +584,3 @@ typedef struct {
 /**
 * @}
 */
-

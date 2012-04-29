@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
- * Contact: Kyeongchul Kim <kyeongchul.kim@samsung.com>
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,9 +34,6 @@
 #ifndef _ITAPI_NETTEXT_H_
 #define _ITAPI_NETTEXT_H_
 
-/*==================================================================================================
-                                         INCLUDE FILES
-==================================================================================================*/
 #include <TapiCommon.h>
 #include <TelNetText.h>
 
@@ -45,18 +42,6 @@ extern "C"
 {
 #endif
 
-/*==================================================================================================
-                                           CONSTANTS
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                            MACROS
-==================================================================================================*/
-
-/*==================================================================================================
-                                             ENUMS
-==================================================================================================*/
 /**
  * @enum TelSmsDeviceStatus
  * This defines the enumeration for device ready value
@@ -66,17 +51,6 @@ typedef enum {
 	TAPI_NETTEXT_DEVICE_NOT_READY = 0x02 /**< Device not ready */
 } TelSmsDeviceStatus;
 
-
-/*==================================================================================================
-                                 STRUCTURES AND OTHER TYPEDEFS
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                     FUNCTION PROTOTYPES
-==================================================================================================*/
-
-/*================================================================================================*/
  /**
  * @brief  This API is used to send an SMS message to the network.  This API interface allows transmitting SMS PDU as defined by
  *		3GPP TS 23.040 (SMS-SUBMIT, SMS-COMMAND) to lower layers. This API allows keeping the dedicated link at lower layers
@@ -1323,4 +1297,3 @@ int tel_set_sms_device_status(void);
 /**
 * @}
 */
-

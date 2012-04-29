@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
- * Contact: Kyeongchul Kim <kyeongchul.kim@samsung.com>
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,9 +31,6 @@
 #ifndef _ITAPI_CFG_H_
 #define _ITAPI_CFG_H_
 
-/*==================================================================================================
- INCLUDE FILES
- ==================================================================================================*/
 #include <TelDefines.h>
 #include <TelErr.h>
 #include <TelUtility.h>
@@ -42,19 +39,8 @@
 extern "C" {
 #endif
 
-/*==================================================================================================
- CONSTANTS
- ==================================================================================================*/
-
-/*==================================================================================================
- MACROS
- ==================================================================================================*/
 #define TAPI_CFG_A_KEY_DIGITS_MAX			26	/**< Maximum length of A-Key Digits */
 #define TAPI_CFG_MSL_CODE_MAX				6	/**< Maximum length of MSL codes */
-
-/*==================================================================================================
- ENUMS
- ==================================================================================================*/
 
 /* DEFAULT_MODE field */
 typedef enum {
@@ -153,10 +139,6 @@ typedef enum {
 	TAPI_CFG_TTY_MODE_ENABLE_FULL /**< 0x01 : TTY mode full */
 } TelCfgTTYMode_t;
 
-/*==================================================================================================
- STRUCTURES AND OTHER TYPEDEFS
- ==================================================================================================*/
-
 /**
  * This structure contains A-Key information.
  */
@@ -197,10 +179,6 @@ typedef struct {
 	unsigned char minute; /**< Minute (0 ~ 59) */
 	unsigned char second; /**< Second (0 ~ 59) */
 } TelCfgReconditionedInfo_t;
-
-/*==================================================================================================
-  FUNCTION PROTOTYPES
-  ==================================================================================================*/
 
 /**
  * @brief  This function is used to set Modem default configuration,
@@ -710,4 +688,3 @@ int tel_set_cfg_tty_mode(TelCfgTTYMode_t Mode);
 /**
  * @}
  */
-

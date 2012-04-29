@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
- * Contact: Kyeongchul Kim <kyeongchul.kim@samsung.com>
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,6 @@
 #ifndef _ITAPI_OMADM_H_
 #define _ITAPI_OMADM_H_
 
-/*==================================================================================================
- INCLUDE FILES
- ==================================================================================================*/
 #include <TelDefines.h>
 #include <TelUtility.h>
 
@@ -42,22 +39,11 @@
 extern "C" {
 #endif
 
-/*==================================================================================================
- CONSTANTS
- ==================================================================================================*/
-
-/*==================================================================================================
- MACROS
- ==================================================================================================*/
 #define TAPI_OMADM_MAX_PRL_SIZE_LEN		17		/** Maximum length of PRL size string */
 #define TAPI_OMADM_MAX_MODEL_NAME_LEN	17		/** Maximum length of Model name string */
 #define TAPI_OMADM_MAX_OEM_NAME_LEN		65		/** Maximum length of OEM name string */
 #define TAPI_OMADM_MAX_SW_VER_LEN		17		/** Maximum length of SW version string */
 #define TAPI_OMADM_MAX_PRL_DATA_LEN		237		/** Maximum length of PRL data */
-
-/*==================================================================================================
- ENUMS
- ==================================================================================================*/
 
 /**
  * @enum TelDataSignalType
@@ -68,10 +54,6 @@ typedef enum {
 	TAPI_OMADM_PRL_WRITE_INVALID_SIZE = 0x01, /**< PRL size is invalid */
 	TAPI_OMADM_PRL_WRITE_FAIL = 0x02 /**< Fail */
 } TelOMADMPRLWriteStatus_t;
-
-/*==================================================================================================
- STRUCTURES AND OTHER TYPEDEFS
- ==================================================================================================*/
 
 /**
  * This structure contains PRL size string.
@@ -110,10 +92,6 @@ typedef struct {
 	unsigned char more; /**< more data or not */
 	unsigned char prl_data[TAPI_OMADM_MAX_PRL_DATA_LEN]; /**< PRL data information */
 } TelOMADMPRLData_t;
-
-/*==================================================================================================
- FUNCTION PROTOTYPES
- ==================================================================================================*/
 
 /**
  * @brief This function requests PRL size.

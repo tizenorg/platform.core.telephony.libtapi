@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
- * Contact: Kyeongchul Kim <kyeongchul.kim@samsung.com>
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,22 +32,12 @@
 #ifndef _TEL_DATA_H
 #define _TEL_DATA_H
 
-/*==================================================================================================
- INCLUDE FILES
- ==================================================================================================*/
 #include <TelDefines.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/*==================================================================================================
- CONSTANTS
- ==================================================================================================*/
-
-/*==================================================================================================
- MACROS
- ==================================================================================================*/
 #define TAPI_DATA_MAX_DIAL_NUM_LEN				32		/** Maximum length of dial number */
 #define TAPI_DATA_MIP_CONNECT_SUCCESS			0xFF	/** For Sprint */
 #define TAPI_DATA_MAX_USER_NAI_LEN				72		/** Maximum length of user NAI */
@@ -56,10 +46,6 @@ extern "C" {
 #define TAPI_DATA_MAX_PKT_DATA_ORIGINSTRING_LEN	16		/** Maximum length of Packet data origin string */
 #define TAPI_DATA_MAX_PAP_USER_ID_LEN			64		/** Maximum length of Packet PAP user ID */
 #define TAPI_DATA_MAX_PAP_USER_PASSWORD_LEN		14		/** Maximum length of Packet PAP password */
-
-/*==================================================================================================
- ENUMS
- ==================================================================================================*/
 
 typedef enum {
 	TAPI_DATA_NO_ERR = 0x00, /**< There is no error for any data operation. */
@@ -89,6 +75,16 @@ typedef enum {
 	TAPI_DATA_SIGNAL_STATUS_OFF = 0x00, /**< Signal Status Off */
 	TAPI_DATA_SIGNAL_STATUS_ON = 0x01   /**< Signal Status On */
 } TelDataSignalStatus_t;
+
+/**
+ * @enum TelDataDormantStatus_t
+ * This enumeration defines Status of Dormant Mode.
+ */
+typedef enum {
+	TAPI_DATA_DORMANT_STATUS_DISABLE = 0x00, /**< Dormant Mode Disabled */
+	TAPI_DATA_DORMANT_STATUS_ENABLE = 0x01, /**< Dormant Mode Enabled */
+	TAPI_DATA_DORMANT_STATUS_3G_DATA_ACTIVE = 0x02 /**< 3G Data Call Activated */
+} TelDataDormantStatus_t;
 
 typedef enum {
 	TAPI_DATA_TE2_TYPE_UART = 0x00,
@@ -232,11 +228,6 @@ typedef enum {
 	TAPI_DATA_CALL_TYPE_HSPD = 0x02
 } TelDataPacketDataCallType_t;
 
-
-/*==================================================================================================
- STRUCTURES AND OTHER TYPEDEFS
- ==================================================================================================*/
-
 /**
  * This structure contains Data pin control information.
  *
@@ -307,10 +298,6 @@ typedef struct {
 }TelDataPacketDataCallConfig_t;
 
 
-/*==================================================================================================
- FUNCTION PROTOTYPES
- ==================================================================================================*/
-
 #ifdef __cplusplus
 }
 #endif
@@ -319,4 +306,3 @@ typedef struct {
 /**
  * @}
  */
-

@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
- * Contact: Kyeongchul Kim <kyeongchul.kim@samsung.com>
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,10 +31,6 @@
 #ifndef _TEL_DISPLAY_H_
 #define _TEL_DISPLAY_H_
 
-/*==================================================================================================
- INCLUDE FILES
- ==================================================================================================*/
-
 #include <TelDefines.h>
 #include <TelUtility.h>
 
@@ -42,20 +38,9 @@
 extern "C" {
 #endif
 
-/*==================================================================================================
- CONSTANTS
- ==================================================================================================*/
-
-/*==================================================================================================
- MACROS
- ==================================================================================================*/
 #define TAPI_MAX_DISP_O2_HOMEZONE_TAG_LEN    	13	/** Maximum number of bytes Home Zone Tag name */
 #define TAPI_MAX_DISP_ROAM_INFO_LEN				49	/* Roaming location information Maximum length is 32 bytes, But, 49 bytes in Modem code*/
 #define TAPI_MAX_DISP_PHONE_FATAL_ERR_MSG_LEN	64	/* Phone fatal error message length */
-
-/*==================================================================================================
- ENUMS
- ==================================================================================================*/
 
 /**
  * This defines the RSSI levels.
@@ -150,10 +135,6 @@ typedef enum {
 	TAPI_DISPLAY_USER_IND_AUTHENTICATION_REQUIRED = 0x04 /**< Authentication Required */
 } tapi_display_user_ind_message_t;
 
-/*==================================================================================================
- STRUCTURES AND OTHER TYPEDEFS
- ==================================================================================================*/
-
 /**
  * This structure defines the display icon information
  */
@@ -208,10 +189,6 @@ typedef struct {
 	unsigned char text[TAPI_MAX_DISP_ROAM_INFO_LEN];
 } tapi_display_ext_roam_info_noti_t;
 
-/*==================================================================================================
- FUNCTION PROTOTYPES
- ==================================================================================================*/
-
 #ifdef __cplusplus
 }
 #endif
@@ -221,4 +198,3 @@ typedef struct {
 /**
  *  @}
  */
-

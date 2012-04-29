@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
- * Contact: Kyeongchul Kim <kyeongchul.kim@samsung.com>
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,6 +46,7 @@ EXPORT_API int tel_select_sat_menu(TelSatMenuSelectionReqInfo_t *pMenuSelect, in
 {
 	int ret_val;
 	TS_BOOL ret = FALSE;
+
 	TAPI_GLIB_INIT_PARAMS();
 
 	if (pMenuSelect == NULL)
@@ -109,6 +110,8 @@ EXPORT_API int tel_download_sat_event(TelSatEventDownloadReqInfo_t *pEventData, 
 	int ret_val;
 	TS_BOOL ret = FALSE;
 
+	return TAPI_API_NOT_SUPPORTED;
+#if 0
 	TAPI_GLIB_INIT_PARAMS();
 
 	if (pEventData == NULL){
@@ -152,6 +155,7 @@ EXPORT_API int tel_download_sat_event(TelSatEventDownloadReqInfo_t *pEventData, 
 			out_param1,out_param2,out_param3,out_param4);
 
 	return ret_val;
+#endif
 }
 
 /**
@@ -169,6 +173,7 @@ EXPORT_API int tel_get_sat_main_menu_info(TelSatSetupMenuInfo_t *pMainMenu)
 	TAPI_LIB_DEBUG(LEVEL_DEBUG, " Get Main Menu Information");
 	int ret_val;
 	TS_BOOL ret = FALSE;
+
 	TAPI_GLIB_INIT_PARAMS();
 
 	if (pMainMenu == NULL)
@@ -215,6 +220,7 @@ EXPORT_API int tel_send_sat_app_exec_result(TelSatAppsRetInfo_t *pAppRetInfo)
 	TAPI_LIB_DEBUG(LEVEL_DEBUG, " tel_send_sat_app_exec_result");
 	int ret_val;
 	TS_BOOL ret = FALSE;
+
 	TAPI_GLIB_INIT_PARAMS();
 
 	if (pAppRetInfo == NULL)
@@ -261,6 +267,10 @@ EXPORT_API int tel_send_ui_display_status(int commandId, TelSatUiDisplayStatusTy
 	TAPI_LIB_DEBUG(LEVEL_DEBUG,"status [%d]\n", status);
 	int ret_val;
 	TS_BOOL ret = FALSE;
+
+	return TAPI_API_NOT_SUPPORTED;
+
+#if 0
 	TAPI_GLIB_INIT_PARAMS();
 
 	if (commandId < 0) {
@@ -295,6 +305,7 @@ EXPORT_API int tel_send_ui_display_status(int commandId, TelSatUiDisplayStatusTy
 			out_param1,out_param2,out_param3,out_param4);
 
 	return ret_val;
+#endif
 }
 
 /**
@@ -317,6 +328,7 @@ EXPORT_API int tel_send_sat_ui_user_confirm(TelSatUiUserConfirmInfo_t *pUserConf
 	int ret_val;
 	TS_BOOL ret = FALSE;
 	TelSatTextInfo_t add_data;
+
 	TAPI_GLIB_INIT_PARAMS();
 
 	if (pUserConfirmData == NULL) {

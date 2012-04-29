@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
- * Contact: Kyeongchul Kim <kyeongchul.kim@samsung.com>
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -229,7 +229,7 @@ void registerevent()
 
 	printf("MISC Event registeration is Done: sub id is %d, api_err is %d\n", subscription_id, api_err);
 
-	tel_register_app_name("org.tizen.appname");
+	tel_register_app_name("com.samsung.appname");
 }
 
 void app_callback(TelTapiEvent_t *event)
@@ -275,7 +275,7 @@ void registerevent()
 	api_err = tel_register_event (TAPI_EVENT_CALL_SETUP_CNF, &subscription_id, (TelAppCallback)&app_callback);
 	printf("MISC Event registeration is Done: sub id is %d, api_err is %d\n",subscription_id,api_err);
 
-	tel_register_app_name("org.tizen.appname");
+	tel_register_app_name("com.samsung.appname");
 
 	// DEREGISTER EVENT
 	api_err = tel_deregister_event (subscription_id);
@@ -384,7 +384,7 @@ void registereventecore()
 	}
 	printf("RegisterEventEcore done with subscription_id:%d and return Status:%d\n", subscription_id, api_err);
 
-	tel_register_app_name("org.tizen.appname");
+	tel_register_app_name("com.samsung.appname");
 }
 
 void app_callback(TelTapiEvent_t *event)
@@ -424,7 +424,7 @@ Void deregistereventecore()
 	api_err = tel_register_event_at_ecore_loop (TAPI_EVENT_CALL_SETUP_CNF, &subscription_id, (TellAppCallback)&app_callback);
 	printf("RegisterEventEcore done with subscription_id:%d and return Status:%d\n", subscription_id, api_err);
 
-	tel_register_app_name("org.tizen.appname");
+	tel_register_app_name("com.samsung.appname");
 
 	// DEREGISTER EVENT
 	api_err = tel_deregister_event_at_ecore_loop (subscription_id);
@@ -459,7 +459,7 @@ Void register_app_name()
 	//register telephony event
 	tel_register_event(...);
 	//...
-	tel_register_app_name("org.tizen.appname");
+	tel_register_app_name("com.samsung.appname");
 	GMainLoop *loop = g_main_loop_new(NULL, false);
 	g_main_loop_run(loop);
 }
@@ -550,7 +550,7 @@ if (api_err != TAPI_API_SUCCESS)
 api_err = tel_register_event (TAPI_EVENT_CALL_CALL_SETUP_CNF, &subscription_id, (TelAppCallback)&app_callback);
 printf("VOICE CALL Event registration is Done: sub id is %d, api_err is %d\n",subscription_id,api_err);
 
-tel_register_app_name("org.tizen.appname");
+tel_register_app_name("com.samsung.appname");
 
 // DEREGISTER EVENT
 api_err = tel_deregister_event (subscription_id);
@@ -1625,7 +1625,7 @@ if (api_err != TAPI_API_SUCCESS)
 api_err = tel_register_event (TAPI_EVENT_SS_WAITING_CNF, &subscription_id, (TelAppCallback)&app_callback);
 printf("SS Event registration is Done: sub id is %d, api_err is %d\n",subscription_id,api_err);
 
-tel_register_app_name("org.tizen.appname");
+tel_register_app_name("com.samsung.appname");
 
 // DEREGISTER EVENT
 api_err = tel_deregister_event(subscription_id);
@@ -2698,7 +2698,7 @@ if (api_err != TAPI_API_SUCCESS)
 api_err = tel_register_event(TAPI_EVENT_NETTEXT_SENTSTATUS_CNF, &subscription_id, (TelAppCallback)&app_callback);
 printf("Nettext Class registration is Done: sub id is %d, api_err is %d\n", subscription_id, api_err);
 
-tel_register_app_name("org.tizen.appname");
+tel_register_app_name("com.samsung.appname");
 
 // DEREGISTER EVENT
 api_err = tel_deregister_event(subscription_id);
@@ -4299,7 +4299,7 @@ if (api_err != TAPI_API_SUCCESS)
 api_err = tel_register_event(TAPI_EVENT_NETWORK_GETNWBAND_CNF, &subscription_id, (TelAppCallback)&app_callback);
 printf("Network Event registration is Done: sub id is %d, api_err is %d\n", subscription_id, api_err);
 
-tel_register_app_name("org.tizen.appname");
+tel_register_app_name("com.samsung.appname");
 
 // DEREGISTER EVENT
 api_err = tel_deregister_event (subscription_id);
@@ -7977,7 +7977,7 @@ if (api_err != TAPI_API_SUCCESS)
 api_err = tel_register_event (TAPI_EVENT_SOUND_VOLUMECTRL_CNF, &subscription_id, (TelAppCallback)&app_callback);
 printf("VSOUND Event registration is Done: sub id is %d, api_err is %d\n",subscription_id,api_err);
 
-tel_register_app_name("org.tizen.appname");
+tel_register_app_name("com.samsung.appname");
 
 // DEREGISTER EVENT
 api_err = tel_deregister_event (subscription_id);
@@ -8001,6 +8001,7 @@ This API provides an interface for controlling voice path via application.
 int tel_set_sound_path (tapi_sound_audio_path_t  vc_path, int *pRequestId);
 @endcode
 
+<strong>This API is permitted for Samsung in-house applications only</strong>
 @}
 @defgroup Use_Cases6_3 Volume control
 @ingroup Use_Cases6_SOUND
@@ -8015,6 +8016,7 @@ int     tel_set_sound_volume_info (tapi_sound_volume_control_t vol_control, int 
 int     tel_get_sound_volume_info (tapi_sound_volume_type_t vol_control, int *pRequestId);
 @endcode
 
+<strong>This API is permitted for Samsung in-house applications only</strong>
 @}
 @defgroup Use_Cases6_4 Mic mute control
 @ingroup Use_Cases6_SOUND
@@ -8028,6 +8030,7 @@ This API provides an interface for mute/unmute mic via application.
 int  tel_set_sound_mute_status(tapi_sound_mic_mute_t micmute_set, int * pRequestId);
 @endcode
 
+<strong>This API is permitted for Samsung in-house applications only</strong>
 
 SAMPLE CODE
 @code
@@ -8245,7 +8248,7 @@ if (api_err != TAPI_API_SUCCESS)
 api_err = tel_register_event(TAPI_EVENT_SAT_MENU_SELECTION_CNF, &subscription_id, (TelAppCallback)&app_callback);
 printf("SAT Event registration is Done: sub id is %d, api_err is %d\n",subscription_id,api_err);
 
-tel_register_app_name("org.tizen.appname");
+tel_register_app_name("com.samsung.appname");
 
 // DEREGISTER EVENT
 api_err = tel_deregister_event(subscription_id);
@@ -8436,6 +8439,7 @@ static void app_callback(TelTapiEvent_t *event)
 
 Telephony provides APIs for retreiving SAT Main Menu Information.
 
+<strong>This API is permitted for Samsung in-house applications only</strong>
 
 @code
 int tel_get_sat_main_menu_info(TelSatSetupMenuInfo_t* pMainMenu)
@@ -8479,6 +8483,7 @@ void mainmenuinformation()
 
 This API sends a USIM application toolkit command to the USIM, using the envelope mechanism of USIM application toolkit. (See GSM TS 31.111)
 
+<strong>These APIs are permitted for Samsung in-house applications only</strong>
 
 @code
 int tel_select_sat_menu(TelSatMenuSelectionReqInfo_t* pMenuSelect, int* pRequestId);
@@ -8588,6 +8593,7 @@ static void  SatAppCallback  (TelTapiEvent_t *event)
 
 Telephony provides this API to get the Application execution result.
 
+<strong>This API is permitted for Samsung in-house applications only</strong>
 
 @code
 Int tel_send_sat_app_exec_result(TelSatAppsRetInfo_t* pAppRetInfo);
@@ -8628,6 +8634,7 @@ void sendappexecutionresult()
 
 Send user’s confirmation message to the USIM application
 
+<strong>These APIs are permitted for Samsung in-house applications only</strong>
 
 @code
 int tel_send_sat_ui_display_status(int commandId, TelSatUiDisplayStatusType_t status);
@@ -8710,7 +8717,7 @@ if (api_err != 0)
 api_err = tel_register_event(TAPI_EVENT_PS_PDP_ACT_RSP, &subscription_id , (TelAppCallback)&app_callback);
 printf("Power Event registeration is Done: sub id is %d, api_err is %d\n", subscription_id, api_err);
 
-tel_register_app_name("org.tizen.appname");
+tel_register_app_name("com.samsung.appname");
 
 void app_callback(TelTapiEvent_t *event)
 {
@@ -8966,6 +8973,201 @@ void  ps_app_callback (TelTapiEvent_t *event)
 }
 @endcode
 @}
+@defgroup Use_Cases8_5 DataEnterDormantState
+@ingroup Use_Cases8_GPRS
+@{
+
+
+		<h3 class="pg">DataEnterDormantState</h3>
+This API is used to set the modem’s data channels to the dormant state for power saving when there is no data flowing for certain time.
+
+Precondition:
+@n GPRS session must be started before executing this API.
+
+@code
+int     tel_set_gprs_dormant (int * pRequestID);
+@endcode
+
+<strong>This API is restricted for direct use. Use the Data Network API instead.</strong>
+
+SAMPLE CODE
+@code
+#include <stdio.h>
+#include <TapiCommon.h>
+#include <ITapiPS.h>
+
+void enterdormantstate()
+{
+	int ret_status;
+	int request_id = 0;
+
+	ret_status = TelTapiDataEnterDormantState(&request_id);
+	if (ret_status == TAPI_API_SUCCESS)
+	{
+		printf("/n/ Entered Dormant State successfully \\n");
+	}
+	else
+	{
+		printf("/nerror:%d  \\n", ret_status);
+	}
+}
+//WAIT FOR EVENT HERE
+
+//CALLBACK FUNCTION TO BE USED
+void  ps_app_callback  (TelTapiEvent_t *event)
+{
+	int eventClass;
+	int eventType;
+	int  requestId;
+	int  status;
+	void  *EventData = NULL;
+
+	eventClass = event->EventClass;
+	eventType = event->EventType;
+	requestId = event->RequestId;
+	status = event->Status;
+	EventData = event->pData;
+	printf(" app _callback is called \n");
+
+	switch (eventClass)
+	{
+		case TAPI_EVENT_CLASS_DATA:
+			switch (eventType)
+			{
+				case TAPI_EVENT_PS_DATA_DORMANT_RESP:
+					TelTapiGprsDataDormancy_t resp;
+					memcpy(&resp, psEvent->pData, sizeof(TelTapiGprsDataDormancy_t));
+					printf("TAPI_EVENT_PS_DATA_DORMANT_RESP\n");
+					break;
+			}
+	}
+}
+@endcode
+@}
+@defgroup Use_Cases8_6 SetPortlist
+@ingroup Use_Cases8_GPRS
+@{
+
+
+		<h3 class="pg">SetPortlist</h3>
+This API is used to set white or black port list
+
+@code
+int tel_set_gprs_port_list(int *pRequestID);
+@endcode
+
+<strong>This API is restricted for direct use. Use the Data Network API instead.</strong>
+
+SAMPLE CODE
+@code
+#include <stdio.h>
+#include <TapiCommon.h>
+#include <ITapiPS.h>
+
+void setportlist()
+{
+	int ret_val;
+	int requestId = 0;
+	tapi_gprs_pdp_port_list_setting_info_t test;
+
+	memset(&test, 0, sizeof(tapi_gprs_pdp_port_list_setting_info_t));
+	test.tcp_list.type = TAPI_GPRS_PORT_LIST_NOT_USE;
+	test.tcp_list.len = 1;
+	test.tcp_list.list[0] = 1004;
+	test.udp_list.type = TAPI_GPRS_PORT_LIST_NOT_USE;
+	test.udp_list.len = 1;
+	test.udp_list.list[i] = 1111;
+
+	ret_val = tel_set_gprs_port_list(&test, &requestId);
+}
+//CALLBACK FUNCTION TO BE USED
+void  ps_app_callback  (TelTapiEvent_t *event)
+{
+	int eventClass;
+	int eventType;
+	int requestId;
+	int status;
+	void *EventData = NULL;
+
+	eventClass = event->EventClass;
+	eventType = event->EventType;
+	requestId = event->RequestId;
+	status = event->Status;
+	EventData = event->pData;
+	printf(" app _callback is called \n");
+
+	switch (eventClass)
+	{
+		case TAPI_EVENT_CLASS_DATA:
+			switch (eventType)
+			{
+				case TAPI_EVENT_PS_DATA_DORMANT_RESP:
+					printf("TAPI_EVENT_PS_DATA_DORMANT_RESP\n");
+					break;
+			}
+	}
+}
+@endcode
+@}
+@defgroup Use_Cases8_7 GetPortlist
+@ingroup Use_Cases8_GPRS
+@{
+
+
+		<h3 class="pg">GetPortlist</h3>
+This function is used to get white or black port list from modem
+
+@code
+int tel_get_gprs_port_list(int *pRequestID);
+@endcode
+
+<strong>This API is restricted for direct use. Use the Data Network API instead.</strong>
+
+SAMPLE CODE
+@code
+#include <stdio.h>
+#include <TapiCommon.h>
+#include <ITapiPS.h>
+
+Void getportlist()
+{
+	int ret_val;
+	int requestId = 0;
+	ret_val = tel_get_gprs_port_list(&requestId);
+}
+
+//CALLBACK FUNCTION TO BE USED
+void  ps_app_callback  (TelTapiEvent_t *event)
+{
+	int eventClass;
+	int eventType;
+	int requestId;
+	int status;
+	void *EventData = NULL;
+
+	eventClass = event->EventClass;
+	eventType = event->EventType;
+	requestId = event->RequestId;
+	status = event->Status;
+	EventData = event->pData;
+	printf(" app _callback is called \n");
+
+	switch (eventClass)
+	{
+		case TAPI_EVENT_CLASS_DATA:
+			switch (eventType)
+			{
+				case TAPI_EVENT_PS_DATA_DORMANT_RESP:
+					tapi_gprs_pdp_port_list_setting_info_t *info;
+					memcpy(info, psEvent->pData, sizeof(tapi_gprs_pdp_port_list_setting_info_t));
+					printf("TAPI_EVENT_PS_DATA_DORMANT_RESP\n");
+					break;
+			}
+	}
+}
+@endcode
+@}
+
 @defgroup Appendixes1 Appendix A. Sample Codes
 @ingroup Appendix
 @{

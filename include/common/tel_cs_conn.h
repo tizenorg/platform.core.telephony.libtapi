@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
- * Contact: Kyeongchul Kim <kyeongchul.kim@samsung.com>
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,19 +21,11 @@
 #ifndef _TEL_CS_CONN_H_
 #define _TEL_CS_CONN_H_
 
-/*==================================================================================================
- INCLUDE FILES
- ==================================================================================================*/
-
 #include <TapiCommon.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/*==================================================================================================
- CONSTANTS
- ==================================================================================================*/
 
 #define TAPI_CS_TYPE_ASYNC					(0 << 24)
 #define TAPI_CS_TYPE_SYNC					(1 << 24)
@@ -196,8 +188,12 @@ extern "C" {
 #define	TAPI_CS_SIMATK_SEND_APP_EXEC_RESULT			(TAPI_EVENT_SAT_CNF_MAX + 4)
 
 // GPRS Service
+#define	TAPI_CS_GPRS_EVENT_MAX				TAPI_EVENT_PS_PDP_GET_PORTLIST_RSP
 #define	TAPI_CS_GPRS_STARTNETWORK			TAPI_EVENT_PS_PDP_ACT_RSP
 #define	TAPI_CS_GPRS_PDP_DEACTIVATION_SET	TAPI_EVENT_PS_PDP_DEACT_RSP
+#define	TAPI_CS_GPRS_DATA_DORMANT			TAPI_EVENT_PS_DATA_DORMANT_RESP
+#define	TAPI_CS_GPRS_PORT_LIST_SET			TAPI_EVENT_PS_PDP_SET_PORTLIST_RSP
+#define	TAPI_CS_GPRS_PORT_LIST_GET			TAPI_EVENT_PS_PDP_GET_PORTLIST_RSP
 #define	TAPI_CS_GPRS_BTDUN_PINCTRL_GET		(TAPI_EVENT_PS_CNF_MAX + 1)
 
 // Sound Service
@@ -330,25 +326,8 @@ extern "C" {
 #define TAPI_CS_FACTORY_OMISSION_AVOIDANCE_SET	(TAPI_CS_INTERNAL|(TAPI_EVENT_FACTORY_OMISSION_AVOIDANCE_SET_CNF))
 #define TAPI_CS_FACTORY_OMISSION_AVOIDANCE_GET	(TAPI_CS_INTERNAL|(TAPI_EVENT_FACTORY_OMISSION_AVOIDANCE_GET_CNF))
 
-/*==================================================================================================
- MACROS
- ==================================================================================================*/
-
-/*==================================================================================================
- ENUMS
- ==================================================================================================*/
-
-/*==================================================================================================
- STRUCTURES AND OTHER TYPEDEFS
- ==================================================================================================*/
-
-/*==================================================================================================
- FUNCTION PROTOTYPES
- ==================================================================================================*/
-
 #ifdef __cplusplus
 }
 #endif
 
 #endif /*_TEL_CS_CONN_H_ */
-

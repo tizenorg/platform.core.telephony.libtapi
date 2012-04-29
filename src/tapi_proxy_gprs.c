@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
- * Contact: Kyeongchul Kim <kyeongchul.kim@samsung.com>
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -234,6 +234,165 @@ EXPORT_API int tel_control_gprs_btdun_pin(tapi_ps_btdun_pincontrol pincontrol, i
 		TAPI_GLIB_FREE_PARAMS(in_param1,in_param2,in_param3,in_param4,
 				out_param1,out_param2,out_param3,out_param4);
 	}
+
+	return ret_val;
+}
+
+/**
+ * This function is used to set white or black port list to the modem
+ *
+ * @return		TAPI_API_SUCCESS on success and one of the enum types of  TapiResult_t on failure
+ * @param[in]
+ * @remark
+ *
+ */
+EXPORT_API int tel_set_gprs_port_list(tapi_gprs_pdp_port_list_setting_info_t *info, int *pRequestID)
+{
+	TS_BOOL ret;
+	int ret_val;
+
+	TAPI_LIB_DEBUG(LEVEL_DEBUG,"Func Entrance ");
+
+	TAPI_RETURN_VAL_IF_FAIL((pRequestID&&info) , TAPI_API_INVALID_PTR);
+
+	if (conn_name.length_of_name == 0) {
+		TAPI_LIB_DEBUG(LEVEL_ERR, "No dbus connection name");
+		return TAPI_API_OPERATION_FAILED;
+	}
+
+	if (info->tcp_list.len == 0 && info->udp_list.len == 0) {
+		return TAPI_API_INVALID_DATA_LEN;
+	}
+
+	if (((info->tcp_list.type >= TAPI_GPRS_PORT_LIST_NOT_USE) && (info->tcp_list.type <= TAPI_GPRS_PORT_LIST_BLACK))
+			&& ((info->udp_list.type >= TAPI_GPRS_PORT_LIST_NOT_USE) && (info->udp_list.type <= TAPI_GPRS_PORT_LIST_BLACK))) {
+		TAPI_GLIB_INIT_PARAMS();
+
+		TAPI_RET_ERR_NUM_IF_FAIL(tapi_check_dbus_status(), TAPI_API_SYSTEM_RPC_LINK_NOT_EST);
+
+		TAPI_GLIB_ALLOC_PARAMS(in_param1,in_param2,in_param3,in_param4,
+				out_param1,out_param2,out_param3,out_param4);
+
+		g_array_append_vals(in_param1, info, sizeof(tapi_gprs_pdp_port_list_setting_info_t));
+		g_array_append_vals(in_param4, &conn_name, sizeof(tapi_dbus_connection_name));
+
+		ret = tapi_send_request(TAPI_CS_SERVICE_GPRS, TAPI_CS_GPRS_PORT_LIST_SET, in_param1, in_param2, in_param3,
+				in_param4, &out_param1, &out_param2, &out_param3, &out_param4);
+
+		if (ret) {
+			ret_val = g_array_index(out_param1, int, 0);
+			*pRequestID = g_array_index(out_param2, int, 0);
+		}
+		else {
+			ret_val = TAPI_API_SYSTEM_RPC_LINK_DOWN;
+			TAPI_LIB_DEBUG(LEVEL_DEBUG,"Proxy error =%d ",ret_val);
+		}
+
+		TAPI_GLIB_FREE_PARAMS(in_param1,in_param2,in_param3,in_param4,
+				out_param1,out_param2,out_param3,out_param4);
+	}
+	else {
+		ret_val = TAPI_API_INVALID_INPUT;
+		TAPI_LIB_DEBUG(LEVEL_DEBUG,"Invalid PTR  =%d ",ret_val);
+	}
+
+	return ret_val;
+}
+
+/**
+ * This function is used to get white or black port list from modem
+ *
+ * @return		TAPI_API_SUCCESS on success and one of the enum types of  TapiResult_t on failure
+ * @param[in]
+ * @remark
+ *
+ */
+EXPORT_API int tel_get_gprs_port_list(int *pRequestID)
+{
+	TS_BOOL ret;
+	int ret_val;
+
+	TAPI_LIB_DEBUG(LEVEL_DEBUG,"Func Entrance ");
+
+	TAPI_RETURN_VAL_IF_FAIL(pRequestID , TAPI_API_INVALID_PTR);
+
+	if (conn_name.length_of_name == 0) {
+		TAPI_LIB_DEBUG(LEVEL_ERR, "No dbus connection name");
+		return TAPI_API_OPERATION_FAILED;
+	}
+	TAPI_GLIB_INIT_PARAMS();
+
+	TAPI_RET_ERR_NUM_IF_FAIL(tapi_check_dbus_status(), TAPI_API_SYSTEM_RPC_LINK_NOT_EST);
+
+	TAPI_GLIB_ALLOC_PARAMS(in_param1,in_param2,in_param3,in_param4,
+			out_param1,out_param2,out_param3,out_param4);
+
+	g_array_append_vals(in_param4, &conn_name, sizeof(tapi_dbus_connection_name));
+
+	ret = tapi_send_request(TAPI_CS_SERVICE_GPRS, TAPI_CS_GPRS_PORT_LIST_GET, in_param1, in_param2, in_param3,
+			in_param4, &out_param1, &out_param2, &out_param3, &out_param4);
+
+	if (ret) {
+		ret_val = g_array_index(out_param1, int, 0);
+		*pRequestID = g_array_index(out_param2, int, 0);
+	}
+	else {
+		ret_val = TAPI_API_SYSTEM_RPC_LINK_DOWN;
+
+		TAPI_LIB_DEBUG(LEVEL_DEBUG,"Proxy error =%d ",ret_val);
+	}
+
+	TAPI_GLIB_FREE_PARAMS(in_param1,in_param2,in_param3,in_param4,
+			out_param1,out_param2,out_param3,out_param4);
+
+	return ret_val;
+}
+
+/**
+ * This function is used to send modem data channels to dormant state for power saving when there is no data flowing for certain time
+ *
+ * @return		TAPI_API_SUCCESS on success and one of the enum types of  TapiResult_t on failure
+ * @param[in]
+ * @remark
+ *
+ */
+EXPORT_API int tel_set_gprs_dormant(int *pRequestID)
+{
+	TS_BOOL ret;
+	int ret_val;
+
+	TAPI_LIB_DEBUG(LEVEL_DEBUG,"Func Entrance ");
+
+	TAPI_RETURN_VAL_IF_FAIL(pRequestID , TAPI_API_INVALID_PTR);
+
+	if (conn_name.length_of_name == 0) {
+		TAPI_LIB_DEBUG(LEVEL_ERR, "No dbus connection name");
+		return TAPI_API_OPERATION_FAILED;
+	}
+	TAPI_GLIB_INIT_PARAMS();
+
+	TAPI_RET_ERR_NUM_IF_FAIL(tapi_check_dbus_status(), TAPI_API_SYSTEM_RPC_LINK_NOT_EST);
+
+	TAPI_GLIB_ALLOC_PARAMS(in_param1,in_param2,in_param3,in_param4,
+			out_param1,out_param2,out_param3,out_param4);
+
+	g_array_append_vals(in_param4, &conn_name, sizeof(tapi_dbus_connection_name));
+
+	ret = tapi_send_request(TAPI_CS_SERVICE_GPRS, TAPI_CS_GPRS_DATA_DORMANT, in_param1, in_param2, in_param3,
+			in_param4, &out_param1, &out_param2, &out_param3, &out_param4);
+
+	if (ret) {
+		ret_val = g_array_index(out_param1, int, 0);
+		*pRequestID = g_array_index(out_param2, int, 0);
+	}
+	else {
+		ret_val = TAPI_API_SYSTEM_RPC_LINK_DOWN;
+
+		TAPI_LIB_DEBUG(LEVEL_DEBUG,"Proxy error =%d ",ret_val);
+	}
+
+	TAPI_GLIB_FREE_PARAMS(in_param1,in_param2,in_param3,in_param4,
+			out_param1,out_param2,out_param3,out_param4);
 
 	return ret_val;
 }

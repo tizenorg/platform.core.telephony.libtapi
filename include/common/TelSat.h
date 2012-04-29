@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
  *
- * Contact: Kyeongchul Kim <kyeongchul.kim@samsung.com>
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,9 +35,6 @@
 #ifndef _TEL_SAT_H_
 #define _TEL_SAT_H_
 
-/*==================================================================================================
-                                         INCLUDE FILES
-==================================================================================================*/
 #include <TelDefines.h>
 #include <TelCall.h>
 #include <TelSs.h>
@@ -50,16 +47,6 @@ extern "C"
 {
 #endif
 
-
-/*==================================================================================================
-                                           CONSTANTS
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                            MACROS
-==================================================================================================*/
-
 #define TAPI_SAT_DEF_TITLE_LEN_MAX			50 /**< max length for Menu Title */
 #define TAPI_SAT_DEF_ITEM_STR_LEN_MAX		50 /**< max length for Menu Item  */
 #define TAPI_SAT_DEF_TEXT_STRING_LEN_MAX	500 /**< max length for Text String  */
@@ -70,13 +57,7 @@ extern "C"
 #define TAPI_SAT_DEF_SS_LEN_MAX             250
 #define TAPI_SAT_DEF_USSD_LEN_MAX           250
 
-
-/*==================================================================================================
-                                             ENUMS
-==================================================================================================*/
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony UI USER CONFIRM TYPE
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * @enum TelSatUiUserConfirmType_t
  * This enumeration defines the UI User Confirm Type.
@@ -90,10 +71,7 @@ typedef enum
 	TAPI_SAT_USER_CONFIRM_TIMEOUT,					/**<This enum informs that user did not respond */
 }TelSatUiUserConfirmType_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony UI INKEY TYPE
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * @enum TelSatUiInkeyYesNoCaseType_t
  * This enumeration defines the UI Inkey Type Yes or No.
@@ -104,10 +82,7 @@ typedef enum
 	TAPI_SAT_INKEY_CONFIRM_YES				= 0x01,			/**<Yes*/
 }TelSatUiInkeyYesNoCaseType_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony UI DISPLAY STATUS
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * @enum TelSatUiDisplayStatusType_t
  * This enumeration defines the UI Display Status.
@@ -118,10 +93,7 @@ typedef enum
 	TAPI_SAT_DISPLAY_FAIL					= 0x01,					/**<This enum informs  UI display failure*/
 }TelSatUiDisplayStatusType_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	TELEPHONY REFRESH APPLICATION TYPE
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * @enum TelSatRefreshAppType_t
  * This enumeration defines the Refresh Application Type.
@@ -134,10 +106,7 @@ typedef enum
 	TAPI_SAT_REFRESH_MAX,							/**<Maximum Enumeration Value*/
 }TelSatRefreshAppType_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony COMMAND PERFORMED RESULT
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * @enum TelSatCommandPerformResultType_t
  * This enumeration defines the Result of Proactive Command execution.
@@ -149,9 +118,7 @@ typedef enum
 	TAPI_SAT_CMD_PERFORM_MAX,					/**<Maximum Enumeration Value*/
 }TelSatCommandPerformResultType_t;
 
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony CALL CONTROL TYPE
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * @enum TelSatCallCtrlType_t
  * This enumeration defines Call Control Type.
@@ -165,13 +132,7 @@ typedef enum
 	TAPI_SAT_CALL_CNF_MAX,				/**<Maximum Enumeration Value*/
 }TelSatCallCtrlType_t;
 
-
-/*==================================================================================================
-                                 STRUCTURES AND OTHER TYPEDEFS
-==================================================================================================*/
-///////////////////////////////////////////////////////////////////////////////////////////
 //	SAT UI USER CONFIRMATION INFO
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the user confirmation data.
  */
@@ -184,9 +145,7 @@ typedef struct
 	int							dataLen;				/**<Additional Data Length*/
 }TelSatUiUserConfirmInfo_t;
 
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony TEXT INFO
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the character data for sat engine data structure.
  */
@@ -196,10 +155,7 @@ typedef struct
 	unsigned char		string[TAPI_SAT_DEF_TEXT_STRING_LEN_MAX+1];		/**<character data*/
 }TelSatTextInfo_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony MAIN MENU TITLE INFO
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the main menu title to check sat menu.
  */
@@ -209,9 +165,7 @@ typedef struct
 	TelSatTextInfo_t	mainMenuTitle;			/**<main menu title data*/
 }TelSatMainMenuTitleInfo_t;
 
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony DISPLAY TEXT DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the display text proactive command for sat ui.
  */
@@ -225,9 +179,7 @@ typedef struct
 	TelSatIconIdentifierInfo_t	iconId;						/**< Icon Identifier */
 }TelSatDisplayTextInd_t;
 
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony INKEY DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the get inkey proactive command data for sat ui.
  */
@@ -243,10 +195,7 @@ typedef struct
 	TelSatIconIdentifierInfo_t		iconId;					/**<Icon Identifier*/
 }TelSatGetInkeyInd_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony GET INPUT DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the get input proactive command data for sat ui.
  */
@@ -263,10 +212,7 @@ typedef struct
 	TelSatIconIdentifierInfo_t		iconId;					/**<Icon Identifier*/
 }TelSatGetInputInd_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony PLAY TONE DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the play tone proactive command data for application.
  */
@@ -279,10 +225,7 @@ typedef struct
 	TelSatIconIdentifierInfo_t	iconId;		/**<Icon Identifier*/
 }TelSatPlayToneInd_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony SEND SMS DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the send sms proactive command data for sat ui.
  */
@@ -293,10 +236,7 @@ typedef struct
 	TelSatIconIdentifierInfo_t	iconId;			/**<Icon Identifier*/
 }TelSatSendSmsIndUiInfo_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony  SEND SS DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the send ss proactive command data for sat ui.
  */
@@ -307,10 +247,7 @@ typedef struct
 	TelSatIconIdentifierInfo_t	iconId;			/**<Icon Identifier*/
 } TelSatSendSsIndUiInfo_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony SEND USSD DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the send ussd proactive command data for sat ui.
  */
@@ -321,10 +258,7 @@ typedef struct
 	TelSatIconIdentifierInfo_t	iconId;			/**<Icon Identifier*/
 }TelSatSendUssdIndUiInfo_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony SEND DTMF DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the send dtmf proactive command data for sat ui.
  */
@@ -335,10 +269,7 @@ typedef struct
 	TelSatIconIdentifierInfo_t	iconId;			/**<Icon Identifier*/
 }TelSatSendDtmfIndUiInfo_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony LAUNCH BROWSER  DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the launch browser proactive command data for sat ui.
  */
@@ -349,10 +280,7 @@ typedef struct
 	TelSatIconIdentifierInfo_t	iconId;			/**<Icon Identifier*/
 }TelSatLaunchBrowserIndUiInfo_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony SETUP CALL DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the setup call proactive command data for sat ui.
  */
@@ -363,10 +291,7 @@ typedef struct
 	TelSatIconIdentifierInfo_t	iconId;			/**<Icon Identifier*/
 } TelSatSetupCallIndUiInfo_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony MENU ITEM DATA FOR SETUP MENU
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the menu item info for setup menu.
  */
@@ -376,9 +301,7 @@ typedef struct
 	char itemId;											/**<identifies the item on the menu that user selected*/
 }TelSatMenuInfo_t;
 
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony SETUP MENU INFO
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the sat main menu info.
  */
@@ -395,10 +318,7 @@ typedef struct
 	TelSatIconIdentifierListInfo_t iconIdList;	/**<List of Icon Identifiers*/
 }TelSatSetupMenuInfo_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony SELECT ITEM DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the select item proactive command data for sat ui.
  */
@@ -415,11 +335,7 @@ typedef struct
 
 }TelSatSelectItemInd_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony IDLE MODE TEXT DATA
-///////////////////////////////////////////////////////////////////////////////////////////
-
 /**
  * This structure defines the setup idle mode text proactive command for idle application.
  */
@@ -430,10 +346,7 @@ typedef struct
 	TelSatIconIdentifierInfo_t	iconId;
 } TelSatSetupIdleModeTextInd_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony REFRESH DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the refresh proactive command data for sat ui.
  */
@@ -443,11 +356,7 @@ typedef struct
 	TelSatCmdQualiRefresh_t		refreshType;		/**<refresh mode*/
 }TelSatRefreshIndUiInfo_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony REFRESH DATA
-///////////////////////////////////////////////////////////////////////////////////////////
-
 /**
  * This structure defines the refresh proactive command data for applications which are concerned with files resident on USIM .
  */
@@ -460,10 +369,7 @@ typedef struct
 	TelSimFileID_t				fileId[TAPI_SAT_REFRESH_FILE_LIST];		/**<refresh file identifier*/
 }TelSatRefreshInd_t;
 
-
-//////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony END PROACTIVE COMMAND INFO
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the data objects to indicate to sat ui, the end of execution of a specific proactive command by other application.
  */
@@ -474,9 +380,7 @@ typedef struct
 	TelSatCommandPerformResultType_t		result;				/**<result of command execution by application*/
 }TelSatProactiveCmdEndIndInfo_t;
 
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony SEND SMS DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the send sms proactive command data for sms application.
  */
@@ -488,9 +392,7 @@ typedef struct
 	TelSatSmsTpduInfo_t	smsTpdu;				/**<SMS TPDU data*/
 } TelSatSendSmsIndSmsData_t;
 
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony SEND SS DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the send ss proactive command data for ss application.
  */
@@ -501,10 +403,7 @@ typedef struct
 	unsigned char		ssString[TAPI_SAT_DEF_SS_LEN_MAX+1];
 }TelSatSendSsIndSsData_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony USSD DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the send ussd proactive command data for ussd application.
  */
@@ -516,9 +415,7 @@ typedef struct
 	unsigned char		ussdString[TAPI_SAT_DEF_USSD_LEN_MAX+1];
 }TelSatSendUssdIndUssdData_t;
 
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony SEND DTMF DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the send dtmf proactive command data for dtmf application.
  */
@@ -529,10 +426,7 @@ typedef struct
 	TelSatTextInfo_t		dtmfString;			/**<dtmf string data*/
 }TelSatSendDtmfIndDtmfData_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony SETUP CALL  DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the setup call proactive command data for call application.
  */
@@ -546,10 +440,7 @@ typedef struct
 	TelSatIconIdentifierInfo_t		iconId;			/**<icon identifier for call application*/
 }TelSatSetupCallIndCallData_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony LAUNCH BROWSER DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the launch browser proactive command data for browser application.
  */
@@ -561,27 +452,20 @@ typedef struct
 	TelSatBrowserIdentityType_t	IdentityType;	/**<Browser Identity -default, html, etc*/
 }TelSatLaunchBrowserIndBrowserData_t;
 
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony PROVIDE LOCAL INFO DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the provide local info proactive command data for application.
  */
-
 typedef struct
 {
 	int commandId;										/**<Proactive Command Number sent by USIM*/
 	TelSatCmdQualiProvideLocalInfo_t localInfoType;		/**<Provide Local Information Type*/
 }TelSatProvideLocalInfoInd_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony LANGUAGE NOTIFICATION DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the language notification proactive command data for application.
  */
-
 typedef struct
 {
 	int							commandId;						/**<Proactive Command Number sent by USIM*/
@@ -589,10 +473,7 @@ typedef struct
 	TelSatLanguageInfo_t			language;					/**<language info from USIM application	*/
 }TelSatLanguageNotiInfoInd_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony PLAY TONE RETURN INFO
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the return result data for Play Tone proactive command.
  */
@@ -601,10 +482,7 @@ typedef struct
 	TelSatResultType_t	resp;			/**<result response value*/
 }TelSatSetupMenuRetInfo_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony REFRESH RETURN INFO
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the return result data for refresh proactive command.
  */
@@ -614,11 +492,7 @@ typedef struct
 	TelSatResultType_t		resp;				/**<result response value*/
 }TelSatRefreshRetInfo_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony CALL RETURN INFO
-///////////////////////////////////////////////////////////////////////////////////////////
-
 /**
  * This structure defines the return result data for setup call proactive command.
  */
@@ -636,10 +510,7 @@ typedef struct
 	TelSatTextTypeInfo_t			text;							/**<call control envelope display data*/
 }TelSatCallRetInfo_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony SS RETURN INFO
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the return result data for send ss proactive command.
  */
@@ -655,10 +526,7 @@ typedef struct
 	TelSatResultInfo_t					result2;						/**<call control envelope result value*/
 }TelSatSsRetInfo_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony USSD RETURN INFO
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the return result data for send ussd proactive command.
  */
@@ -677,10 +545,7 @@ typedef struct
 	TelSatTextTypeInfo_t				text2;							/**<cc envelope display data */
 }TelSatUssdRetInfo_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony SMS RETURN INFO
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the return result data for send sms proactive command.
  */
@@ -689,10 +554,7 @@ typedef struct
 	TelSatResultType_t	resp;			/**<result response value*/
 }TelSatSmsRetInfo_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony DTMF RETUEN INFO
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the return result data for send dtmf proactive command.
  */
@@ -701,10 +563,7 @@ typedef struct
 	TelSatResultType_t	resp;			/**<result response value*/
 }TelSatDtmfRetInfo_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony BROWSER RETURN INFO
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the return result data for launch browser proactive command.
  */
@@ -714,10 +573,7 @@ typedef struct
 	TelSatLaunchBrowserProblemType_t    browserProblem;	/**<specific browser problem*/
 }TelSatBrowserRetInfo_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony SETUP IDLE MODE TEXT RETURN INFO
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the return result data for setup idle mode text proactive command.
  */
@@ -726,9 +582,7 @@ typedef struct
 	TelSatResultType_t	resp;			/**<result response value*/
 }TelSatIdleTextRetInfo_t;
 
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony PLAY TONE RETURN INFO
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the return result data for Play Tone proactive command.
  */
@@ -737,9 +591,7 @@ typedef struct
 	TelSatResultType_t	resp;			/**<result response value*/
 }TelSatPlayToneRetInfo_t;
 
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony  PROVIDE LOCAL INFO RETURN INFO
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the return result data for setup idle mode text proactive command.
  */
@@ -755,10 +607,7 @@ typedef struct
 	}u;													/**<	Union*/
 }TelSatProvideLocalRetInfo_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony LANGUAGE NOTI RETURN INFO
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the return result data for setup idle mode text proactive command.
  */
@@ -767,10 +616,7 @@ typedef struct
 		TelSatResultType_t		 resp;				/**<result response value*/
 	}TelSatLanguageNotiRetInfo_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony DISPLAY TEXT RETURN INFO
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the return result data for setup idle mode text proactive command.
  */
@@ -780,9 +626,7 @@ typedef struct
 		TelSatMeProblemType_t	 meProblem;			/**<Me Problem Type */
 	}TelSatDiplayTextRetInfo_t;
 
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony APPLICATIONS RETURN DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the common return result data for applications proactive command.
  */
@@ -808,10 +652,7 @@ typedef struct
 		}appsRet;												/**< common union result value */
 }TelSatAppsRetInfo_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony CALL CONTROL CONFIRM  DATA FOR CALL
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the call control confirm data for call.
  */
@@ -824,10 +665,7 @@ typedef struct
 	TelSatTextInfo_t				ccp2;						/**< Configuration Capability Parameter 2*/
 } TelSatCallCtrlIndCallData_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony CALL CONTROL CONFIRM  DATA FOR SS
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the call control confirm data for ss.
  */
@@ -840,10 +678,7 @@ typedef struct
 	TelSatTextInfo_t				ccp2;						/**< Configuration Capability Parameter 2*/
 } TelSatCallCtrlIndSsData_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony CALL CONTROL CONFIRM  DATA FOR USSD
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the call control confirm data for ussd.
  */
@@ -852,10 +687,7 @@ typedef struct
 	TelSatTextInfo_t		ussdString;			/**< ussd destination address*/
 } TelSatCallCtrlIndUssdData_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony READ FILE REQUEST DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the common call control confirm data.
  */
@@ -874,10 +706,7 @@ typedef struct
 		}u;																/**<   Union*/
 } TelSatCallCtrlIndData_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony MO SMS CONTROL CONFIRMATION DATA
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the mo sms control confirm data.
  */
@@ -890,10 +719,7 @@ typedef struct
 	TelSatTextTypeInfo_t			tpDestAddr;					/**<the TP_Destination_Address */
 } TelSatMoSmCtrlIndData_t;
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
 //	Telephony EVENT LIST INFO
-///////////////////////////////////////////////////////////////////////////////////////////
 /**
  * This structure defines the Event List Info.
  */
@@ -931,11 +757,6 @@ typedef struct
 	} u;																		/**<Union*/
 } TelSatEventDownloadReqInfo_t;
 
-
-/*==================================================================================================
-                                     FUNCTION PROTOTYPES
-==================================================================================================*/
-
 #ifdef __cplusplus
 }
 #endif
@@ -945,4 +766,3 @@ typedef struct
 /**
 * @}
 */
-
