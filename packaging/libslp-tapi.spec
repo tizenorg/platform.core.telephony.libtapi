@@ -1,25 +1,21 @@
-Name:       libslp-tapi
-Summary:    Telephony client API
-Version:    0.5.81
+#sbs-git:slp/pkgs/l/libslp-tapi libslp-tapi 0.1.1
+Name: libslp-tapi
+Summary: Telephony dbus client library
+Version: 0.6.4
 Release:    1
 Group:      System/Libraries
-License:    Apache-2.0
+License:    Apache
 Source0:    libslp-tapi-%{version}.tar.gz
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 BuildRequires:  cmake
-BuildRequires:  pkgconfig(vconf)
 BuildRequires:  pkgconfig(glib-2.0)
-BuildRequires:  pkgconfig(dbus-1)
-BuildRequires:  pkgconfig(gthread-2.0)
+BuildRequires:  pkgconfig(gobject-2.0)
 BuildRequires:  pkgconfig(dlog)
-BuildRequires:  pkgconfig(dbus-glib-1)
 BuildRequires:  pkgconfig(security-server)
 
 %description
 Telephony client API library
-
-
 
 %package devel
 Summary:    Telephony client API (devel)
@@ -41,30 +37,24 @@ cmake . -DCMAKE_INSTALL_PREFIX=%{_prefix}
 make %{?jobs:-j%jobs}
 
 %install
+rm -rf %{buildroot}
 %make_install
 
 rm -rf %{buildroot}/usr/include/telephony/tapi/.gitignore
-
-
 
 %post -p /sbin/ldconfig
 
 %postun -p /sbin/ldconfig
 
 
-
-
-
 %files
+%defattr(-,root,root,-)
+#%doc COPYING
 %{_libdir}/*.so.*
-
+#%{_bindir}/tapitest
 
 %files devel
-%{_includedir}/telephony/common/*.h
-%{_includedir}/telephony/tapi/*.h
-%exclude %{_includedir}/telephony/tapi/tapi-lib-proxy.h
-%exclude %{_includedir}/telephony/common/tel_cs_conn.h
+%defattr(-,root,root,-)
+%{_includedir}/telephony-client/*.h
 %{_libdir}/pkgconfig/*.pc
 %{_libdir}/*.so
-
-

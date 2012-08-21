@@ -3,10 +3,9 @@ exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include
 
-Name: Telephony Server
-Description: Telephony Framework
-Requires: dbus-1 glib-2.0 vconf dbus-glib-1
-Version: 1.80
+Name: TAPI Library
+Description: Telephony DBUS Client
+Requires: glib-2.0 gobject-2.0
+Version: 0.1
 Libs: -L${libdir} -lSLP-tapi
-Cflags: -I${includedir}/telephony/tapi -I${includedir}/telephony/common
-
+Cflags: -I${includedir}/telephony-client

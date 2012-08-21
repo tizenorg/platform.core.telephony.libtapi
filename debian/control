@@ -1,19 +1,17 @@
 Source: libslp-tapi
 Section: libs
 Priority: extra
-Maintainer: Danny Jeongseok Seo <s.seo@samsung.com>
-Uploaders: Danny Jeongseok Seo <s.seo@samsung.com>, Gunwang Jeong <ethan.jeong@samsung.com>, HyunJung Park <junge.park@samsung.com>, kyeongchul.kim <kyeongchul.kim@samsung.com>, Sunghyuk Lee <sunghyuk.lee@samsung.com>, Youngman Park <youngman.park@samsung.com>, Inho Oh <inho48.oh@samsung.com>
+Maintainer: Ja-young Gu <jygu@samsung.com>
+Uploaders: Ja-young Gu <jygu@samsung.com>, kyeongchul.kim <kyeongchul.kim@samsung.com>, Youngman Park <youngman.park@samsung.com>, Inho Oh <inho48.oh@samsung.com>, DongHoo Park <donghoo.park@samsung.com>
 Build-Depends: debhelper (>= 5),
-               libglib2.0-dev, libdbus-1-dev, libdbus-glib-1-dev,
-               libslp-setting-dev, dlog-dev, libsecurity-server-client-dev
+               libglib2.0-dev, dlog-dev, libsecurity-server-client-dev
 Standards-Version: 0.0.0
 
 Package: libslp-tapi-dev
 Section: libs
 Architecture: any
 Depends: libslp-tapi-0 (= ${Source-Version}),
-         libglib2.0-dev, libdbus-1-dev, libdbus-glib-1-dev,
-         libslp-setting-dev, dlog-dev, libsecurity-server-client-dev
+         libglib2.0-dev, dlog-dev, libsecurity-server-client-dev
 Description: telephony client API library (Development)
 
 Package: libslp-tapi-0
