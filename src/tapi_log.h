@@ -34,7 +34,7 @@ __BEGIN_DECLS
 #define msg(fmt,args...)  { RLOG(LOG_INFO, TAPI_LOG_TAG, fmt "\n", ##args); }
 #define dbg(fmt,args...)  { RLOG(LOG_DEBUG, TAPI_LOG_TAG, "<%s:%d> " fmt "\n", __func__, __LINE__, ##args); }
 #define warn(fmt,args...)  { RLOG(LOG_WARN, TAPI_LOG_TAG, "<%s:%d> " fmt "\n", __func__, __LINE__, ##args); }
-#define err(fmt,args...)  { RLOG(LOG_FATAL, TAPI_LOG_TAG, "<%s:%D> " fmt "\n", __func__, __LINE__, ##args); }
+#define err(fmt,args...)  { RLOG(LOG_FATAL, TAPI_LOG_TAG, "<%s:%d> " fmt "\n", __func__, __LINE__, ##args); }
 
 #else
 

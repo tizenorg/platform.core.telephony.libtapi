@@ -846,6 +846,10 @@ typedef enum {
 typedef enum {
 	TAPI_SOUND_EQUALIZATION_MODE_OFF,
 	TAPI_SOUND_EQUALIZATION_MODE_ON,
+	TAPI_SOUND_EQUALIZATION_MODE_FLAG_OFF,
+	TAPI_SOUND_EQUALIZATION_MODE_FLAG_ON,
+	TAPI_SOUND_EQUALIZATION_MODE_SOFT1,
+	TAPI_SOUND_EQUALIZATION_MODE_SOFT2,
 } TelSoundEqualizationMode_t;
 
 typedef enum {
@@ -854,11 +858,11 @@ typedef enum {
 } TelSoundDirection_t;
 
 
-#define MAX_SOUND_EQ_PARAMETER_SIZE 13
+#define MAX_SOUND_EQ_PARAMETER_SIZE 6
 typedef struct {
 	TelSoundEqualizationMode_t mode;
 	TelSoundDirection_t direction;
-	char parameter[MAX_SOUND_EQ_PARAMETER_SIZE];
+	unsigned short parameter[MAX_SOUND_EQ_PARAMETER_SIZE];
 } TelCallSoundEqualization_t;
 
 

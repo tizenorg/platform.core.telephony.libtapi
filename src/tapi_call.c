@@ -940,10 +940,13 @@ EXPORT_API  int tel_set_call_sound_equalization(TapiHandle *handle, TelCallSound
 {
 	struct tapi_resp_data *evt_cb_data = 0;
 	GVariant *param = 0;
+	char *eq_param = 0;
 
 	dbg("Func Entrance ");
 
-	param = g_variant_new("(iis)", eq->mode, eq->direction, eq->parameter);
+	eq_param = (char*)eq->parameter;
+
+	param = g_variant_new("(iis)", eq->mode, eq->direction, eq_param);
 
 	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 

@@ -362,7 +362,7 @@ EXPORT_API int tel_get_sat_main_menu_info(TapiHandle *handle, TelSatSetupMenuInf
 	gchar *title;
 	gint result, command_id, item_cnt;
 	gboolean b_present, b_helpinfo, b_updated;
-	GVariant *items = NULL, *icon_id, *icon_list;
+	GVariant *items = NULL;
 
 	dbg("Func Entrance ");
 
@@ -385,8 +385,8 @@ EXPORT_API int tel_get_sat_main_menu_info(TapiHandle *handle, TelSatSetupMenuInf
 
 	dbg("menu_info type_format(%s)", g_variant_get_type_string(rst));
 
-	g_variant_get(rst, "(iibs@vibb@v@v)", &result, &command_id, &b_present, &title, &items, &item_cnt,
-			&b_helpinfo, &b_updated, &icon_id, &icon_list);
+	g_variant_get(rst, "(iibs@vibb)", &result, &command_id, &b_present, &title, &items, &item_cnt,
+			&b_helpinfo, &b_updated);
 
 	pMainMenu->commandId = command_id;
 	pMainMenu->bIsMainMenuPresent = (b_present ? 1 : 0);

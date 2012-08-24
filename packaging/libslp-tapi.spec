@@ -1,7 +1,7 @@
 #sbs-git:slp/pkgs/l/libslp-tapi libslp-tapi 0.1.1
 Name: libslp-tapi
 Summary: Telephony dbus client library
-Version: 0.6.4
+Version: 0.6.9
 Release:    1
 Group:      System/Libraries
 License:    Apache

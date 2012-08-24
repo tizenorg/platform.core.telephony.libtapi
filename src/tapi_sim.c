@@ -510,7 +510,7 @@ static void on_response_req_sim_authentication(GObject *source_object, GAsyncRes
 		g_variant_get(ak, "ay", &iter);
 		while (g_variant_iter_loop(iter, "y", &rt_i)) {
 			auth_resp.authentication_key[i] = rt_i;
-			dbg("auth_resp.authentication_key[%d]=[0x%2x]", i, auth_resp.authentication_key);
+			dbg("auth_resp.authentication_key[%d]=[0x%02x]", i, auth_resp.authentication_key[i]);
 			i++;
 		}
 		auth_resp.authentication_key_length = i;
@@ -521,7 +521,7 @@ static void on_response_req_sim_authentication(GObject *source_object, GAsyncRes
 		g_variant_get(cp, "ay", &iter);
 		while (g_variant_iter_loop(iter, "y", &rt_i)) {
 			auth_resp.cipher_data[i] = rt_i;
-			dbg("auth_resp.cipher_data[%d]=[0x%2x]", i, auth_resp.cipher_data);
+			dbg("auth_resp.cipher_data[%d]=[0x%02x]", i, auth_resp.cipher_data[i]);
 			i++;
 		}
 		auth_resp.cipher_length = i;
@@ -532,7 +532,7 @@ static void on_response_req_sim_authentication(GObject *source_object, GAsyncRes
 		g_variant_get(it, "ay", &iter);
 		while (g_variant_iter_loop(iter, "y", &rt_i)) {
 			auth_resp.integrity_data[i] = rt_i;
-			dbg("auth_resp.integrity_data[%d]=[0x%2x]", i, auth_resp.integrity_data);
+			dbg("auth_resp.integrity_data[%d]=[0x%02x]", i, auth_resp.integrity_data[i]);
 			i++;
 		}
 		auth_resp.integrity_length = i;
@@ -543,7 +543,7 @@ static void on_response_req_sim_authentication(GObject *source_object, GAsyncRes
 		g_variant_get(resp, "ay", &iter);
 		while (g_variant_iter_loop(iter, "y", &rt_i)) {
 			auth_resp.resp_data[i] = rt_i;
-			dbg("auth_resp.resp_data[%d]=[0x%2x]", i, auth_resp.resp_data);
+			dbg("auth_resp.resp_data[%d]=[0x%02x]", i, auth_resp.resp_data[i]);
 			i++;
 		}
 		auth_resp.resp_length = i;
@@ -802,7 +802,7 @@ static void on_response_req_sim_atr(GObject *source_object, GAsyncResult *res, g
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
 
 	if (dbus_result) {
-		/*	dbg("dbus_result type_format(%s)", g_variant_get_type_string(dbus_result));*/
+		dbg("dbus_result type_format(%s)", g_variant_get_type_string(dbus_result));
 		g_variant_get(dbus_result, "(i@v)", &result, &param_gv);
 		inner_gv = g_variant_get_variant(param_gv);
 

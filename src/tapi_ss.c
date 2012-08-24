@@ -241,6 +241,7 @@ static void on_response_send_ss_ussd_request(GObject *source_object, GAsyncResul
 	GDBusConnection *conn = 0;
 	struct tapi_resp_data *evt_cb_data = user_data;
 	int result = -1;
+	char *tmp_str = 0;
 	TelSsUssdResp_t resp;
 
 	GVariant *dbus_result = 0;
@@ -250,7 +251,13 @@ static void on_response_send_ss_ussd_request(GObject *source_object, GAsyncResul
 	conn = G_DBUS_CONNECTION (source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
 
-	g_variant_get (dbus_result, "(iiiis)",  &result, &resp.Type, &resp.Status, &resp.Length, &resp.szString);
+	g_variant_get (dbus_result, "(iiiis)",  &result, &resp.Type, &resp.Status, &resp.Length, &tmp_str);
+
+
+	if ( !result ) {
+		memcpy( resp.szString, tmp_str, resp.Length );
+		g_free(tmp_str);
+	}
 
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &resp, evt_cb_data->user_data);
@@ -270,11 +277,11 @@ EXPORT_API int tel_set_ss_barring(TapiHandle *handle, TelSsBarringInfo_t *info, 
 	param = g_variant_new("(iis)", info->Class, info->Type, info->szPassword);
 
 	if ( info->Mode == TAPI_SS_CB_MODE_ACTIVATE ) {
-		dbg("[ checke ] barring activate");
+		dbg("[ check ] barring activate");
 		method = "ActivateBarring";
 
 	} else {
-		dbg("[ checke ] barring deactivate");
+		dbg("[ check ] barring deactivate");
 		method = "DeactivateBarring";
 
 	}
@@ -374,7 +381,7 @@ EXPORT_API int tel_set_ss_forward(TapiHandle *handle, const TelSsForwardInfo_t *
 
 		case TAPI_SS_CF_MODE_ENABLE_EV: {
 			dbg("[ check ] forwarding activate");
-			method = "ActivateFowarding";
+			method = "ActivateForwarding";
 		} break;
 
 		case TAPI_SS_CF_MODE_REGISTRATION_EV: {
@@ -455,11 +462,11 @@ EXPORT_API int tel_set_ss_waiting(TapiHandle *handle, const TelSsWaitingInfo_t *
 	param = g_variant_new("(i)", info->Class);
 
 	if ( info->Mode == TAPI_SS_CW_MODE_ACTIVATE ) {
-		dbg("[ checke ] waiting activate");
+		dbg("[ check ] waiting activate");
 		method = "ActivateWaiting";
 
 	} else {
-		dbg("[ checke ] waiting deactivate");
+		dbg("[ check ] waiting deactivate");
 		method = "DeactivateWaiting";
 
 	}

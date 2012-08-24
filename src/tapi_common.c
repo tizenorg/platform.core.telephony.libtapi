@@ -345,12 +345,12 @@ static void on_signal_callback(GDBusConnection *conn, const gchar *name, const g
 			gchar *title;
 			gint command_id, item_cnt;
 			gboolean b_present, b_helpinfo, b_updated;
-			GVariant *items = NULL, *icon_id, *icon_list;
+			GVariant *items = NULL;
 
 			memset(&setup_menu, 0, sizeof(TelSatSetupMenuInfo_t));
 
-			g_variant_get(param, "(ibs@vibb@v@v)", &command_id, &b_present, &title, &items, &item_cnt,
-						&b_helpinfo, &b_updated, &icon_id, &icon_list);
+			g_variant_get(param, "(ibs@vibb)", &command_id, &b_present, &title, &items, &item_cnt,
+						&b_helpinfo, &b_updated);
 
 			setup_menu.commandId = command_id;
 			setup_menu.bIsMainMenuPresent = (b_present ? 1 : 0);
@@ -394,12 +394,11 @@ static void on_signal_callback(GDBusConnection *conn, const gchar *name, const g
 			gchar* text;
 			gint command_id, text_len, duration;
 			gboolean high_priority, user_rsp_required, immediately_rsp;
-			GVariant *icon_id = NULL;
 
 			memset(&display_text, 0, sizeof(TelSatDisplayTextInd_t));
 
-			g_variant_get(param, "(isiibbb@v)", &command_id, &text, &text_len, &duration,
-				&high_priority, &user_rsp_required, &immediately_rsp, &icon_id);
+			g_variant_get(param, "(isiibbb)", &command_id, &text, &text_len, &duration,
+				&high_priority, &user_rsp_required, &immediately_rsp);
 
 			display_text.commandId = command_id;
 			memcpy(display_text.text.string, text, TAPI_SAT_DEF_TEXT_STRING_LEN_MAX+1);
@@ -423,12 +422,12 @@ static void on_signal_callback(GDBusConnection *conn, const gchar *name, const g
 			gboolean help_info ;
 			gchar *selected_text;
 			gint command_id, default_item_id, menu_cnt, text_len =0;
-			GVariant *menu_items, *icon_id, *icon_list;
+			GVariant *menu_items;
 
 			memset(&select_item, 0, sizeof(TelSatSelectItemInd_t));
 
-			g_variant_get(param, "(ibsiii@v@v@v)", &command_id, &help_info, &selected_text,
-				&text_len, &default_item_id, &menu_cnt, &menu_items, &icon_id, &icon_list);
+			g_variant_get(param, "(ibsiii@v)", &command_id, &help_info, &selected_text,
+				&text_len, &default_item_id, &menu_cnt, &menu_items);
 
 			select_item.commandId = command_id;
 			select_item.bIsHelpInfoAvailable = (help_info ? 1 : 0);
@@ -474,12 +473,11 @@ static void on_signal_callback(GDBusConnection *conn, const gchar *name, const g
 			gint text_len, duration;
 			gboolean b_numeric, b_help_info;
 			gchar *text;
-			GVariant *icon_id;
 
 			memset(&get_inkey, 0, sizeof(TelSatGetInkeyInd_t));
 
-			g_variant_get(param, "(iiibbsii@v)", &command_id, &key_type, &input_character_mode,
-				&b_numeric,&b_help_info, &text, &text_len, &duration, &icon_id);
+			g_variant_get(param, "(iiibbsii)", &command_id, &key_type, &input_character_mode,
+				&b_numeric,&b_help_info, &text, &text_len, &duration);
 
 			get_inkey.commandId = command_id;
 			get_inkey.keyType = key_type;
@@ -508,12 +506,11 @@ static void on_signal_callback(GDBusConnection *conn, const gchar *name, const g
 			gint text_len, def_text_len, rsp_len_min, rsp_len_max;
 			gboolean b_numeric, b_help_info, b_echo_input;
 			gchar *text, *def_text;
-			GVariant *icon_id;
 
 			memset(&get_input, 0, sizeof(TelSatGetInputInd_t));
 
-			g_variant_get(param, "(iibbbsiiisi@v)", &command_id, &input_character_mode, &b_numeric, &b_help_info, &b_echo_input,
-				&text, &text_len, &rsp_len_max, &rsp_len_min, &def_text, &def_text_len, &icon_id);
+			g_variant_get(param, "(iibbbsiiisi)", &command_id, &input_character_mode, &b_numeric, &b_help_info, &b_echo_input,
+				&text, &text_len, &rsp_len_max, &rsp_len_min, &def_text, &def_text_len);
 
 			get_input.commandId = command_id;
 			get_input.inputCharMode = input_character_mode;
@@ -548,11 +545,11 @@ static void on_signal_callback(GDBusConnection *conn, const gchar *name, const g
 			gboolean b_packing_required;
 			gint text_len, number_len, tpdu_data_len, tmp_data_len;
 			gchar* text, *dialling_number;
-			GVariant *tpdu_data, *icon_id;
+			GVariant *tpdu_data;
 
 			memset(&send_sms, 0, sizeof(TelSatSendSmsIndSmsData_t));
 
-			g_variant_get(param, "(isi@vbiisii@vi)", &command_id, &text, &text_len, &icon_id, &b_packing_required, &ton, &npi,
+			g_variant_get(param, "(isibiisii@vi)", &command_id, &text, &text_len, &b_packing_required, &ton, &npi,
 						&dialling_number, &number_len, &tpdu_type, &tpdu_data, &tpdu_data_len);
 
 			send_sms.commandId = command_id;
