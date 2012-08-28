@@ -172,9 +172,9 @@ static void on_response_get_sim_pb_usim_meta_info(GObject *source_object, GAsync
 			}
 		}
 		i++;
-		g_variant_iter_free(iter_row);
+		g_variant_iter_free0(iter_row);
 	}
-	g_variant_iter_free(iter);
+	g_variant_iter_free0(iter);
 
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &list, evt_cb_data->user_data);

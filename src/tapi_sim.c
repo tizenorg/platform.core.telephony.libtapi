@@ -256,9 +256,9 @@ static void on_response_get_sim_mailbox_info(GObject *source_object, GAsyncResul
 			}
 		}
 		i++;
-		g_variant_iter_free(iter_row);
+		g_variant_iter_free0(iter_row);
 	}
-	g_variant_iter_free(iter);
+	g_variant_iter_free0(iter);
 
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &list, evt_cb_data->user_data);
@@ -338,13 +338,13 @@ static void on_response_get_sim_msisdn(GObject *source_object, GAsyncResult *res
 			}
 		}
 		i++;
-		g_variant_iter_free(iter_row);
+		g_variant_iter_free0(iter_row);
 		/*this can be changed regarding concept*/
 		if (i == 3)
 			break;
 		/*this can be changed regarding concept*/
 	}
-	g_variant_iter_free(iter);
+	g_variant_iter_free0(iter);
 
 	dbg("msisdn count[%d]", list.count);
 	for(i =0; i < list.count; i++){
@@ -396,9 +396,9 @@ static void on_response_get_sim_oplmnwact(GObject *source_object, GAsyncResult *
 			}
 		}
 		i++;
-		g_variant_iter_free(iter_row);
+		g_variant_iter_free0(iter_row);
 	}
-	g_variant_iter_free(iter);
+	g_variant_iter_free0(iter);
 
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &list, evt_cb_data->user_data);
@@ -514,7 +514,7 @@ static void on_response_req_sim_authentication(GObject *source_object, GAsyncRes
 			i++;
 		}
 		auth_resp.authentication_key_length = i;
-		g_variant_iter_free(iter);
+		g_variant_iter_free0(iter);
 		i = 0;
 
 		cp = g_variant_get_variant(cp_gv);
@@ -525,7 +525,7 @@ static void on_response_req_sim_authentication(GObject *source_object, GAsyncRes
 			i++;
 		}
 		auth_resp.cipher_length = i;
-		g_variant_iter_free(iter);
+		g_variant_iter_free0(iter);
 		i = 0;
 
 		it = g_variant_get_variant(it_gv);
@@ -536,7 +536,7 @@ static void on_response_req_sim_authentication(GObject *source_object, GAsyncRes
 			i++;
 		}
 		auth_resp.integrity_length = i;
-		g_variant_iter_free(iter);
+		g_variant_iter_free0(iter);
 		i = 0;
 
 		resp = g_variant_get_variant(resp_gv);
@@ -547,7 +547,7 @@ static void on_response_req_sim_authentication(GObject *source_object, GAsyncRes
 			i++;
 		}
 		auth_resp.resp_length = i;
-		g_variant_iter_free(iter);
+		g_variant_iter_free0(iter);
 		i = 0;
 	}
 	else {
@@ -763,7 +763,7 @@ static void on_response_req_sim_apdu(GObject *source_object, GAsyncResult *res, 
 			i++;
 		}
 		r_apdu.apdu_resp_len = (unsigned char) i;
-		g_variant_iter_free(iter);
+		g_variant_iter_free0(iter);
 		g_variant_unref(inner_gv);
 		g_variant_unref(param_gv);
 		/*		for(i=0; i < (int)r_apdu.apdu_resp_len; i++)
@@ -812,7 +812,7 @@ static void on_response_req_sim_atr(GObject *source_object, GAsyncResult *res, g
 			i++;
 		}
 		r_atr.atr_resp_len = (unsigned char) i;
-		g_variant_iter_free(iter);
+		g_variant_iter_free0(iter);
 		g_variant_unref(inner_gv);
 		g_variant_unref(param_gv);
 		/*		for(i=0; i < (int)r_atr.atr_resp_len; i++)
@@ -983,9 +983,9 @@ EXPORT_API int tel_get_sim_ecc(TapiHandle *handle, TelSimEccList_t *ecc)
 				}
 			}
 			i++;
-			g_variant_iter_free(iter_row);
+			g_variant_iter_free0(iter_row);
 		}
-		g_variant_iter_free(iter);
+		g_variant_iter_free0(iter);
 	} else {
 		dbg( "g_dbus_conn failed. error (%s)", gerr->message);
 		g_error_free(gerr);

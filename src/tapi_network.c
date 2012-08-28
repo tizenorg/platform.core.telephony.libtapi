@@ -141,9 +141,9 @@ static void on_response_search_network(GObject *source_object, GAsyncResult *res
 			}
 		}
 		i++;
-		g_variant_iter_free(iter_row);
+		g_variant_iter_free0(iter_row);
 	}
-	g_variant_iter_free(iter);
+	g_variant_iter_free0(iter);
 
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &list, evt_cb_data->user_data);
@@ -249,9 +249,9 @@ static void on_response_get_network_preferred_plmn(GDBusConnection *conn, GAsync
 			}
 		}
 		i++;
-		g_variant_iter_free(iter_row);
+		g_variant_iter_free0(iter_row);
 	}
-	g_variant_iter_free(iter);
+	g_variant_iter_free0(iter);
 
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &list, evt_cb_data->user_data);

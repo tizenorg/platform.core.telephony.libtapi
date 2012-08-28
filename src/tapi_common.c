@@ -374,7 +374,7 @@ static void on_signal_callback(GDBusConnection *conn, const gchar *name, const g
 					//dbg("item index(%d) id(%d) str(%s)",index, item_id, item_str);
 					index++;
 				}
-				g_variant_iter_free(iter);
+				g_variant_iter_free0(iter);
 			}
 			setup_menu.bIsSatMainMenuHelpInfo = (b_helpinfo ? 1 : 0);
 			setup_menu.bIsUpdatedSatMainMenu = (b_updated ? 1 : 0);
@@ -454,7 +454,7 @@ static void on_signal_callback(GDBusConnection *conn, const gchar *name, const g
 							select_item.menuItem[index].itemId, select_item.menuItem[index].textLen, select_item.menuItem[index].text);
 					index++;
 				}
-				g_variant_iter_free(iter);
+				g_variant_iter_free0(iter);
 			}
 
 			dbg("command id (%d)", select_item.commandId);
@@ -578,7 +578,7 @@ static void on_signal_callback(GDBusConnection *conn, const gchar *name, const g
 					send_sms.smsTpdu.data[index] = data;
 					index++;
 				}
-				g_variant_iter_free(iter);
+				g_variant_iter_free0(iter);
 				g_variant_unref(inner_gv);
 				tmp_data_len = index - 1;
 			}
@@ -636,7 +636,7 @@ static void on_signal_callback(GDBusConnection *conn, const gchar *name, const g
 					g_index++;
 				}
 				//while end
-				g_variant_iter_free(iter);
+				g_variant_iter_free0(iter);
 				g_variant_unref(inner_gv);
 			}
 
@@ -775,7 +775,7 @@ EXPORT_API char** tel_get_cp_name_list(void)
 	while (g_variant_iter_next(iter, "s", &modem_path)){
 		list = g_slist_append(list, modem_path);
 	}
-	g_variant_iter_free (iter);
+	g_variant_iter_free0 (iter);
 
 	if (!list) {
 		dbg( "No CP name");

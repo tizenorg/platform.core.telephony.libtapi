@@ -77,9 +77,9 @@ static void on_response_get_ss_barring_status(GObject *source_object, GAsyncResu
 
 		}
 		i++;
-		g_variant_iter_free(iter_row);
+		g_variant_iter_free0(iter_row);
 	}
-	g_variant_iter_free(iter);
+	g_variant_iter_free0(iter);
 
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &resp, evt_cb_data->user_data);
@@ -158,9 +158,9 @@ static void on_response_get_ss_forward_status(GObject *source_object, GAsyncResu
 
 		}
 		i++;
-		g_variant_iter_free(iter_row);
+		g_variant_iter_free0(iter_row);
 	}
-	g_variant_iter_free(iter);
+	g_variant_iter_free0(iter);
 
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &resp, evt_cb_data->user_data);
@@ -203,9 +203,9 @@ static void on_response_get_ss_waiting_status(GObject *source_object, GAsyncResu
 			}
 		}
 		i++;
-		g_variant_iter_free(iter_row);
+		g_variant_iter_free0(iter_row);
 	}
-	g_variant_iter_free(iter);
+	g_variant_iter_free0(iter);
 
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &resp, evt_cb_data->user_data);
