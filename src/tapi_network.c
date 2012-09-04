@@ -117,6 +117,8 @@ static void on_response_search_network(GObject *source_object, GAsyncResult *res
 		if (evt_cb_data->cb_fn) {
 			evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
 		}
+
+		free(evt_cb_data);
 		return;
 	}
 
@@ -141,13 +143,15 @@ static void on_response_search_network(GObject *source_object, GAsyncResult *res
 			}
 		}
 		i++;
-		g_variant_iter_free0(iter_row);
+		g_variant_iter_free(iter_row);
 	}
-	g_variant_iter_free0(iter);
+	g_variant_iter_free(iter);
 
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &list, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_get_network_selection_mode(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -168,6 +172,8 @@ static void on_response_get_network_selection_mode(GObject *source_object, GAsyn
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &mode, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_default_set(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -187,6 +193,8 @@ static void on_response_default_set(GObject *source_object, GAsyncResult *res, g
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_get_network_preferred_plmn(GDBusConnection *conn, GAsyncResult *res, gpointer user_data)
@@ -217,6 +225,8 @@ static void on_response_get_network_preferred_plmn(GDBusConnection *conn, GAsync
 		if (evt_cb_data->cb_fn) {
 			evt_cb_data->cb_fn(evt_cb_data->handle, result, &list, evt_cb_data->user_data);
 		}
+
+		free(evt_cb_data);
 		return;
 	}
 
@@ -229,6 +239,8 @@ static void on_response_get_network_preferred_plmn(GDBusConnection *conn, GAsync
 		if (evt_cb_data->cb_fn) {
 			evt_cb_data->cb_fn(evt_cb_data->handle, result, &list, evt_cb_data->user_data);
 		}
+
+		free(evt_cb_data);
 		return;
 	}
 
@@ -249,13 +261,15 @@ static void on_response_get_network_preferred_plmn(GDBusConnection *conn, GAsync
 			}
 		}
 		i++;
-		g_variant_iter_free0(iter_row);
+		g_variant_iter_free(iter_row);
 	}
-	g_variant_iter_free0(iter);
+	g_variant_iter_free(iter);
 
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &list, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_get_network_band(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -277,6 +291,8 @@ static void on_response_get_network_band(GObject *source_object, GAsyncResult *r
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &band, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_get_network_mode(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -297,6 +313,8 @@ static void on_response_get_network_mode(GObject *source_object, GAsyncResult *r
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &mode, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_get_network_service_domain(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -317,6 +335,8 @@ static void on_response_get_network_service_domain(GObject *source_object, GAsyn
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &domain, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_get_network_serving(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -350,6 +370,8 @@ static void on_response_get_network_serving(GObject *source_object, GAsyncResult
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &data, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 EXPORT_API int tel_search_network(TapiHandle *handle, tapi_response_cb callback, void *user_data)
@@ -363,7 +385,7 @@ EXPORT_API int tel_search_network(TapiHandle *handle, tapi_response_cb callback,
 	g_dbus_connection_call(handle->dbus_connection,
 			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_NETWORK_INTERFACE,
 			"Search", NULL, NULL,
-			G_DBUS_CALL_FLAGS_NONE, 60000, NULL,
+			G_DBUS_CALL_FLAGS_NONE, 180000, NULL,
 			on_response_search_network, evt_cb_data);
 
 	return TAPI_API_SUCCESS;

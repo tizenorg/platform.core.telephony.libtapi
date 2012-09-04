@@ -175,7 +175,7 @@ static void on_response_sap_transfer_atr(GObject *source_object, GAsyncResult *r
 			i++;
 		}
 		r_atr.atr_len = (int) i;
-		g_variant_iter_free0(iter);
+		g_variant_iter_free(iter);
 		g_variant_unref(inner_gv);
 		g_variant_unref(param_gv);
 		/*		for(i=0; i < (int)r_atr.atr_len; i++)
@@ -237,7 +237,7 @@ static void on_response_sap_transfer_apdu(GObject *source_object, GAsyncResult *
 			i++;
 		}
 		r_apdu.apdu_len = (int) i;
-		g_variant_iter_free0(iter);
+		g_variant_iter_free(iter);
 		g_variant_unref(inner_gv);
 		g_variant_unref(param_gv);
 		/*		for(i=0; i < (int)r_apdu.apdu_len; i++)

@@ -288,9 +288,9 @@ static void on_response_get_call_volume_info(GObject *source_object, GAsyncResul
 			}
 		}
 		i++;
-		g_variant_iter_free0(iter_row);
+		g_variant_iter_free(iter_row);
 	}
-	g_variant_iter_free0(iter);
+	g_variant_iter_free(iter);
 
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &resp, evt_cb_data->user_data);
@@ -754,11 +754,11 @@ EXPORT_API int tel_get_call_status_all( TapiHandle *handle, TelCallStatusCallbac
 
 			}
 
-			g_variant_iter_free0(iter_row);
+			g_variant_iter_free(iter_row);
 
 			cb( &data, user_data );
 		}
-		g_variant_iter_free0(iter);
+		g_variant_iter_free(iter);
 	} else {
 
 		dbg("[ error ] fail to get call status");

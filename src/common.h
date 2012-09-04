@@ -28,20 +28,12 @@
 
 __BEGIN_DECLS
 
-#include "tapi_log.h"
-
 #define MAKE_RESP_CB_DATA(data,handle,cb,user_data)  \
-	if (!handle || !cb) { return TAPI_API_INVALID_INPUT; } \
+	if (!handle) { return TAPI_API_INVALID_INPUT; } \
 	data = g_new0(struct tapi_resp_data, 1); \
 	data->handle = handle; \
 	data->cb_fn = cb; \
 	data->user_data = user_data
-
-#define g_variant_iter_free0( iter ) \
-	if ( iter ) \
-		g_variant_iter_free( iter );\
-	else \
-		dbg("iter : 0");
 
 struct tapi_handle {
 	gpointer dbus_connection;

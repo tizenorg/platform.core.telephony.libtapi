@@ -410,7 +410,7 @@ EXPORT_API int tel_get_sat_main_menu_info(TapiHandle *handle, TelSatSetupMenuInf
 			//dbg("item index(%d) id(%d) str(%s)",index, item_id, item_str);
 			index++;
 		}
-		g_variant_iter_free0(iter);
+		g_variant_iter_free(iter);
 	}
 	pMainMenu->bIsSatMainMenuHelpInfo = (b_helpinfo ? 1 : 0);
 	pMainMenu->bIsUpdatedSatMainMenu = (b_updated ? 1 : 0);

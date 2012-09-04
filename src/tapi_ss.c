@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "tapi_common.h"
 #include "TapiUtility.h"
@@ -53,6 +54,8 @@ static void on_response_get_ss_barring_status(GObject *source_object, GAsyncResu
 		if (evt_cb_data->cb_fn) {
 			evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
 		}
+
+		free(evt_cb_data);
 		return;
 	}
 
@@ -77,13 +80,15 @@ static void on_response_get_ss_barring_status(GObject *source_object, GAsyncResu
 
 		}
 		i++;
-		g_variant_iter_free0(iter_row);
+		g_variant_iter_free(iter_row);
 	}
-	g_variant_iter_free0(iter);
+	g_variant_iter_free(iter);
 
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &resp, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_change_ss_barring_password(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -104,6 +109,7 @@ static void on_response_change_ss_barring_password(GObject *source_object, GAsyn
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
 	}
 
+	free(evt_cb_data);
 }
 
 static void on_response_get_ss_forward_status(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -158,14 +164,15 @@ static void on_response_get_ss_forward_status(GObject *source_object, GAsyncResu
 
 		}
 		i++;
-		g_variant_iter_free0(iter_row);
+		g_variant_iter_free(iter_row);
 	}
-	g_variant_iter_free0(iter);
+	g_variant_iter_free(iter);
 
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &resp, evt_cb_data->user_data);
 	}
 
+	free(evt_cb_data);
 }
 
 static void on_response_get_ss_waiting_status(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -203,13 +210,15 @@ static void on_response_get_ss_waiting_status(GObject *source_object, GAsyncResu
 			}
 		}
 		i++;
-		g_variant_iter_free0(iter_row);
+		g_variant_iter_free(iter_row);
 	}
-	g_variant_iter_free0(iter);
+	g_variant_iter_free(iter);
 
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &resp, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 
@@ -233,6 +242,8 @@ static void on_response_get_ss_cli_status(GObject *source_object, GAsyncResult *
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &resp, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_send_ss_ussd_request(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -253,8 +264,7 @@ static void on_response_send_ss_ussd_request(GObject *source_object, GAsyncResul
 
 	g_variant_get (dbus_result, "(iiiis)",  &result, &resp.Type, &resp.Status, &resp.Length, &tmp_str);
 
-
-	if ( !result ) {
+	if (!result) {
 		memcpy( resp.szString, tmp_str, resp.Length );
 		g_free(tmp_str);
 	}
@@ -262,6 +272,8 @@ static void on_response_send_ss_ussd_request(GObject *source_object, GAsyncResul
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &resp, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 EXPORT_API int tel_set_ss_barring(TapiHandle *handle, TelSsBarringInfo_t *info, tapi_response_cb callback, void *user_data)
@@ -293,7 +305,6 @@ EXPORT_API int tel_set_ss_barring(TapiHandle *handle, TelSsBarringInfo_t *info, 
 			on_response_get_ss_barring_status, evt_cb_data );
 
 	return TAPI_API_SUCCESS;
-
 }
 
 EXPORT_API int tel_get_ss_barring_status(TapiHandle *handle, TelSsClass_t class, TelSsBarringType_t type, tapi_response_cb callback, void *user_data)
@@ -349,7 +360,6 @@ EXPORT_API int tel_change_ss_barring_password(TapiHandle *handle,
 			on_response_change_ss_barring_password, evt_cb_data );
 
 	return TAPI_API_SUCCESS;
-
 }
 
 /**********************************************************************************************
@@ -406,7 +416,6 @@ EXPORT_API int tel_set_ss_forward(TapiHandle *handle, const TelSsForwardInfo_t *
 			on_response_get_ss_forward_status, evt_cb_data );
 
 	return TAPI_API_SUCCESS;
-
 }
 
 /**********************************************************************************************
@@ -437,7 +446,6 @@ EXPORT_API int tel_get_ss_forward_status(TapiHandle *handle, TelSsClass_t class,
 			on_response_get_ss_forward_status, evt_cb_data );
 
 	return TAPI_API_SUCCESS;
-
 }
 
 /**********************************************************************************************
@@ -537,7 +545,6 @@ EXPORT_API int tel_get_ss_cli_status(TapiHandle *handle, TelSsCliType_t type, ta
 			on_response_get_ss_cli_status, evt_cb_data );
 
 	return TAPI_API_SUCCESS;
-
 }
 
 /**********************************************************************************************
@@ -568,7 +575,6 @@ EXPORT_API int tel_send_ss_ussd_request(TapiHandle *handle, const TelSsUssdMsgIn
 			on_response_send_ss_ussd_request, evt_cb_data );
 
 	return TAPI_API_SUCCESS;
-
 }
 
 /**********************************************************************************************

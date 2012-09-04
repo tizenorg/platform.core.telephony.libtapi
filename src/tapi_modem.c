@@ -50,6 +50,8 @@ static void on_response_default_set(GObject *source_object, GAsyncResult *res, g
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_get_version(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -81,6 +83,8 @@ static void on_response_get_version(GObject *source_object, GAsyncResult *res, g
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &data, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_get_serial_number(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -101,6 +105,8 @@ static void on_response_get_serial_number(GObject *source_object, GAsyncResult *
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, sn, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_get_imei(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -121,6 +127,8 @@ static void on_response_get_imei(GObject *source_object, GAsyncResult *res, gpoi
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, imei, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_set_dun_pin_ctrl(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -141,6 +149,8 @@ static void on_response_set_dun_pin_ctrl(GObject *source_object, GAsyncResult *r
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, 0, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 /**
