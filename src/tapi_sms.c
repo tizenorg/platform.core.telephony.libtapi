@@ -69,6 +69,10 @@ static void on_response_default(GObject *source_object, GAsyncResult *res, gpoin
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &data, evt_cb_data->user_data);
 	}
+
+	if(evt_cb_data)
+		free(evt_cb_data);
+
 }
 
 static void on_response_read_msg(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -121,6 +125,9 @@ static void on_response_read_msg(GObject *source_object, GAsyncResult *res, gpoi
 	if(decoded_tpdu)
 		g_free(decoded_tpdu);
 
+	if(evt_cb_data)
+		free(evt_cb_data);
+
 }
 
 static void on_response_write_msg(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -149,6 +156,10 @@ static void on_response_write_msg(GObject *source_object, GAsyncResult *res, gpo
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &index, evt_cb_data->user_data);
 	}
+
+	if(evt_cb_data)
+		free(evt_cb_data);
+
 }
 
 static void on_response_delete_msg(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -177,6 +188,10 @@ static void on_response_delete_msg(GObject *source_object, GAsyncResult *res, gp
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &index, evt_cb_data->user_data);
 	}
+
+	if(evt_cb_data)
+		free(evt_cb_data);
+
 }
 
 static void on_response_get_msg_count(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -217,6 +232,9 @@ static void on_response_get_msg_count(GObject *source_object, GAsyncResult *res,
 
 	if(decoded_indexList)
 		g_free(decoded_indexList);
+
+	if(evt_cb_data)
+		free(evt_cb_data);
 
 }
 
@@ -260,6 +278,9 @@ static void on_response_get_sca(GObject *source_object, GAsyncResult *res, gpoin
 	if(decoded_sca)
 		g_free(decoded_sca);
 
+	if(evt_cb_data)
+		free(evt_cb_data);
+
 }
 
 static void on_response_get_cb_config(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -268,12 +289,14 @@ static void on_response_get_cb_config(GObject *source_object, GAsyncResult *res,
 	GDBusConnection *conn = NULL;
 	struct tapi_resp_data *evt_cb_data = user_data;
 	int result = -1;
+	int i;
 	TelSmsCbConfig_t cbConfig = {0,};
 
 	GVariant *dbus_result = NULL;
-	const char *cbMsgIDs = NULL;
-	gsize length;
-	guchar *decoded_cbMsgIDs = NULL;
+	GVariant *value = NULL;
+	GVariantIter *iter = NULL;
+	GVariantIter *iter_row = NULL;
+	const gchar *key = NULL;
 
 	conn = G_DBUS_CONNECTION (source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
@@ -286,22 +309,43 @@ static void on_response_get_cb_config(GObject *source_object, GAsyncResult *res,
 
 	dbg("on_response_get_cb_config type_format(%s)", g_variant_get_type_string(dbus_result));
 
-	g_variant_get (dbus_result, "(iiiiis)", &result,
-						&cbConfig.bCBEnabled,
-						&cbConfig.SelectedId,
-						&cbConfig.MsgIdMaxCount,
-						&cbConfig.MsgIdCount,
-						&cbMsgIDs);
+	g_variant_get (dbus_result, "(iiiiiaa{sv})", &result,
+					&cbConfig.Net3gppType,
+					&cbConfig.CBEnabled,
+					&cbConfig.MsgIdMaxCount,
+					&cbConfig.MsgIdRangeCount,
+					&iter);
 
-	decoded_cbMsgIDs = g_base64_decode(cbMsgIDs, &length);
-	memcpy(&(cbConfig.MsgIDs[0]), decoded_cbMsgIDs, TAPI_NETTEXT_GSM_SMS_CBMI_LIST_SIZE_MAX);
+	i = 0;
+	while (g_variant_iter_next(iter, "a{sv}", &iter_row)) {
+		while (g_variant_iter_loop(iter_row, "{sv}", &key, &value)) {
+			if (!g_strcmp0(key, "FromMsgId")) {
+				cbConfig.MsgIDs[i].Net3gpp.FromMsgId = g_variant_get_uint16(value);
+			}
+			if (!g_strcmp0(key, "ToMsgId")) {
+				cbConfig.MsgIDs[i].Net3gpp.ToMsgId = g_variant_get_uint16(value);
+			}
+			if (!g_strcmp0(key, "CBCategory")) {
+				cbConfig.MsgIDs[i].Net3gpp2.CBCategory = g_variant_get_uint16(value);
+			}
+			if (!g_strcmp0(key, "CBLanguage")) {
+				cbConfig.MsgIDs[i].Net3gpp2.CBLanguage = g_variant_get_uint16(value);
+			}
+			if (!g_strcmp0(key, "Selected")) {
+				cbConfig.MsgIDs[i].Net3gpp.Selected = g_variant_get_byte(value);
+			}
+		}
+		i++;
+		g_variant_iter_free(iter_row);
+	}
+	g_variant_iter_free(iter);
 
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &cbConfig, evt_cb_data->user_data);
 	}
 
-	if(decoded_cbMsgIDs)
-		g_free(decoded_cbMsgIDs);
+	if(evt_cb_data)
+		free(evt_cb_data);
 
 }
 
@@ -373,6 +417,9 @@ static void on_response_get_sms_params(GObject *source_object, GAsyncResult *res
 	if(decoded_scaDialNum)
 		g_free(decoded_scaDialNum);
 
+	if(evt_cb_data)
+		free(evt_cb_data);
+
 }
 
 static void on_response_get_sms_param_cnt(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -402,6 +449,10 @@ static void on_response_get_sms_param_cnt(GObject *source_object, GAsyncResult *
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &recordCount, evt_cb_data->user_data);
 	}
+
+	if(evt_cb_data)
+		free(evt_cb_data);
+
 }
 
 /**
@@ -433,9 +484,7 @@ EXPORT_API int tel_send_sms(struct tapi_handle *handle,
 
 	dbg("Func Entrance ");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(handle ,TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pDataPackage ,TAPI_API_INVALID_PTR);
-	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
 #if 0
 	if (vconf_get_int("db/telephony/emergency", &emergency_mode) != 0) {
 		err("[FAIL]GET db/telephony/emergency");
@@ -502,13 +551,13 @@ EXPORT_API int tel_read_sms_in_sim(struct tapi_handle *handle, int index, tapi_r
 
 	dbg("Func Entrance ");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(handle ,TAPI_API_INVALID_PTR);
-	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
 	if(index < 0) {
 		err("Invalid Input -Read SMS %d",index);
 
 		return TAPI_API_INVALID_INPUT;
 	}
+
+	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
 
 	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
@@ -549,9 +598,7 @@ EXPORT_API int tel_write_sms_in_sim(struct tapi_handle *handle, const TelSmsData
 
 	dbg("Func Entrance ");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(handle ,TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pWriteData ,TAPI_API_INVALID_PTR);
-	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
 
 	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
@@ -606,8 +653,6 @@ EXPORT_API int tel_delete_sms_in_sim(struct tapi_handle *handle, int index, tapi
 
 	dbg("Func Entrance ");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(handle ,TAPI_API_INVALID_PTR);
-	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
 	if ((index < 0) || (index > TAPI_NETTEXT_MAX_INDEX)) {
 		err("Invalid Index Input");
 		return TAPI_API_INVALID_INPUT;
@@ -647,7 +692,6 @@ EXPORT_API int tel_get_sms_count(struct tapi_handle *handle, tapi_response_cb ca
 
 	dbg("Func Entrance ");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(handle ,TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
 
 	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -685,8 +729,8 @@ EXPORT_API int tel_get_sms_sca(struct tapi_handle *handle, int index, tapi_respo
 
 	dbg("Func Entrance ");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(handle ,TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
+
 	if ((index < 0) || (index > TAPI_NETTEXT_MAX_INDEX)) {
 		err("Invalid Index Input");
 		return TAPI_API_INVALID_INPUT;
@@ -730,9 +774,8 @@ EXPORT_API int tel_set_sms_sca(struct tapi_handle *handle, const TelSmsAddressIn
 
 	dbg("Func Entrance ");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(handle ,TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pSCA ,TAPI_API_INVALID_PTR);
-	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
+
 	if ((index < 0) || (index > TAPI_NETTEXT_MAX_INDEX)) {
 		err("Invalid Index Input");
 		return TAPI_API_INVALID_INPUT;
@@ -785,7 +828,6 @@ EXPORT_API int tel_get_sms_cb_config(struct tapi_handle *handle, tapi_response_c
 
 	dbg("Func Entrance ");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(handle ,TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
 
 	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -821,28 +863,27 @@ EXPORT_API int tel_set_sms_cb_config(struct tapi_handle *handle, const TelSmsCbC
 
 	dbg("Func Entrance ");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(handle ,TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pCBConfig ,TAPI_API_INVALID_PTR);
-	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
-	if ((pCBConfig->SelectedId >= 3) || (pCBConfig->MsgIdCount < 0)) {
-		err("Invalid Input -SelectedId(%d)",pCBConfig->SelectedId);
-		err("Invalid Input -MsgIdCount(%d)",pCBConfig->MsgIdCount);
+
+	if ((pCBConfig->Net3gppType > 2) || (pCBConfig->MsgIdRangeCount < 0)) {
+		err("Invalid Input -3gppType(%d)",pCBConfig->Net3gppType);
+		err("Invalid Input -MsgIdRangeCount(%d)",pCBConfig->MsgIdRangeCount);
 
 		return TAPI_API_INVALID_INPUT;
 	}
 
 	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
-	encoded_cbConfig = g_base64_encode((const guchar *)&(pCBConfig->MsgIDs[0]), TAPI_NETTEXT_GSM_SMS_CBMI_LIST_SIZE_MAX);
+	encoded_cbConfig = g_base64_encode((const guchar *)&(pCBConfig->MsgIDs[0]), TAPI_NETTEXT_GSM_SMS_CBMI_LIST_SIZE_MAX*5);
 	if (encoded_cbConfig == NULL) {
 		dbg("g_base64_encode: Failed to Enocde the CB Config");
 		return TAPI_API_OPERATION_FAILED;
 	}
 
-	param = g_variant_new("(iiiis)", pCBConfig->bCBEnabled,
-							pCBConfig->SelectedId,
+	param = g_variant_new("(iiiis)", pCBConfig->Net3gppType,
+							pCBConfig->CBEnabled,
 							pCBConfig->MsgIdMaxCount,
-							pCBConfig->MsgIdCount,
+							pCBConfig->MsgIdRangeCount,
 							encoded_cbConfig);
 
 	g_dbus_connection_call(handle->dbus_connection,
@@ -877,8 +918,6 @@ EXPORT_API int tel_set_sms_memory_status(struct tapi_handle *handle, int memoryS
 
 	dbg("Func Entrance ");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(handle ,TAPI_API_INVALID_PTR);
-	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
 	if ((memoryStatus < TAPI_NETTEXT_PDA_MEMORY_STATUS_AVAILABLE) || (memoryStatus > TAPI_NETTEXT_PDA_MEMORY_STATUS_FULL)) {
 		err("Invalid Input -MemoryStatus Nettext");
 		return TAPI_API_INVALID_INPUT;
@@ -917,7 +956,6 @@ EXPORT_API int tel_get_sms_preferred_bearer(struct tapi_handle *handle, tapi_res
 
 	dbg("Func Entrance ");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(handle ,TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
 
 	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -952,8 +990,6 @@ EXPORT_API int tel_set_sms_preferred_bearer(struct tapi_handle *handle, TelSmsBe
 
 	dbg("Func Entrance ");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(handle ,TAPI_API_INVALID_PTR);
-	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
 	if ((TAPI_NETTEXT_BEARER_PS_ONLY > BearerType) || (TAPI_NETTEXT_NO_PREFERRED_BEARER < BearerType)) {
 		err("Invalid Input -PrefBearer Set Nettext");
 		return TAPI_API_INVALID_INPUT;
@@ -999,9 +1035,7 @@ EXPORT_API int tel_send_sms_deliver_report(struct tapi_handle *handle,
 
 	dbg("Func Entrance ");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(handle ,TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pDataPackage ,TAPI_API_INVALID_PTR);
-	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
 
 	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
@@ -1056,8 +1090,6 @@ EXPORT_API int tel_set_sms_message_status(struct tapi_handle *handle, int index,
 
 	dbg("Func Entrance ");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(handle ,TAPI_API_INVALID_PTR);
-	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
 	if ((index < 0) || (index > TAPI_NETTEXT_MAX_INDEX) ||
 		(msgStatus > TAPI_NETTEXT_STATUS_RESERVED)) {
 		err("Invalid Input -MsgStatus Set Nettext");
@@ -1098,8 +1130,8 @@ EXPORT_API int tel_get_sms_parameters(struct tapi_handle *handle, int index, tap
 
 	dbg("Func Entrance ");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(handle ,TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
+
 	if ((index < 0) || (index > TAPI_NETTEXT_MAX_INDEX)) {
 		err("Invalid Input -SMS Param Get Nettext");
 		return TAPI_API_INVALID_INPUT;
@@ -1142,9 +1174,7 @@ EXPORT_API int tel_set_sms_parameters(struct tapi_handle *handle, const TelSmsPa
 
 	dbg("Func Entrance ");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(handle ,TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pSmsSetParameters ,TAPI_API_INVALID_PTR);
-	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
 
 	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
@@ -1216,7 +1246,6 @@ EXPORT_API int tel_get_sms_parameter_count(struct tapi_handle *handle, tapi_resp
 
 	dbg("Func Entrance ");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(handle ,TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
 
 	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);

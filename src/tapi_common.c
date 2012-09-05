@@ -192,7 +192,7 @@ static void on_signal_callback(GDBusConnection *conn, const gchar *name, const g
 			g_variant_get(param, "(iis)", &noti.CbMsgType, &noti.Length, &cbMsg);
 
 			decoded_cbMsg = g_base64_decode(cbMsg, &length);
-			memcpy(&(noti.szMsgData[0]), decoded_cbMsg, TAPI_NETTEXT_CB_PAGE_SIZE_MAX + 1);
+			memcpy(&(noti.szMsgData[0]), decoded_cbMsg, TAPI_NETTEXT_CB_SIZE_MAX + 1);
 
 			noti_data = &noti;
 
@@ -643,6 +643,34 @@ static void on_signal_callback(GDBusConnection *conn, const gchar *name, const g
 			dbg("event list cnt(%d)", event_cnt);
 
 			noti_data = &event_list;
+		}
+		else if (!g_strcmp0(sig, "Refresh")) {
+			//refresh
+		}
+		else if (!g_strcmp0(sig, "SendDtmf")) {
+			TelSatSendDtmfIndDtmfData_t send_dtmf;
+
+			gint command_id = 0;
+			gint text_len = 0, dtmf_str_len = 0;
+			gchar *text = NULL;
+			gchar *dtmf_str = NULL;
+
+			memset(&send_dtmf, 0, sizeof(TelSatSendDtmfIndDtmfData_t));
+
+			g_variant_get(param, "(isisi)", &command_id, &text, &text_len, &dtmf_str, &dtmf_str_len);
+
+			send_dtmf.commandId = command_id;
+			if(text_len <= 0 || g_strcmp0(text,"") == 0 ){
+				send_dtmf.bIsHiddenMode = 1;
+			}
+
+			send_dtmf.dtmfString.stringLen = dtmf_str_len;
+			memcpy(send_dtmf.dtmfString.string, dtmf_str, TAPI_SAT_DEF_TEXT_STRING_LEN_MAX+1);
+
+			dbg("dtmf event command id(%d)", send_dtmf.commandId);
+			dbg("dtmf event dtmf(%s)", send_dtmf.dtmfString.string);
+
+			noti_data = &send_dtmf;
 		}
 		else if (!g_strcmp0(sig, "EndProactiveSession")) {
 			int command_type = 0;

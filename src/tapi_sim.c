@@ -119,6 +119,8 @@ static void on_response_get_sim_iccid(GObject *source_object, GAsyncResult *res,
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &iccid_info, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_get_sim_language(GObject *source_object, GAsyncResult *res,
@@ -141,6 +143,8 @@ static void on_response_get_sim_language(GObject *source_object, GAsyncResult *r
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &lang, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_set_sim_language(GObject *source_object, GAsyncResult *res,
@@ -162,6 +166,8 @@ static void on_response_set_sim_language(GObject *source_object, GAsyncResult *r
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_get_sim_callforwarding_info(GObject *source_object, GAsyncResult *res,
@@ -186,6 +192,8 @@ static void on_response_get_sim_callforwarding_info(GObject *source_object, GAsy
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &cf, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_get_sim_messagewaiting_info(GObject *source_object, GAsyncResult *res,
@@ -210,6 +218,8 @@ static void on_response_get_sim_messagewaiting_info(GObject *source_object, GAsy
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &msg, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_get_sim_mailbox_info(GObject *source_object, GAsyncResult *res,
@@ -263,6 +273,8 @@ static void on_response_get_sim_mailbox_info(GObject *source_object, GAsyncResul
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &list, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_get_sim_cphs_info(GObject *source_object, GAsyncResult *res,
@@ -291,6 +303,8 @@ static void on_response_get_sim_cphs_info(GObject *source_object, GAsyncResult *
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &cphs, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_get_sim_msisdn(GObject *source_object, GAsyncResult *res,
@@ -354,6 +368,8 @@ static void on_response_get_sim_msisdn(GObject *source_object, GAsyncResult *res
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &list, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_get_sim_oplmnwact(GObject *source_object, GAsyncResult *res,
@@ -403,6 +419,8 @@ static void on_response_get_sim_oplmnwact(GObject *source_object, GAsyncResult *
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &list, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_get_sim_spn(GObject *source_object, GAsyncResult *res,
@@ -436,6 +454,8 @@ static void on_response_get_sim_spn(GObject *source_object, GAsyncResult *res,
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &spn_info, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_get_sim_cphs_netname(GObject *source_object, GAsyncResult *res,
@@ -469,6 +489,8 @@ static void on_response_get_sim_cphs_netname(GObject *source_object, GAsyncResul
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &cphs_net, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_req_sim_authentication(GObject *source_object, GAsyncResult *res,
@@ -559,6 +581,8 @@ static void on_response_req_sim_authentication(GObject *source_object, GAsyncRes
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &auth_resp, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_verify_sim_pins(GObject *source_object, GAsyncResult *res,
@@ -583,6 +607,8 @@ static void on_response_verify_sim_pins(GObject *source_object, GAsyncResult *re
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &sec_rt, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_verify_sim_puks(GObject *source_object, GAsyncResult *res,
@@ -607,6 +633,8 @@ static void on_response_verify_sim_puks(GObject *source_object, GAsyncResult *re
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &sec_rt, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_change_sim_pins(GObject *source_object, GAsyncResult *res,
@@ -631,6 +659,8 @@ static void on_response_change_sim_pins(GObject *source_object, GAsyncResult *re
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &sec_rt, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_disable_sim_facility(GObject *source_object, GAsyncResult *res,
@@ -655,6 +685,8 @@ static void on_response_disable_sim_facility(GObject *source_object, GAsyncResul
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &f_rt, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_enable_sim_facility(GObject *source_object, GAsyncResult *res,
@@ -679,6 +711,8 @@ static void on_response_enable_sim_facility(GObject *source_object, GAsyncResult
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &f_rt, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_get_sim_facility(GObject *source_object, GAsyncResult *res,
@@ -703,6 +737,8 @@ static void on_response_get_sim_facility(GObject *source_object, GAsyncResult *r
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &fi, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_get_sim_lock_info(GObject *source_object, GAsyncResult *res,
@@ -728,6 +764,8 @@ static void on_response_get_sim_lock_info(GObject *source_object, GAsyncResult *
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &lock, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_req_sim_apdu(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -777,6 +815,8 @@ static void on_response_req_sim_apdu(GObject *source_object, GAsyncResult *res, 
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &r_apdu, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_req_sim_atr(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -825,6 +865,8 @@ static void on_response_req_sim_atr(GObject *source_object, GAsyncResult *res, g
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &r_atr, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 EXPORT_API int tel_get_sim_init_info(TapiHandle *handle, TelSimCardStatus_t *sim_status,

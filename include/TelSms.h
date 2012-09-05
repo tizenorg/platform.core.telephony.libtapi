@@ -48,6 +48,7 @@ extern "C"
 
 #define TAPI_NETTEXT_MSG_SIZE_MAX		918 /**< Maximum Message Size */
 #define TAPI_NETTEXT_CB_SIZE_MAX			93 /** Maximum CB Message Size */
+#define TAPI_NETTEXT_ETWS_SIZE_MAX			56 /** Maximum ETWS Message Size */
 #define TAPI_NETTEXT_ADDRESS_LEN_MAX	20 /* Nettext Address Length */
 #define TAPI_NETTEXT_SCADDRESS_LEN_MAX	18 /* SC Address Length */
 
@@ -198,6 +199,16 @@ typedef enum
 	   TAPI_NETTEXT_CB_MSG_INVALID            /**< Invalid  CB message */
 } TelSmsCbMsgType_t;
 
+/**
+* @enum TelSmsEtwsMsgType_t
+* This enumeration defines the different ETWS message types.
+*/
+typedef enum
+{
+	   TAPI_NETTEXT_ETWS_PRIMARY = 0,             /**< Primary ETWS message */
+	   TAPI_NETTEXT_ETWS_SECONDARY_GSM,            /**< GSM Secondary ETWS message  */
+	   TAPI_NETTEXT_ETWS_SECONDARY_UMTS,               /**< UMTS Secondary ETWS message  */
+} TelSmsEtwsMsgType_t;
 
 /**
  * @enum TelSmsResponse_t
@@ -459,17 +470,52 @@ typedef enum{
   TAPI_NETTEXT_SUBADDR_USER_SPECIFIED		    = 0x01,	/**<  User-specified */
 } TelSmsIs637SubAddressType_t;
 
+/**
+ * @enum telephony_sms_3gpp_type
+ * This defines the type of 3gpp
+ */
+typedef enum  {
+	TAPI_NETTEXT_NETTYPE_3GPP = 0x01,						/**< 3gpp type */
+	TAPI_NETTEXT_NETTYPE_3GPP2 = 0x02,    					/**< 3gpp2 type (CDMA) */
+} TelSms3gppType_t;
+
 // ********************************************************************//
 
 /**
  * This structure defines the different parameters of  CB configuration
  */
 typedef struct {
-	int bCBEnabled; /**< CB service state. If cb_enabled is true then cell broadcast service will be enabled and underlying modem will enable CB Channel to receiving CB messages. Otherwise CB service will be disabled, underlying modem will deactivate the CB channel. (enabled/disabled) */
-	unsigned char SelectedId; /**< CBMI Identifier selected (all or some)  */
-	unsigned char MsgIdMaxCount; /**< CB Channel List Max Count */
-	int MsgIdCount; /**< CB message ID count */
-	unsigned short MsgIDs[TAPI_NETTEXT_GSM_SMS_CBMI_LIST_SIZE_MAX]; /**< CB message ID information */
+ unsigned short FromMsgId; /**< Starting point of the range of CBS message ID */
+ unsigned short ToMsgId; /**< Ending point of the range of CBS message ID */
+ unsigned char Selected; /**< 0x00 . Not selected. 0x01 . Selected */
+} TelSmsCbMsgInfo3gpp_t;
+
+typedef struct {
+ unsigned short CBCategory; /**< CB Service category */
+ unsigned short CBLanguage; /**< Language indicator value
+ 								. 0x00 . LANGUAGE_UNKNOWN .
+									Unknown or Unspecified
+								. 0x01 . LANGUAGE_ENGLISH . English
+								. 0x02 . LANGUAGE_FRENCH . French
+								. 0x03 . LANGUAGE_SPANISH . Spanish
+								. 0x04 . LANGUAGE_JAPANESE . Japanese
+								. 0x05 . LANGUAGE_KOREAN . Korean
+								. 0x06 . LANGUAGE_CHINESE . Chinese
+								. 0x07 . LANGUAGE_HEBREW . Hebrew*/
+ unsigned char Selected; /**< 0x00 . Not selected. 0x01 . Selected */
+} TelSmsCbMsgInfo3gpp2_t;
+
+typedef union {
+	TelSmsCbMsgInfo3gpp_t Net3gpp; /**< 3GPP Broadcast Configuration Information */
+	TelSmsCbMsgInfo3gpp2_t Net3gpp2; /**< 3GPP2 Broadcast Configuration Information, CDMA*/
+} TelSmsCbMsgInfo_t;
+
+typedef struct {
+	int Net3gppType;  /**< Type of 3gpp, 0x01 . 3gpp. 0x02 . 3gpp2(CDMA) */
+	int CBEnabled; /**< CB service state. If cb_enabled is true then cell broadcast service will be enabled and underlying modem will enable CB Channel to receiving CB messages. Otherwise CB service will be disabled, underlying modem will deactivate the CB channel. (enabled/disabled) */
+	unsigned char MsgIdMaxCount; /**< CB Channel List Max Count For Response */
+	int MsgIdRangeCount; /**< Range of CB message ID count */
+	TelSmsCbMsgInfo_t MsgIDs[TAPI_NETTEXT_GSM_SMS_CBMI_LIST_SIZE_MAX]; /**< Range of CB message ID information */
 } TelSmsCbConfig_t;
 
 /**
@@ -536,8 +582,17 @@ typedef struct {
 
 	TelSmsCbMsgType_t CbMsgType; /**< Cell Broadcast  message type */
 	unsigned short Length; /**<Size of array szMsgData (which is actual TPDU message) */
-	char szMsgData[TAPI_NETTEXT_CB_PAGE_SIZE_MAX + 1]; /**<Cell broadcast message data[Refer 3GPP TS 23.041 9.4.1]*/
+	char szMsgData[TAPI_NETTEXT_CB_SIZE_MAX + 1]; /**<Cell broadcast message data[Refer 3GPP TS 23.041 9.4.1]*/
 } TelSmsCbMsg_t;
+
+/**
+ * This structure defines a ETWS message.
+ */
+typedef struct {
+	TelSmsEtwsMsgType_t EtwsMsgType; /**< Cell Broadcast  message type */
+	unsigned short Length; /**<Size of array szMsgData (which is actual TPDU message) */
+	char szMsgData[TAPI_NETTEXT_ETWS_SIZE_MAX + 1]; /**<Cell broadcast message data[Refer 3GPP TS 23.041 9.4.1]*/
+} TelSmsEtwsMsg_t;
 
 // ************************  CDMA Features  **************************//
 /**

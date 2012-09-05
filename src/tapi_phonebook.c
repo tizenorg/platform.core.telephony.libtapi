@@ -95,6 +95,8 @@ static void on_response_get_sim_pb_count(GObject *source_object, GAsyncResult *r
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &pb_cnt, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_get_sim_pb_meta_info(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -130,6 +132,8 @@ static void on_response_get_sim_pb_meta_info(GObject *source_object, GAsyncResul
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &pb_entry, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_get_sim_pb_usim_meta_info(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -179,6 +183,8 @@ static void on_response_get_sim_pb_usim_meta_info(GObject *source_object, GAsync
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &list, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_read_sim_pb_record(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -266,6 +272,8 @@ static void on_response_read_sim_pb_record(GObject *source_object, GAsyncResult 
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &pb_rec, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_update_sim_pb_record(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -285,6 +293,8 @@ static void on_response_update_sim_pb_record(GObject *source_object, GAsyncResul
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 static void on_response_delete_sim_pb_record(GObject *source_object, GAsyncResult *res, gpointer user_data)
@@ -304,6 +314,8 @@ static void on_response_delete_sim_pb_record(GObject *source_object, GAsyncResul
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 EXPORT_API int tel_get_sim_pb_init_info(TapiHandle *handle, int *init_completed, TelSimPbList_t *pb_list)

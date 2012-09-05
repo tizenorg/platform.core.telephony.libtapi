@@ -51,6 +51,8 @@ static void on_response_sap_connect(GObject *source_object, GAsyncResult *res, g
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, (void*)&max_msg_size, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 EXPORT_API int tel_req_sap_connect(TapiHandle *handle, int max_msg_size, tapi_response_cb callback, void *user_data)
@@ -89,6 +91,8 @@ static void on_response_sap_disconnect(GObject *source_object, GAsyncResult *res
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 EXPORT_API int tel_req_sap_disconnect(TapiHandle *handle, tapi_response_cb callback, void *user_data)
@@ -125,6 +129,8 @@ static void on_response_sap_connection_status(GObject *source_object, GAsyncResu
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 EXPORT_API int tel_req_sap_connection_status(TapiHandle *handle, tapi_response_cb callback, void *user_data)
@@ -187,6 +193,8 @@ static void on_response_sap_transfer_atr(GObject *source_object, GAsyncResult *r
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, (void*)&r_atr, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 EXPORT_API int tel_req_sap_transfer_atr(TapiHandle *handle, tapi_response_cb callback, void *user_data)
@@ -251,6 +259,8 @@ static void on_response_sap_transfer_apdu(GObject *source_object, GAsyncResult *
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, (void*)&r_apdu, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 EXPORT_API int tel_req_sap_transfer_apdu(TapiHandle *handle, TelSapApduData_t *apdu_data, tapi_response_cb callback, void *user_data)
@@ -301,6 +311,8 @@ static void on_response_sap_transport_protocol(GObject *source_object, GAsyncRes
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 EXPORT_API int tel_req_sap_transport_protocol(TapiHandle *handle, TelSimSapProtocol_t protocol, tapi_response_cb callback, void *user_data)
@@ -339,6 +351,8 @@ static void on_response_sap_power_operation(GObject *source_object, GAsyncResult
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 EXPORT_API int tel_req_sap_power_operation(TapiHandle *handle, TelSimSapPowerMode_t power_mode, tapi_response_cb callback, void *user_data)
@@ -393,6 +407,8 @@ static void on_response_sap_cardreader_status(GObject *source_object, GAsyncResu
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, (void*)&reader_status, evt_cb_data->user_data);
 	}
+
+	free(evt_cb_data);
 }
 
 EXPORT_API int tel_req_sap_cardreader_status(TapiHandle *handle, tapi_response_cb callback, void *user_data)

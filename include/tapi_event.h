@@ -94,6 +94,7 @@ __BEGIN_DECLS
 #define TAPI_NOTI_SAT_REFRESH						DBUS_TELEPHONY_SAT_INTERFACE":Refresh"
 #define TAPI_NOTI_SAT_SEND_SMS						DBUS_TELEPHONY_SAT_INTERFACE":SendSMS"
 #define TAPI_NOTI_SAT_SETUP_EVENT_LIST				DBUS_TELEPHONY_SAT_INTERFACE":SetupEventList"
+#define TAPI_NOTI_SAT_SEND_DTMF						DBUS_TELEPHONY_SAT_INTERFACE":SendDtmf"
 #define TAPI_NOTI_SAT_SESSION_END_EVENT				DBUS_TELEPHONY_SAT_INTERFACE":EndProactiveSession"
 #define TAPI_NOTI_SAT_MO_SMS_CTRL					DBUS_TELEPHONY_SAT_INTERFACE":MoSmsCtrl"
 
@@ -120,6 +121,7 @@ __BEGIN_DECLS
 #define DBUS_TELEPHONY_SMS_INTERFACE	DBUS_TELEPHONY_SERVICE".sms"
 #define TAPI_NOTI_SMS_INCOM_MSG			DBUS_TELEPHONY_SMS_INTERFACE":IncommingMsg"	/* This is an unsolicited Incoming SMS Event*/
 #define TAPI_NOTI_SMS_CB_INCOM_MSG		DBUS_TELEPHONY_SMS_INTERFACE":IncommingCbMsg"	/* This is an unsolicited Incoming cell broadcast message*/
+#define TAPI_NOTI_SMS_ETWS_INCOM_MSG	DBUS_TELEPHONY_SMS_INTERFACE":IncommingEtwsMsg"	/* This is an unsolicited Incoming cell broadcast message*/
 #if 0
 #define TAPI_NOTI_SMS_INCOM_EX_MSG "org.tizen.telephony. "		/* This is an extended unsolicited Incoming SMS Event*/
 #define TAPI_NOTI_SMS_CB_INCOM_EX_MSG "org.tizen.telephony. "	/* This is an extended unsolicited Incoming cell broadcast message*/

@@ -61,7 +61,9 @@ typedef enum {
 	TAPI_NETWORK_SELECTIONMODE_AUTOMATIC,				/**< Network selection is in Automatic selection mode*/
 	TAPI_NETWORK_SELECTIONMODE_MANUAL,				/**< Network selection is in Manual selection mode */
 	TAPI_NETWORK_SELECTIONMODE_GLOBAL_AUTOMAITIC,	/**<Global Automatic */
-	TAPI_NETWORK_SELECTIONMODE_CDMA			/**<CDMA selection*/
+	TAPI_NETWORK_SELECTIONMODE_CDMA,				/**<CDMA selection*/
+	TAPI_NETWORK_SELECTIONMODE_LTE_AUTO,			/**<LTE Automatic*/
+	TAPI_NETWORK_SELECTIONMODE_LTE_MANUAL			/**<LTE Manual */
 } TelNetworkSelectionMode_t;
 
 /**
@@ -132,6 +134,7 @@ typedef enum
 	TAPI_NETWORK_SYSTEM_EVDO_REV_A,	/**< Available service is  EV-DO revA */
 	TAPI_NETWORK_SYSTEM_1X_EVDO_REV_A_HYBRID, /**< Available service is 1X and EV-DO revA */
 	TAPI_NETWORK_SYSTEM_EVDV,		/**< Available service is EV-DV */
+	TAPI_NETWORK_SYSTEM_LTE			/**< Available service is LTE */
 } TelNetworkSystemType_t;
 
 /**
@@ -160,8 +163,10 @@ typedef enum
 	TAPI_NETWORK_BAND_TYPE_WCDMA1900,		/**< This member sets the band to WCDMA 1900 */
 	TAPI_NETWORK_BAND_TYPE_WCDMA2100,		/**< This member sets the band to WCDMA 2100 */
 	TAPI_NETWORK_BAND_TYPE_GSM900,			/**< GSM 900*/
-	TAPI_NETWORK_BAND_TYPE_GSM1800,	/**< This member sets the band to GSM 1800 */
-	TAPI_NETWORK_BAND_TYPE_GSM_850_1900	/**< This member sets the band to GSM 850_1900 */
+	TAPI_NETWORK_BAND_TYPE_GSM1800,			/**< This member sets the band to GSM 1800 */
+	TAPI_NETWORK_BAND_TYPE_GSM_850_1900,	/**< This member sets the band to GSM 850_1900 */
+	TAPI_NETWORK_BAND_TYPE_LTE_BAND_4,		/**< This member sets the band to LTE BAND 4*/
+	TAPI_NETWORK_BAND_TYPE_LTE_BAND_17		/**< This member sets the band to LTE BAND 17 */
 } TelNetworkBand_t;
 
 /**
