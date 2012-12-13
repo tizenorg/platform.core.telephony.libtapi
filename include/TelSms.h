@@ -41,23 +41,22 @@ extern "C"
 #endif
 
 /* NetText */
-/** EF-SMSP digit length */
-#define TAPI_SIM_SMSP_ADDRESS_LEN		20
-/** EF-SMSP alpha id length */
-#define TAPI_SIM_SMSP_ALPHA_ID_LEN_MAX		128
+#define TAPI_SMS_ENCODED_SCA_LEN_MAX				12	/** Encoded SCA is 12 bytes long maximum */
+#define TAPI_SIM_SMSP_ADDRESS_LEN				20	/** EF-SMSP digit length */
+#define TAPI_SIM_SMSP_ALPHA_ID_LEN_MAX				128	/** EF-SMSP alpha id length */
 
-#define TAPI_NETTEXT_MSG_SIZE_MAX		918 /**< Maximum Message Size */
-#define TAPI_NETTEXT_CB_SIZE_MAX			93 /** Maximum CB Message Size */
-#define TAPI_NETTEXT_ETWS_SIZE_MAX			56 /** Maximum ETWS Message Size */
-#define TAPI_NETTEXT_ADDRESS_LEN_MAX	20 /* Nettext Address Length */
-#define TAPI_NETTEXT_SCADDRESS_LEN_MAX	18 /* SC Address Length */
+#define TAPI_NETTEXT_MSG_SIZE_MAX				918	/** Maximum Message Size */
+#define TAPI_NETTEXT_CB_SIZE_MAX				93	/** Maximum CB Message Size */
+#define TAPI_NETTEXT_ETWS_SIZE_MAX				56	/** Maximum ETWS Message Size */
+#define TAPI_NETTEXT_ADDRESS_LEN_MAX				20	/* Nettext Address Length */
+#define TAPI_NETTEXT_SCADDRESS_LEN_MAX				18	/* SC Address Length */
 
-#define TAPI_NETTEXT_CB_PAGE_SIZE_MAX				 9    /**< CB maximum page size*/
-#define TAPI_NETTEXT_GSM_SMS_MSG_NUM_MAX             255    /**< Maximum GSM SMS message number*/
-#define TAPI_NETTEXT_GSM_SMS_CBMI_LIST_SIZE_MAX      50    /**< Maximum GSM SMS CBMI list size*/
-#define TAPI_NETTEXT_SMDATA_SIZE_MAX                           165  /**< Maximum SMS data size that can be stored*/
-#define TAPI_NETTEXT_MAX_SMS_SERVICE_CENTER_ADDR   12    /**<Maximum SMS service center address*/
-#define TAPI_NETTEXT_MAX_INDEX                                        255 /**< Maximum index value for SMS */
+#define TAPI_NETTEXT_CB_PAGE_SIZE_MAX				9	/** CB maximum page size*/
+#define TAPI_NETTEXT_GSM_SMS_MSG_NUM_MAX			255	/** Maximum GSM SMS message number*/
+#define TAPI_NETTEXT_GSM_SMS_CBMI_LIST_SIZE_MAX		50	/** Maximum GSM SMS CBMI list size*/
+#define TAPI_NETTEXT_SMDATA_SIZE_MAX				164	/** Maximum SMS data size that can be stored*/
+#define TAPI_NETTEXT_MAX_SMS_SERVICE_CENTER_ADDR		12	/** Maximum SMS service center address*/
+#define TAPI_NETTEXT_MAX_INDEX					255	/** Maximum index value for SMS */
 
 #define TAPI_NETTEXT_SMSP_PARAMS_MAX_LEN		28
 
@@ -546,12 +545,21 @@ typedef struct {
 } TelSmsParams_t;
 
 /**
- * This structure defines the fields related to an Sms like SIM index, TPDU  and length
+ * This structure defines the fields related to an Sms like SIM index, TPDU
+ * and length.
  */
 typedef struct {
-	unsigned char Sca[TAPI_SIM_SMSP_ADDRESS_LEN]; /**< Service Centre address - an optional parameter. If this parameter is not present, then this field will be Null.If present, the valid service centre address information is filled as per 3GPP TS23.040 9.1.2.5 Address fields */
-	int MsgLength; /**< Size of array szData (which is actual TPDU message) */
-	unsigned char szData[TAPI_NETTEXT_SMDATA_SIZE_MAX + 1]; /**<SMS TPDU message */
+	/**
+	 * Service Centre address - an optional parameter. If this parameter
+	 * is not present, then this field will be Null.If present, the valid
+	 * service centre address information is filled as per 3GPP TS23.040
+	 * 9.1.2.5 Address fields
+	 */
+	unsigned char Sca[TAPI_SMS_ENCODED_SCA_LEN_MAX];
+	/**< Size of array szData (which is actual TPDU message) */
+	int MsgLength;
+	/**< SMS TPDU message */
+	unsigned char szData[TAPI_NETTEXT_SMDATA_SIZE_MAX + 1];
 } TelSmsDatapackageInfo_t;
 
 /**

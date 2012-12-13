@@ -133,7 +133,7 @@ static void on_response_read_msg(GObject *source_object, GAsyncResult *res, gpoi
 
 	decoded_sca = g_base64_decode(sca, &length);
 	if (decoded_sca) {
-		memcpy(&(readMsg.SmsData.Sca[0]), decoded_sca, TAPI_SIM_SMSP_ADDRESS_LEN);
+		memcpy(&(readMsg.SmsData.Sca[0]), decoded_sca, TAPI_SMS_ENCODED_SCA_LEN_MAX);
 		g_free(decoded_sca);
 	}
 
@@ -593,7 +593,7 @@ EXPORT_API int tel_send_sms(struct tapi_handle *handle,
 
 	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
-	encoded_sca = g_base64_encode(&(pDataPackage->Sca[0]), TAPI_SIM_SMSP_ADDRESS_LEN);
+	encoded_sca = g_base64_encode(&(pDataPackage->Sca[0]), TAPI_SMS_ENCODED_SCA_LEN_MAX);
 	if (encoded_sca == NULL) {
 		dbg("g_base64_encode: Failed to Enocde the SCA");
 		return TAPI_API_OPERATION_FAILED;
@@ -696,7 +696,7 @@ EXPORT_API int tel_write_sms_in_sim(struct tapi_handle *handle, const TelSmsData
 
 	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
-	encoded_sca = g_base64_encode(&(pWriteData->SmsData.Sca[0]), TAPI_SIM_SMSP_ADDRESS_LEN);
+	encoded_sca = g_base64_encode(&(pWriteData->SmsData.Sca[0]), TAPI_SMS_ENCODED_SCA_LEN_MAX);
 	if (encoded_sca == NULL) {
 		dbg("g_base64_encode: Failed to Enocde the SCA");
 		return TAPI_API_OPERATION_FAILED;
@@ -1133,7 +1133,7 @@ EXPORT_API int tel_send_sms_deliver_report(struct tapi_handle *handle,
 
 	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
-	encoded_sca = g_base64_encode(&(pDataPackage->Sca[0]), TAPI_SIM_SMSP_ADDRESS_LEN);
+	encoded_sca = g_base64_encode(&(pDataPackage->Sca[0]), TAPI_SMS_ENCODED_SCA_LEN_MAX);
 	if (encoded_sca == NULL) {
 		dbg("g_base64_encode: Failed to Enocde the SCA");
 		return TAPI_API_OPERATION_FAILED;
