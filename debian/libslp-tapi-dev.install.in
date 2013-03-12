@@ -1,0 +1,2 @@
+@PREFIX@/include/telephony-client/*
+@PREFIX@/lib/pkgconfig/tapi-lib.pc
