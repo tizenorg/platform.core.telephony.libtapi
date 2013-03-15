@@ -209,6 +209,7 @@ static void on_response_search_network(GObject *source_object, GAsyncResult *res
 		while (g_variant_iter_loop(iter_row, "{sv}", &key, &value)) {
 			if (!g_strcmp0(key, "plmn")) {
 				list.network_list[i].plmn_id = atoi(g_variant_get_string(value, NULL));
+				strncpy(list.network_list[i].plmn, g_variant_get_string(value, NULL), TAPI_NETWORK_PLMN_LEN_MAX);
 			}
 			if (!g_strcmp0(key, "act")) {
 				list.network_list[i].access_technology = _convert_act_to_systemtype(g_variant_get_int32(value));

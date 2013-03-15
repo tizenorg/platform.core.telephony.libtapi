@@ -40,6 +40,7 @@ extern "C"
 
 #define TAPI_NETWORK_ORDER_MAX					5		/**< Maximum network order */
 #define TAPI_NETWORK_LIST_MAX					15		/**< Maximum network list */
+#define TAPI_NETWORK_PLMN_LEN_MAX				6		/**< Maximum PLMN length*/
 #define TAPI_NETWORK_NAME_LEN_MAX				40		/**< Maximum network name or PLMN name length*/
 #define TAPI_NETWORK_SPN_LEN_MAX				20		/**< Maximum network service provider name length */
 #define TAPI_PREFERRED_PLMN_RECORDS_MAX			150		/**< Maximum record length for preferred plmn list*/
@@ -315,7 +316,7 @@ typedef struct {
  */
 typedef struct {
 	unsigned char Index; /**< Network Preferred Plmn list index */
-	char Plmn[7]; /**< Network Preferred Plmn */
+	char Plmn[TAPI_NETWORK_PLMN_LEN_MAX + 1]; /**< Network Preferred Plmn */
 	char network_name[TAPI_NETWORK_NAME_LEN_MAX + 1]; /**< Network Name  */
 	char service_provider_name[TAPI_NETWORK_NAME_LEN_MAX + 1]; /**< Service provider name */
 	TelNetworkSystemType_t SystemType; /**< Network system type */
@@ -365,6 +366,7 @@ typedef struct {
 	char network_name[TAPI_NETWORK_NAME_LEN_MAX + 1]; /**< Network Name  */
 	char service_provider_name[TAPI_NETWORK_NAME_LEN_MAX + 1]; /**< Service provider name */
 	unsigned int plmn_id; /**< PLMN ID */
+	char plmn[TAPI_NETWORK_PLMN_LEN_MAX + 1]; /**< PLMN ID */
 	TelNetworkPlmnType_t type_of_plmn; /**< PLMN type */
 	TelNetworkSystemType_t access_technology; /**< Access technology  */
 } TelNetworkIdentity_t;
@@ -407,7 +409,7 @@ typedef struct {
 
 typedef struct {
 	TelNetworkSystemType_t act; /**< Access technology  */
-	char plmn[7];
+	char plmn[TAPI_NETWORK_PLMN_LEN_MAX + 1];
 	int lac;
 } TelNetworkServing_t;
 
@@ -475,7 +477,7 @@ struct tel_noti_network_cell_info {
 
 struct tel_noti_network_change {
 	TelNetworkSystemType_t act; /**< Access technology  */
-	char plmn[7];
+	char plmn[TAPI_NETWORK_PLMN_LEN_MAX + 1];
 	int lac;
 };
 
@@ -490,11 +492,11 @@ struct tel_noti_network_time_info {
 	int gmtoff;
 	int dstoff;
 	int isdst;
-	char plmn[7];
+	char plmn[TAPI_NETWORK_PLMN_LEN_MAX + 1];
 };
 
 struct  tel_noti_network_identity {
-	char plmn[7];
+	char plmn[TAPI_NETWORK_PLMN_LEN_MAX + 1];
 	char short_name[17];
 	char full_name[33];
 };

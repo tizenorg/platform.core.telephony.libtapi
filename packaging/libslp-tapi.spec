@@ -1,13 +1,10 @@
-#sbs-git:slp/pkgs/l/libslp-tapi libslp-tapi 0.1.1
 Name: libslp-tapi
 Summary: Telephony dbus client library
-Version: 0.6.59
+Version: 0.6.69
 Release:    1
 Group:      System/Libraries
-License:    Apache
+License:    Apache-2.0
 Source0:    libslp-tapi-%{version}.tar.gz
-Requires(post): /sbin/ldconfig
-Requires(postun): /sbin/ldconfig
 BuildRequires:  cmake
 BuildRequires:  pkgconfig(glib-2.0)
 BuildRequires:  pkgconfig(gobject-2.0)
@@ -31,7 +28,7 @@ Telephony client API library (devel)
 
 
 %build
-cmake . -DCMAKE_INSTALL_PREFIX=%{_prefix}
+%cmake .
 
 
 make %{?jobs:-j%jobs}
@@ -51,9 +48,7 @@ mkdir -p %{buildroot}/usr/share/license
 %files
 %manifest libslp-tapi.manifest
 %defattr(-,root,root,-)
-#%doc COPYING
 %{_libdir}/*.so.*
-#%{_bindir}/tapitest
 /usr/share/license/libslp-tapi
 
 %files devel

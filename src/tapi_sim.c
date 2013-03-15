@@ -1261,7 +1261,7 @@ static void on_response_req_sim_apdu(GObject *source_object, GAsyncResult *res, 
 	GVariant *param_gv = NULL;
 	GVariant *inner_gv = NULL;
 	guchar rt_i;
-	int i = 0;
+	unsigned short i = 0;
 
 	struct tapi_resp_data *evt_cb_data = user_data;
 	TelSimAccessResult_t result = TAPI_SIM_ACCESS_SUCCESS;
@@ -1295,12 +1295,11 @@ static void on_response_req_sim_apdu(GObject *source_object, GAsyncResult *res, 
 		r_apdu.apdu_resp[i] = rt_i;
 		i++;
 	}
-	r_apdu.apdu_resp_len = (unsigned char) i;
+	r_apdu.apdu_resp_len = i;
+	dbg("r_apdu.apdu_resp_len=[%d]", r_apdu.apdu_resp_len);
 	g_variant_iter_free(iter);
 	g_variant_unref(inner_gv);
 	g_variant_unref(param_gv);
-	/*		for(i=0; i < (int)r_apdu.apdu_resp_len; i++)
-	 dbg("apdu[%d][0x%02x]",i, r_apdu.apdu_resp[i]);*/
 
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &r_apdu, evt_cb_data->user_data);
@@ -1319,7 +1318,7 @@ static void on_response_req_sim_atr(GObject *source_object, GAsyncResult *res, g
 	GVariant *param_gv = NULL;
 	GVariant *inner_gv = NULL;
 	guchar rt_i;
-	int i = 0;
+	unsigned short i = 0;
 
 	struct tapi_resp_data *evt_cb_data = user_data;
 	TelSimAccessResult_t result = TAPI_SIM_ACCESS_SUCCESS;
@@ -1353,12 +1352,11 @@ static void on_response_req_sim_atr(GObject *source_object, GAsyncResult *res, g
 		r_atr.atr_resp[i] = rt_i;
 		i++;
 	}
-	r_atr.atr_resp_len = (unsigned char) i;
+	r_atr.atr_resp_len = i;
+	dbg("r_atr.atr_resp_len=[%d]", r_atr.atr_resp_len);
 	g_variant_iter_free(iter);
 	g_variant_unref(inner_gv);
 	g_variant_unref(param_gv);
-	/*		for(i=0; i < (int)r_atr.atr_resp_len; i++)
-	 dbg("r_atr[%d][0x%02x]",i, r_atr.atr_resp[i]);*/
 
 	if (evt_cb_data->cb_fn) {
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &r_atr, evt_cb_data->user_data);

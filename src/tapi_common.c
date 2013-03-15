@@ -1177,8 +1177,9 @@ EXPORT_API TapiHandle* tel_init(const char *cp_name)
 	GError *error = NULL;
 	struct tapi_handle *handle;
 	gchar *addr;
-
+#if !GLIB_CHECK_VERSION (2, 35, 3)
 	g_type_init();
+#endif
 
 	dbg("process info: env=%s, invocation=%s", getenv("_"), program_invocation_name);
 
