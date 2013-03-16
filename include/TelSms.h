@@ -806,7 +806,7 @@ typedef struct {
 // ********************************************************************//
 
 struct tel_noti_sms_incomming_msg {
-        char Sca[TAPI_SIM_SMSP_ADDRESS_LEN];
+        char Sca[TAPI_SMS_ENCODED_SCA_LEN_MAX];
         int MsgLength;
         char szData[TAPI_NETTEXT_SMDATA_SIZE_MAX + 1];
 };

@@ -215,7 +215,7 @@ static void _process_sms_event(const gchar *sig, GVariant *param,
 
 		decoded_sca = g_base64_decode(sca, &length);
 		if (decoded_sca) {
-			memcpy(&(noti.Sca[0]), decoded_sca, TAPI_SIM_SMSP_ADDRESS_LEN);
+			memcpy(&(noti.Sca[0]), decoded_sca, TAPI_SMS_ENCODED_SCA_LEN_MAX);
 			g_free(decoded_sca);
 		}
 
