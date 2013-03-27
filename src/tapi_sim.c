@@ -1471,6 +1471,9 @@ EXPORT_API int tel_get_sim_imsi(TapiHandle *handle, TelSimImsiInfo_t *imsi)
 		g_error_free(gerr);
 		return TAPI_API_OPERATION_FAILED;
 	}
+	g_free(gplmn);
+	g_free(gmsin);
+	g_variant_unref(sync_gv);
 	return TAPI_API_SUCCESS;
 }
 
