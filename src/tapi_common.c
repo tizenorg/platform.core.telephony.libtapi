@@ -1089,10 +1089,11 @@ EXPORT_API char** tel_get_cp_name_list(void)
 	}
 
 	g_variant_get (rst, "(as)", &iter);
-	while (g_variant_iter_next(iter, "s", &modem_path)){
+	while (g_variant_iter_next(iter, "s", &modem_path))
 		list = g_slist_append(list, modem_path);
-	}
-	g_variant_iter_free (iter);
+
+	g_variant_iter_free(iter);
+	g_variant_unref(rst);
 
 	if (!list) {
 		dbg( "No CP name");
@@ -1111,11 +1112,9 @@ EXPORT_API char** tel_get_cp_name_list(void)
 	}
 	cp_list[element_cnt] = NULL;
 
-	g_slist_free(list);
-
 OUT:
-	if (proxy)
-		g_object_unref(proxy);
+	g_slist_free_full(list, g_free);
+	g_object_unref(proxy);
 
 	return cp_list;
 }
@@ -1175,61 +1174,112 @@ OUT:
 EXPORT_API TapiHandle* tel_init(const char *cp_name)
 {
 	GError *error = NULL;
-	struct tapi_handle *handle;
+	struct tapi_handle *handle = NULL;
 	gchar *addr;
 #if !GLIB_CHECK_VERSION (2, 35, 3)
 	g_type_init();
 #endif
 
-	dbg("process info: env=%s, invocation=%s", getenv("_"), program_invocation_name);
+	dbg("process info: env: [%s] invocation: [%s]",
+						getenv("_"), program_invocation_name);
 
-	addr = g_dbus_address_get_for_bus_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
-	if (!addr) {
-		err("Error get dbus: %s\n", error->message);
-		g_error_free (error);
-		return NULL;
+	/* Get System BUS */
+	addr = g_dbus_address_get_for_bus_sync(G_BUS_TYPE_SYSTEM,
+										NULL,
+										&error);
+	if (addr == NULL) {
+		err("Error get dbus: [%s]", error->message);
+		goto ERROR;
 	}
 
-	handle = g_new0(struct tapi_handle, 1);
-	if (!handle)
-		return NULL;
+	/* Allocate new Handle */
+	handle = g_try_new0(struct tapi_handle, 1);
+	if (handle == NULL) {
+		err("Failed to allocate handle");
+		goto ERROR;
+	}
 
+	/* Create DBUS connection */
 	handle->dbus_connection = g_dbus_connection_new_for_address_sync(addr,
-			G_DBUS_CONNECTION_FLAGS_AUTHENTICATION_CLIENT |
-			G_DBUS_CONNECTION_FLAGS_MESSAGE_BUS_CONNECTION,
-			NULL, NULL, &error);
-	if (!handle->dbus_connection) {
-		err("Error creating dbus connection: %s\n", error->message);
-		g_free(handle);
-		g_error_free (error);
-		return NULL;
+							(G_DBUS_CONNECTION_FLAGS_AUTHENTICATION_CLIENT |
+							G_DBUS_CONNECTION_FLAGS_MESSAGE_BUS_CONNECTION),
+							NULL,
+							NULL,
+							&error);
+	if (handle->dbus_connection == NULL) {
+		err("Error creating DBUS connection: [%s]", error->message);
+		goto ERROR;
 	}
 
 	handle->ca = g_cancellable_new();
-
-	if (cp_name) {
-		handle->cp_name = g_strdup(cp_name);
+	if (handle->ca == NULL) {
+		err("Error allocating cancellable object");
+		goto ERROR;
 	}
+
+	/* Get CP name */
+	if (cp_name != NULL)
+		handle->cp_name = g_strdup(cp_name);
 	else {
 		char **list = NULL;
+		int i = 0;
 
+		/* Get CP Name list */
 		list = tel_get_cp_name_list();
-		if (!list)
-			return NULL;
+		if ((list == NULL) || (list[0] == NULL)) {
+			err("Get CP name list failed");
 
-		if (!list[0])
-			return NULL;
+			g_free(list);
+			goto ERROR;
+		}
 
-		dbg("use default plugin(%s)", list[0]);
+		/*
+		 * Presently, we would only be providing the 'default' CP name,
+		 * it is the first CP name in the obtained list of CP names.
+		 *
+		 * We would evolve this logic in due course.
+		 */
+		dbg("Use 'default' Plug-in: [%s]", list[0]);
 		handle->cp_name = g_strdup(list[0]);
+
+		/* Free CP name list */
+		while (list[i] != NULL)
+			g_free(list[i++]);
 	}
 
-	handle->evt_list = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	/* Create Event list Hash Table */
+	handle->evt_list = g_hash_table_new_full(g_str_hash,
+										g_str_equal,
+										g_free,
+										g_free);
 
+	/* Set Path */
 	handle->path = g_strdup_printf("%s/%s",
-			DBUS_TELEPHONY_DEFAULT_PATH, handle->cp_name);
+					DBUS_TELEPHONY_DEFAULT_PATH, handle->cp_name);
+	dbg("handle: [0x%x] Path: [%s]", handle, handle->path);
 
+	g_free(addr);
 	return handle;
+
+ERROR:
+	/* Free all resources */
+	g_free(addr);
+	g_error_free (error);
+
+	if (handle != NULL) {
+		g_cancellable_cancel(handle->ca);
+		g_object_unref(handle->ca);
+
+		if (g_dbus_connection_close_sync(handle->dbus_connection,
+									NULL,
+									NULL) == FALSE) {
+			err("Failed to close connection");
+		}
+		g_object_unref(handle->dbus_connection);
+		g_free(handle);
+	}
+
+	return NULL;
 }
 
 static gboolean _unregister_noti(gpointer key, gpointer value, gpointer user_data)
@@ -1242,44 +1292,43 @@ static gboolean _unregister_noti(gpointer key, gpointer value, gpointer user_dat
 	return TRUE;
 }
 
-EXPORT_API int tel_deinit(TapiHandle* handle)
+EXPORT_API int tel_deinit(TapiHandle *handle)
 {
-	if (!handle)
-		return -1;
+	if (handle == NULL)
+		return TAPI_API_INVALID_INPUT;
 
-	if (handle->cp_name)
-		g_free(handle->cp_name);
+	g_free(handle->cp_name);
+	g_free(handle->path);
 
-	if (handle->path)
-		g_free(handle->path);
-
-	dbg( "remove all signal");
-	g_hash_table_foreach_remove(handle->evt_list, _unregister_noti, handle);
+	dbg("Remove all signals");
+	g_hash_table_foreach_remove(handle->evt_list, _unregister_noti, NULL);
 	g_hash_table_destroy(handle->evt_list);
 
 	g_cancellable_cancel(handle->ca);
 	g_object_unref(handle->ca);
 
-	dbg("close dbus connection");
-	if (g_dbus_connection_close_sync(handle->dbus_connection, NULL, NULL) == FALSE) {
-		dbg("failed");
+	dbg("Close DBUS connection");
+	if (g_dbus_connection_close_sync(handle->dbus_connection,
+									NULL, NULL) == FALSE) {
+		err("Failed to close DBUS connection");
 	}
-
-	memset(handle, 0, sizeof(struct tapi_handle));
+	g_object_unref(handle->dbus_connection);
 	g_free(handle);
 
-	dbg("deinit..");
+	dbg("deinit complete");
 	return TAPI_API_SUCCESS;
 }
 
-EXPORT_API int tel_register_noti_event(TapiHandle *handle, const char *noti_id, tapi_notification_cb callback, void *user_data)
+EXPORT_API int tel_register_noti_event(TapiHandle *handle, const char *noti_id,
+								tapi_notification_cb callback, void *user_data)
 {
 	gchar **dbus_str = NULL;
 	gpointer tmp = NULL;
 	struct tapi_evt_cb *evt_cb_data = NULL;
 
-	if (!handle || !handle->dbus_connection || !callback || !noti_id) {
-		dbg("invalid parameter");
+	if ((handle == NULL) || (handle->dbus_connection == NULL)
+			|| (callback == NULL) || (noti_id == NULL)) {
+		err("Invalid input parameters");
 		return TAPI_API_INVALID_INPUT;
 	}
 
@@ -1301,9 +1350,17 @@ EXPORT_API int tel_register_noti_event(TapiHandle *handle, const char *noti_id, 
 		return TAPI_API_INVALID_INPUT;
 	}
 
-	evt_cb_data = g_new0(struct tapi_evt_cb, 1);
+	evt_cb_data = g_try_new0(struct tapi_evt_cb, 1);
+	if (evt_cb_data == NULL) {
+		err("Failed to allocate memory");
+		g_strfreev(dbus_str);
+		return TAPI_API_SYSTEM_OUT_OF_MEM;
+	}
+
+	/* Assign callback and user_data */
 	evt_cb_data->cb_fn = callback;
 	evt_cb_data->user_data = user_data;
+	evt_cb_data->handle = handle;
 
 	dbg("path(%s) interface (%s) signal (%s)", handle->path, dbus_str[0], dbus_str[1]);
 
