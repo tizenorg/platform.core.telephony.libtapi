@@ -358,7 +358,7 @@ static void on_response_get_network_preferred_plmn(GDBusConnection *conn, GAsync
 			if (!g_strcmp0(key, "act")) {
 				list.PrefPlmnRecord[i].SystemType = _convert_act_to_systemtype(g_variant_get_int32(value));
 			}
-			if (!g_strcmp0(key, "ef_index")) {
+			if (!g_strcmp0(key, "index")) {
 				list.PrefPlmnRecord[i].Index = g_variant_get_int32(value);
 			}
 			if (!g_strcmp0(key, "name")) {
