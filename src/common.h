@@ -38,7 +38,8 @@ __BEGIN_DECLS
 #define CHECK_DEINIT(error) \
 	if (error) { \
 		dbg("dbus error = %d (%s)", error->code, error->message); \
-		if (error->code == G_IO_ERROR_CANCELLED) { \
+		if (error->code == G_IO_ERROR_CANCELLED \
+				&& error->domain == G_IO_ERROR) { \
 			g_error_free(error); \
 			free(evt_cb_data); \
 			return; \
