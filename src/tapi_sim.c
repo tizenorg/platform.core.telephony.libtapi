@@ -1390,12 +1390,14 @@ EXPORT_API int tel_get_sim_init_info(TapiHandle *handle, TelSimCardStatus_t *sim
 		g_variant_get(sync_gv, "(ib)", &init_status, &changed);
 		*sim_status = init_status;
 		*card_changed = changed;
-		dbg("init_status[%d]",init_status); dbg("changed[%d]",changed);
+		dbg("init_status[%d]",init_status);
+		dbg("changed[%d]",changed);
 	} else {
 		dbg( "g_dbus_conn failed. error (%s)", gerr->message);
 		g_error_free(gerr);
 		return TAPI_API_OPERATION_FAILED;
 	}
+	g_variant_unref(sync_gv);
 	return api_err;
 }
 
@@ -1428,6 +1430,7 @@ EXPORT_API int tel_get_sim_type(TapiHandle *handle, TelSimCardType_t *card_type)
 		g_error_free(gerr);
 		return TAPI_API_OPERATION_FAILED;
 	}
+	g_variant_unref(sync_gv);
 	return TAPI_API_SUCCESS;
 }
 
@@ -1466,13 +1469,13 @@ EXPORT_API int tel_get_sim_imsi(TapiHandle *handle, TelSimImsiInfo_t *imsi)
 
 		dbg("imsi->szMnc[%s]", imsi->szMnc);
 		dbg("imsi->szMcc[%s]", imsi->szMcc);
+		g_free(gplmn);
+		g_free(gmsin);
 	} else {
 		dbg( "g_dbus_conn failed. error (%s)", gerr->message);
 		g_error_free(gerr);
 		return TAPI_API_OPERATION_FAILED;
 	}
-	g_free(gplmn);
-	g_free(gmsin);
 	g_variant_unref(sync_gv);
 	return TAPI_API_SUCCESS;
 }
