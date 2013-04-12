@@ -1287,6 +1287,9 @@ static gboolean _unregister_noti(gpointer key, gpointer value, gpointer user_dat
 	struct tapi_evt_cb *evt_cb_data = value;
 	TapiHandle *handle = user_data;
 
+	if (handle == NULL)
+		return TRUE;
+
 	g_dbus_connection_signal_unsubscribe(handle->dbus_connection, evt_cb_data->evt_id);
 
 	return TRUE;
@@ -1301,7 +1304,7 @@ EXPORT_API int tel_deinit(TapiHandle *handle)
 	g_free(handle->path);
 
 	dbg("Remove all signals");
-	g_hash_table_foreach_remove(handle->evt_list, _unregister_noti, NULL);
+	g_hash_table_foreach_remove(handle->evt_list, _unregister_noti, handle);
 	g_hash_table_destroy(handle->evt_list);
 
 	g_cancellable_cancel(handle->ca);

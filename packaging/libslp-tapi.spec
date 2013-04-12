@@ -1,7 +1,7 @@
 Name: libslp-tapi
 Summary: Telephony dbus client library
 Version: 0.6.69
-Release:    1
+Release:    2
 Group:      System/Libraries
 License:    Apache-2.0
 Source0:    libslp-tapi-%{version}.tar.gz
