@@ -15,7 +15,7 @@ FOREACH(flag ${pkgs_CFLAGS})
 ENDFOREACH(flag)
 
 SET(EXTRA_CFLAGS "${EXTRA_CFLAGS}  -Wl,-zdefs -fvisibility=hidden ")
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS} -Werror -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wmissing-declarations -Wredundant-decls -Wcast-align")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS}  -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wmissing-declarations -Wredundant-decls -Wcast-align")
 #SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS}")
 SET(CMAKE_EXE_LINKER_FLAGS "-Wl,--as-needed")
 
