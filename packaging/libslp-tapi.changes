@@ -1,3 +1,6 @@
+* Tue May 28 2013 Baptiste DURAND <baptiste.durand@eurogiciel.fr> accepted/tizen/20130520.103452@48ba921
+- Fix for 64 bits compatibility
+
 * Sat May 18 2013 Anas Nashif <anas.nashif@intel.com> submit/tizen/20130517.045240@00d7b71
 - do not use Werror on releases
 
