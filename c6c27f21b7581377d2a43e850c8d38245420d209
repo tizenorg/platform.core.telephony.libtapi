@@ -1,0 +1,8 @@
+Change-Id: Ic6c27f21b7581377d2a43e850c8d38245420d209
+Code-Review+2: Anas Nashif
+Verified+1: Baptiste DURAND <baptiste.durand@eurogiciel.fr>
+Submitted-by: Baptiste DURAND <baptiste.durand@eurogiciel.fr>
+Submitted-at: Tue, 28 May 2013 05:00:28 -0700
+Reviewed-on: https://review.tizen.org/gerrit/3683
+Project: platform/core/telephony/libslp-tapi
+Branch: refs/heads/tizen
