@@ -3,7 +3,6 @@ PROJECT(SLP-tapi C)
 
 SET(PREFIX ${CMAKE_INSTALL_PREFIX})
 SET(EXEC_PREFIX "\${prefix}")
-SET(LIBDIR "\${prefix}/lib")
 SET(INCLUDEDIR "\${prefix}/include")
 
 # Set required packages
