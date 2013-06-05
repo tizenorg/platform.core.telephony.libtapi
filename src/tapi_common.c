@@ -1245,6 +1245,8 @@ EXPORT_API TapiHandle* tel_init(const char *cp_name)
 		/* Free CP name list */
 		while (list[i] != NULL)
 			g_free(list[i++]);
+
+		g_free(list);
 	}
 
 	/* Create Event list Hash Table */
