@@ -574,22 +574,13 @@ EXPORT_API int tel_send_sms(struct tapi_handle *handle,
 	gchar *encoded_sca = NULL;
 	gchar *encoded_tpdu = NULL;
 
-	int emergency_mode = 0;
-
 	dbg("Func Entrance ");
 
 	TAPI_RET_ERR_NUM_IF_FAIL(pDataPackage ,TAPI_API_INVALID_PTR);
-#if 0
-	if (vconf_get_int("db/telephony/emergency", &emergency_mode) != 0) {
-		err("[FAIL]GET db/telephony/emergency");
-		return TAPI_API_OPERATION_FAILED;
-	}
-#endif
 
-	if (emergency_mode) {
-		dbg("emergency mode on");
-		return TAPI_API_OPERATION_FAILED;
-	}
+	if ((pDataPackage->Sca[0] > TAPI_SIM_SMSP_ADDRESS_LEN)
+			|| (pDataPackage->MsgLength > TAPI_NETTEXT_SMDATA_SIZE_MAX))
+		return TAPI_API_INVALID_INPUT;
 
 	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
@@ -599,7 +590,7 @@ EXPORT_API int tel_send_sms(struct tapi_handle *handle,
 		return TAPI_API_OPERATION_FAILED;
 	}
 
-	encoded_tpdu = g_base64_encode(&(pDataPackage->szData[0]), TAPI_NETTEXT_SMDATA_SIZE_MAX + 1);
+	encoded_tpdu = g_base64_encode(&(pDataPackage->szData[0]), pDataPackage->MsgLength);
 	if (encoded_tpdu == NULL) {
 		dbg("g_base64_encode: Failed to Enocde the TPDU");
 		return TAPI_API_OPERATION_FAILED;
