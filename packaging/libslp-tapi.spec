@@ -5,6 +5,7 @@ Release:    2
 Group:      System/Libraries
 License:    Apache-2.0
 Source0:    libslp-tapi-%{version}.tar.gz
+Source1001: 	libslp-tapi.manifest
 BuildRequires:  cmake
 BuildRequires:  pkgconfig(glib-2.0)
 BuildRequires:  pkgconfig(gobject-2.0)
@@ -25,6 +26,7 @@ Telephony client API library (devel)
 
 %prep
 %setup -q
+cp %{SOURCE1001} .
 
 
 %build
@@ -46,12 +48,13 @@ mkdir -p %{buildroot}/usr/share/license
 
 
 %files
-%manifest libslp-tapi.manifest
+%manifest %{name}.manifest
 %defattr(-,root,root,-)
 %{_libdir}/*.so.*
 /usr/share/license/libslp-tapi
 
 %files devel
+%manifest %{name}.manifest
 %defattr(-,root,root,-)
 %{_includedir}/telephony-client/*.h
 %{_libdir}/pkgconfig/*.pc
