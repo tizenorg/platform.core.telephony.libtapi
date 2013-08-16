@@ -658,7 +658,7 @@ EXPORT_API int tel_select_network_automatic(struct tapi_handle *handle, tapi_res
 	g_dbus_connection_call(handle->dbus_connection,
 			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_NETWORK_INTERFACE,
 			"SetSelectionMode", param, NULL,
-			G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
+			G_DBUS_CALL_FLAGS_NONE, 180000, handle->ca,
 			on_response_default_set, evt_cb_data);
 
 	return TAPI_API_SUCCESS;
