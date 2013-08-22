@@ -7,5 +7,5 @@ Name: TAPI Library
 Description: Telephony DBUS Client
 Requires: glib-2.0 gobject-2.0
 Version: 0.1
-Libs: -L${libdir} -lSLP-tapi
+Libs: -L${libdir} -ltapi
 Cflags: -I${includedir}/telephony-client

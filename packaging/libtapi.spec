@@ -1,11 +1,11 @@
-Name: libslp-tapi
+Name: libtapi
 Summary: Telephony dbus client library
 Version: 0.6.70
 Release:    2
 Group:      System/Libraries
 License:    Apache-2.0
-Source0:    libslp-tapi-%{version}.tar.gz
-Source1001: 	libslp-tapi.manifest
+Source0:    libtapi-%{version}.tar.gz
+Source1001: 	libtapi.manifest
 BuildRequires:  cmake
 BuildRequires:  pkgconfig(glib-2.0)
 BuildRequires:  pkgconfig(gobject-2.0)
@@ -51,7 +51,7 @@ mkdir -p %{buildroot}/usr/share/license
 %manifest %{name}.manifest
 %defattr(-,root,root,-)
 %{_libdir}/*.so.*
-/usr/share/license/libslp-tapi
+/usr/share/license/libtapi
 
 %files devel
 %manifest %{name}.manifest
