@@ -13,6 +13,7 @@ BuildRequires:  pkgconfig(dlog)
 BuildRequires:  pkgconfig(security-server)
 Obsoletes:      libslp-tapi <= 0.6.69
 Provides:       libslp-tapi
+Provides:	libSLP-tapi.so.0
 %description
 Telephony client API library
 
