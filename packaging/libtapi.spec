@@ -38,6 +38,8 @@ make %{?jobs:-j%jobs}
 %make_install
 
 rm -rf %{buildroot}/usr/include/telephony/tapi/.gitignore
+mkdir -p %{buildroot}/usr/share/license
+cp LICENSE %{buildroot}/usr/share/license/%{name}
 
 %post -p /sbin/ldconfig
 
@@ -46,9 +48,9 @@ rm -rf %{buildroot}/usr/include/telephony/tapi/.gitignore
 
 %files
 %manifest %{name}.manifest
-%license LICENSE
 %defattr(-,root,root,-)
 %{_libdir}/*.so.*
+/usr/share/license/%{name}
 
 %files devel
 %manifest %{name}.manifest
