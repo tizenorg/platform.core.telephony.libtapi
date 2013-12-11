@@ -53,10 +53,10 @@ extern "C"
 #define TAPI_SIM_CPHS_CUSTOMER_SERVICE_PROFILE_ENTRY_COUNT_MAX	11
 
 /** Authentication code max length */
-#define TAPI_SIM_AUTH_MAX_REQ_DATA_LEN 256
+#define TAPI_SIM_AUTH_MAX_REQ_DATA_LEN 16
 
 /** Authentication response data max length */
-#define TAPI_SIM_AUTH_MAX_RESP_DATA_LEN 128
+#define TAPI_SIM_AUTH_MAX_RESP_DATA_LEN 16
 
 /** SAP APDU max length */
 #define TAPI_SIM_APDU_MAX_LEN 256+2 // to be fine tuned according to lower layers, 2bytes for SW1 & SW2 should be added
