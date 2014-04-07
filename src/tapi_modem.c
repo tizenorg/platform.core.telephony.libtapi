@@ -1,9 +1,8 @@
 /*
- * libslp-tapi
+ * libtapi
  *
- * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
- *
- * Contact: Ja-young Gu <jygu@samsung.com>
+ * Copyright (c) 2013 Samsung Electronics Co. Ltd. All rights reserved.
+ * Copyright (c) 2013 Intel Corporation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,487 +17,461 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include "tapi_private.h"
+#include "tapi.h"
+#include "tapi_modem.h"
+
+#include <tel_modem.h>
 #include <string.h>
 
-#include "tapi_common.h"
-#include "TapiUtility.h"
-
-#include "TelMisc.h"
-#include "TelPower.h"
-#include "ITapiModem.h"
-#include "ITapiPS.h"
-
-#include "common.h"
-#include "tapi_log.h"
-
-static void on_response_default_set(GObject *source_object, GAsyncResult *res, gpointer user_data)
+static gboolean __tapi_check_power_status(TelModemPowerStatus status)
 {
-	GError *error = NULL;
-	GDBusConnection *conn = NULL;
-	struct tapi_resp_data *evt_cb_data = user_data;
-	int result = -1;
+	switch (status) {
+	case TEL_MODEM_POWER_OFF:
+	case TEL_MODEM_POWER_ON:
+	case TEL_MODEM_POWER_ERROR:
+		return TRUE;
+	}
 
-	GVariant *dbus_result;
+	return FALSE;
+}
 
-	conn = G_DBUS_CONNECTION (source_object);
-	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_DEINIT(error);
+void on_modem_property_change_handler(TelephonyModem *modem,
+	GVariant *changed_properties, const gchar *invalidated_properties,
+	gpointer user_data)
+{
+	TapiEvtCbData *evt_cb_data;
+	TelHandle *handle = user_data;
+	GVariantIter *iter;
+	const gchar *key;
+	GVariant *value;
 
-	if (!dbus_result) {
-		if (evt_cb_data->cb_fn) {
-			evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
+	if (handle == NULL)
+		return;
+
+	if (g_variant_n_children(changed_properties) == 0)
+		return;
+
+	dbg("Properties Changed:");
+
+	g_variant_get(changed_properties, "a{sv}", &iter);
+	while (g_variant_iter_loop(iter, "{sv}", &key, &value)) {
+		char *evt_id;
+
+		dbg("%s", key);
+
+		evt_id = g_strdup_printf("%s:%s",
+					TELEPHONY_MODEM_INTERFACE,
+					key);
+		/*
+		 * If an event callback is registered process
+		 * g-properties-changed event
+		 */
+		evt_cb_data = g_hash_table_lookup(handle->evt_table,
+							evt_id);
+		if (!evt_cb_data) {
+			dbg("Application not registered on event %s",
+							evt_id);
+			g_free(evt_id);
+			continue;
 		}
 
-		if (error)
-			g_error_free(error);
+		if (g_strcmp0("status", key) == 0) {
+			TelModemPowerStatus status = g_variant_get_int32(value);
+			dbg("value: %d", status);
+			EVT_CALLBACK_CALL(handle, evt_cb_data, evt_id,
+						&status);
+		} else if (g_strcmp0("flight_mode_status", key) == 0) {
+			int fm = g_variant_get_int32(value);
+			gboolean enable;
 
-		free(evt_cb_data);
-		return;
-	}
+			switch (fm) {
+			case TEL_MODEM_FLIGHT_MODE_ON:
+				enable = TRUE;
+				break;
+			case TEL_MODEM_FLIGHT_MODE_OFF:
+				enable = FALSE;
+				break;
+			case TEL_MODEM_FLIGHT_MODE_UNKNOWN:
+			default:
+				err("flight mode status error");
+				continue;
+			}
+			dbg("value: %d", enable);
+			EVT_CALLBACK_CALL(handle, evt_cb_data, evt_id,
+						&enable);
 
-	g_variant_get (dbus_result, "(i)", &result);
+		} else if (g_strcmp0("imei", key) == 0) {
+			char *imei = (char *)g_variant_get_string(value, NULL);
 
-	if (evt_cb_data->cb_fn) {
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
-	}
+			if (imei)
+				if (strlen(imei) > TEL_MODEM_IMEI_LENGTH_MAX) {
+					err("Invalid IMEI length");
+					return;
+				}
 
-	free(evt_cb_data);
-}
+			dbg("value: %s", imei);
+			EVT_CALLBACK_CALL(handle, evt_cb_data, evt_id, imei);
 
-static void on_response_get_version(GObject *source_object, GAsyncResult *res, gpointer user_data)
-{
-	GError *error = NULL;
-	GDBusConnection *conn = NULL;
-	struct tapi_resp_data *evt_cb_data = user_data;
-	int result = -1;
-	TelMiscVersionInformation data;
-	char *sw = NULL, *hw = NULL, *rf = NULL, *product = NULL;
+		} else if (g_strcmp0("version", key) == 0) {
+			TelModemVersion version = {{'\0'}, {'\0'}, {'\0'}, {'\0'}};
+			GVariantIter *iter = NULL;
+			GVariant *key_value;
+			const gchar *key;
 
-	GVariant *dbus_result;
+			g_variant_get(value, "a{sv}", &iter);
+			while (g_variant_iter_loop(iter, "{sv}", &key, &key_value)) {
+				if (g_strcmp0(key, "software_version") == 0) {
+					g_strlcpy(version.software_version,
+						g_variant_get_string(key_value, NULL),
+						TEL_MODEM_VERSION_LENGTH_MAX);
+				}
 
-	memset(&data, 0, sizeof(TelMiscVersionInformation));
+				if (g_strcmp0(key, "hardware_version") == 0) {
+					g_strlcpy(version.hardware_version,
+						g_variant_get_string(key_value, NULL),
+						TEL_MODEM_VERSION_LENGTH_MAX);
+				}
 
-	conn = G_DBUS_CONNECTION (source_object);
-	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_DEINIT(error);
+				if (g_strcmp0(key, "calibration_date") == 0) {
+					g_strlcpy(version.calibration_date,
+						g_variant_get_string(key_value, NULL),
+						TEL_MODEM_VERSION_LENGTH_MAX);
+				}
 
-	if (!dbus_result) {
-		if (evt_cb_data->cb_fn) {
-			evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
+				if (g_strcmp0(key, "product_code") == 0) {
+					g_strlcpy(version.product_code,
+						g_variant_get_string(key_value, NULL),
+						TEL_MODEM_VERSION_LENGTH_MAX);
+				}
+			}
+			g_variant_iter_free(iter);
+
+			EVT_CALLBACK_CALL(handle, evt_cb_data, evt_id,
+						&version);
 		}
 
-		if (error)
-			g_error_free(error);
-
-		free(evt_cb_data);
-		return;
+		g_variant_iter_free(iter);
+		g_free(evt_id);
 	}
-
-	g_variant_get (dbus_result, "(issss)", &result,
-			&sw, &hw, &rf, &product);
-
-	dbg("product code [%s]", product);
-
-	g_strlcpy((gchar *)data.szSwVersion, sw, MAX_VERSION_LEN);
-	g_strlcpy((gchar *)data.szHwVersion, hw, MAX_VERSION_LEN);
-	g_strlcpy((gchar *)data.szRfCalDate, rf, MAX_VERSION_LEN);
-	g_strlcpy((gchar *)data.szProductCode, product, TAPI_MISC_PRODUCT_CODE_LEN_MAX);
-
-	if (evt_cb_data->cb_fn) {
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &data, evt_cb_data->user_data);
-	}
-
-	free(evt_cb_data);
 }
 
-static void on_response_get_serial_number(GObject *source_object, GAsyncResult *res, gpointer user_data)
+
+static void on_response_modem_set_power_status(GObject *source_object,
+						GAsyncResult *res,
+						gpointer user_data)
 {
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+	int result = TEL_MODEM_RESULT_FAILURE;
 	GError *error = NULL;
-	GDBusConnection *conn = NULL;
-	struct tapi_resp_data *evt_cb_data = user_data;
-	int result = -1;
-	char *sn = NULL;
 
-	GVariant *dbus_result;
+	telephony_modem_call_set_power_status_finish(handle->modem_proxy,
+						&result, res, &error);
 
-	conn = G_DBUS_CONNECTION (source_object);
-	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_DEINIT(error);
+	CHECK_DEINIT(error, rsp_cb_data, result);
 
-	if (!dbus_result) {
-		if (evt_cb_data->cb_fn) {
-			evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
+	if (result != TEL_MODEM_RESULT_SUCCESS)
+		err("Failed to set modem power status - result: [%d]", result);
+	else
+		dbg("set modem power status: [SUCCESS]");
+
+	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+}
+
+/* Set modem power status to ON OFF or RESET */
+EXPORT_API TelReturn tapi_modem_set_power_status(TelHandle *handle,
+						TelModemPowerStatus status,
+						TapiResponseCb callback,
+						void *user_data)
+{
+	TapiRespCbData *rsp_cb_data;
+
+	dbg("Entry");
+
+	TEL_RETURN_IF_CHECK_FAIL(handle && __tapi_check_power_status(status)
+				&& callback, TEL_RETURN_INVALID_PARAMETER);
+
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+
+	telephony_modem_call_set_power_status(handle->modem_proxy, status,
+					NULL,
+					on_response_modem_set_power_status,
+					rsp_cb_data);
+
+	return TEL_RETURN_SUCCESS;
+}
+
+static void on_response_modem_set_flight_mode(GObject *source_object,
+						GAsyncResult *res,
+						gpointer user_data)
+{
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+	int result = TEL_MODEM_RESULT_FAILURE;
+	GError *error = NULL;
+
+	telephony_modem_call_set_flight_mode_finish(handle->modem_proxy,
+							&result, res, &error);
+
+	CHECK_DEINIT(error, rsp_cb_data, result);
+
+	if (result != TEL_MODEM_RESULT_SUCCESS)
+		err("Failed to set modem flight mode - result: [%d]", result);
+	else
+		dbg("set modem flight mode: [SUCCESS]");
+
+	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+}
+
+EXPORT_API TelReturn tapi_modem_set_flight_mode(TelHandle *handle,
+						gboolean enable,
+						TapiResponseCb callback,
+						void *user_data)
+{
+	TapiRespCbData *rsp_cb_data;
+
+	dbg("Entry");
+
+	TEL_RETURN_IF_CHECK_FAIL(handle && callback,
+					TEL_RETURN_INVALID_PARAMETER);
+
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+
+	telephony_modem_call_set_flight_mode(handle->modem_proxy, enable,
+					NULL,
+					on_response_modem_set_flight_mode,
+					rsp_cb_data);
+
+	return TEL_RETURN_SUCCESS;
+}
+
+EXPORT_API TelReturn tapi_modem_get_flight_mode(TelHandle *handle,
+						gboolean *enable)
+{
+	int flight_mode_status;
+	GError *error = NULL;
+	TelReturn result = TEL_RETURN_SUCCESS;
+	int modem_res;
+
+	dbg("Entry");
+
+	TEL_RETURN_IF_CHECK_FAIL(handle, TEL_RETURN_INVALID_PARAMETER);
+
+	flight_mode_status =
+		telephony_modem_get_flight_mode_status(handle->modem_proxy);
+
+	switch (flight_mode_status) {
+	case TEL_MODEM_FLIGHT_MODE_ON:
+		*enable = TRUE;
+		goto out;
+	case TEL_MODEM_FLIGHT_MODE_OFF:
+		*enable = FALSE;
+		goto out;
+	case TEL_MODEM_FLIGHT_MODE_UNKNOWN:
+		/*
+		 * Need to read state from modem directly to update DBus cached
+		 * property.
+		 */
+		break;
+	default:
+		err("flight mode status error");
+		result = TEL_RETURN_FAILURE;
+		goto out;
+	}
+
+	telephony_modem_call_get_flight_mode_sync(handle->modem_proxy,
+							&modem_res, enable,
+							NULL, &error);
+	if (error) {
+		dbg("dbus error = %d (%s)", error->code, error->message);
+		g_error_free(error);
+		result = TEL_RETURN_FAILURE;
+		goto out;
+	}
+
+	if (modem_res != TEL_MODEM_RESULT_SUCCESS)
+		result = TEL_RETURN_FAILURE;
+
+out:
+	return result;
+}
+
+EXPORT_API TelReturn tapi_modem_get_version(TelHandle *handle,
+						TelModemVersion *version)
+{
+	GVariant *dbus_version;
+	TelReturn result = TEL_RETURN_SUCCESS;
+
+	dbg("Entry");
+
+	TEL_RETURN_IF_CHECK_FAIL(handle, TEL_RETURN_INVALID_PARAMETER);
+
+	/* dbus_version doesn't need to be g_variant_unref() */
+	dbus_version = telephony_modem_get_version(handle->modem_proxy);
+	if (dbus_version != NULL) {
+		GVariantIter *iter = NULL;
+		GVariant *key_value;
+		const gchar *key;
+
+		g_variant_get(dbus_version, "a{sv}", &iter);
+		while (g_variant_iter_loop(iter, "{sv}", &key, &key_value)) {
+			if (g_strcmp0(key, "software_version") == 0) {
+				g_strlcpy(version->software_version,
+					g_variant_get_string(key_value, NULL),
+					TEL_MODEM_VERSION_LENGTH_MAX + 1);
+			}
+			else if (g_strcmp0(key, "hardware_version") == 0) {
+				g_strlcpy(version->hardware_version,
+					g_variant_get_string(key_value, NULL),
+					TEL_MODEM_VERSION_LENGTH_MAX + 1);
+			}
+			else if (g_strcmp0(key, "calibration_date") == 0) {
+				g_strlcpy(version->calibration_date,
+					g_variant_get_string(key_value, NULL),
+					TEL_MODEM_VERSION_LENGTH_MAX + 1);
+			}
+			else if (g_strcmp0(key, "product_code") == 0) {
+				g_strlcpy(version->product_code,
+					g_variant_get_string(key_value, NULL),
+					TEL_MODEM_VERSION_LENGTH_MAX + 1);
+			}
+		}
+		g_variant_iter_free(iter);
+
+		if (strlen(version->software_version)
+				|| strlen(version->hardware_version)
+				|| strlen(version->calibration_date)
+				|| strlen(version->product_code)) {
+			dbg("Version information - Software: [%s] "\
+				"Hardware: [%s] Calibration date: [%d] "\
+				"Product code: [%s]", version->software_version,
+				version->hardware_version,
+				version->calibration_date,
+				version->product_code);
+			return result;
+		}
+	}
+
+	/* Fetch version information from Modem */
+	{
+		gchar *soft, *hard, *cal_date, *prod_code;
+		gint modem_res;
+		GError *error = NULL;
+
+		telephony_modem_call_get_version_sync(handle->modem_proxy,
+			&modem_res, &soft, &hard, &cal_date, &prod_code, NULL, &error);
+		if (error) {
+			dbg("dbus error = %d (%s)", error->code, error->message);
+			g_error_free(error);
+			result = TEL_RETURN_FAILURE;
+			goto out;
 		}
 
-		if (error)
-			g_error_free(error);
-
-		free(evt_cb_data);
-		return;
-	}
-
-	g_variant_get (dbus_result, "(is)", &result, &sn);
-
-	if (evt_cb_data->cb_fn) {
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, sn, evt_cb_data->user_data);
-	}
-
-	free(evt_cb_data);
-}
-
-static void on_response_get_imei(GObject *source_object, GAsyncResult *res, gpointer user_data)
-{
-	GError *error = NULL;
-	GDBusConnection *conn = NULL;
-	struct tapi_resp_data *evt_cb_data = user_data;
-	int result = -1;
-	char *imei = NULL;
-
-	GVariant *dbus_result;
-
-	conn = G_DBUS_CONNECTION (source_object);
-	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_DEINIT(error);
-
-	if (!dbus_result) {
-		if (evt_cb_data->cb_fn) {
-			evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
+		if (modem_res != TEL_MODEM_RESULT_SUCCESS) {
+			result = TEL_RETURN_FAILURE;
+			goto out;
 		}
 
-		if (error)
-			g_error_free(error);
-
-		free(evt_cb_data);
-		return;
-	}
-
-	g_variant_get (dbus_result, "(is)", &result, &imei);
-
-	if (evt_cb_data->cb_fn) {
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, imei, evt_cb_data->user_data);
-	}
-
-	free(evt_cb_data);
-}
-
-static void on_response_set_dun_pin_ctrl(GObject *source_object, GAsyncResult *res, gpointer user_data)
-{
-	GError *error = NULL;
-	GDBusConnection *conn = NULL;
-	struct tapi_resp_data *evt_cb_data = user_data;
-	int result = -1;
-
-	GVariant *dbus_result;
-
-	conn = G_DBUS_CONNECTION (source_object);
-	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_DEINIT(error);
-
-	if (!dbus_result) {
-		if (evt_cb_data->cb_fn) {
-			evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
+		if (soft) {
+			strncpy(version->software_version, soft,
+				TEL_MODEM_VERSION_LENGTH_MAX);
+			version->software_version[TEL_MODEM_VERSION_LENGTH_MAX] = '\0';
 		}
 
-		if (error)
-			g_error_free(error);
-
-		free(evt_cb_data);
-		return;
-	}
-
-	g_variant_get (dbus_result, "(i)", &result);
-	dbg("dun pin ctrl result(%d)", result);
-
-	if (evt_cb_data->cb_fn) {
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, 0, evt_cb_data->user_data);
-	}
-
-	free(evt_cb_data);
-}
-
-static void on_response_get_flight_mode(GObject *source_object, GAsyncResult *res, gpointer user_data)
-{
-	GError *error = NULL;
-	GDBusConnection *conn = NULL;
-	struct tapi_resp_data *evt_cb_data = user_data;
-	int result = -1;
-	gboolean mode = FALSE;
-
-	GVariant *dbus_result;
-
-	conn = G_DBUS_CONNECTION (source_object);
-	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_DEINIT(error);
-
-	if (!dbus_result) {
-		if (evt_cb_data->cb_fn) {
-			evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
+		if (hard) {
+			strncpy(version->hardware_version, hard,
+				TEL_MODEM_VERSION_LENGTH_MAX);
+			version->hardware_version[TEL_MODEM_VERSION_LENGTH_MAX] = '\0';
 		}
 
-		if (error)
-			g_error_free(error);
+		if (cal_date) {
+			strncpy(version->calibration_date, cal_date,
+				TEL_MODEM_VERSION_LENGTH_MAX);
+			version->calibration_date[TEL_MODEM_VERSION_LENGTH_MAX] = '\0';
+		}
 
-		free(evt_cb_data);
-		return;
+		if (prod_code) {
+			strncpy(version->product_code, prod_code,
+				TEL_MODEM_VERSION_LENGTH_MAX);
+			version->product_code[TEL_MODEM_VERSION_LENGTH_MAX] = '\0';
+		}
+
+		g_free(soft);
+		g_free(hard);
+		g_free(cal_date);
+		g_free(prod_code);
 	}
 
-	g_variant_get (dbus_result, "(bi)", &mode, &result);
-
-	if (evt_cb_data->cb_fn) {
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &mode, evt_cb_data->user_data);
-	}
-
-	free(evt_cb_data);
+out:
+	return result;
 }
 
-/**
- *
- * Turn Off or Turn On the Modem.
- *
- * @param[in]	tapi_power_phone_cmd_t  Turn ON or OFF.
- * @param[out]	NONE
- * @return		TapiResult_t API result code. Either Success or some Error Code.
- * @exception	In case of exceptions return value contains appropriate error code.
- * @remarks		None.
- * @see			tapi_power_phone_cmd_t, TapiResult_t.
- */
-EXPORT_API int tel_process_power_command(TapiHandle *handle, tapi_power_phone_cmd_t cmd, tapi_response_cb callback, void *user_data)
+EXPORT_API TelReturn tapi_modem_get_imei(TelHandle *handle,
+				char imei[TEL_MODEM_IMEI_LENGTH_MAX + 1])
 {
-	struct tapi_resp_data *evt_cb_data = NULL;
-	GVariant *param;
+	GError *error = NULL;
+	char *dbus_imei;
+	TelReturn result = TEL_RETURN_FAILURE;
+	int modem_res;
+	unsigned int imei_len;
 
-	dbg("Func Entrance");
+	dbg("Entry");
 
-	if (cmd > TAPI_PHONE_POWER_RESET)
-		return TAPI_API_INVALID_INPUT;
+	TEL_RETURN_IF_CHECK_FAIL(handle, TEL_RETURN_INVALID_PARAMETER);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	/* dbus_imei doesn't need to be g_free() */
+	dbus_imei= (char *)telephony_modem_get_imei(handle->modem_proxy);
+	if (dbus_imei != NULL && strlen(dbus_imei) > 0) {
+		imei_len = strlen(dbus_imei);
+		if (imei_len > TEL_MODEM_IMEI_LENGTH_MAX)
+			err("Invalid IMEI length %d", imei_len);
+		else {
+			memcpy(imei, dbus_imei, imei_len + 1);
+			result = TEL_RETURN_SUCCESS;
+		}
 
-	param = g_variant_new("(i)", cmd);
-
-	g_dbus_connection_call(handle->dbus_connection,
-			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_MODEM_INTERFACE,
-			"SetPower", param, NULL,
-			G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-			on_response_default_set, evt_cb_data);
-
-	return TAPI_API_SUCCESS;
-}
-
-/**
- *
- * Enter in to or Leave from Flight Mode.
- *
- * @param[in]	Enable (if 1, Enable and if 0, Disable)
- * @param[out]	NONE
- * @return		TapiResult_t API result code. Either Success or some Error Code.
- * @exception	In case of exceptions return value contains appropriate error code.
- * @remarks		None
- * @see			None.
- */
-EXPORT_API int tel_set_flight_mode(TapiHandle *handle, tapi_power_flight_mode_type_t mode, tapi_response_cb callback, void *user_data)
-{
-	struct tapi_resp_data *evt_cb_data = NULL;
-	GVariant *param;
-	gboolean b_mode;
-
-	dbg("Func Entrance");
-
-	if (mode == TAPI_POWER_FLIGHT_MODE_ENTER) {
-		b_mode = TRUE;
+		goto out;
 	}
-	else if (mode == TAPI_POWER_FLIGHT_MODE_LEAVE) {
-		b_mode = FALSE;
+
+	/*
+	 * dbus_imei needs to be g_free() because this function is using
+	 * g_variant_get() internally.
+	 */
+	telephony_modem_call_get_imei_sync(handle->modem_proxy, &modem_res,
+						&dbus_imei, NULL, &error);
+	if (error) {
+		dbg("dbus error = %d (%s)", error->code, error->message);
+		g_error_free(error);
+		goto out;
 	}
+
+	if (modem_res != TEL_MODEM_RESULT_SUCCESS || dbus_imei == NULL)
+		goto out;
+
+	imei_len = strlen(dbus_imei);
+	if (imei_len > TEL_MODEM_IMEI_LENGTH_MAX)
+		err("Invalid IMEI length %d", imei_len);
 	else {
-		return TAPI_API_INVALID_INPUT;
-	};
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	param = g_variant_new("(b)", b_mode);
-
-	g_dbus_connection_call(handle->dbus_connection,
-			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_MODEM_INTERFACE,
-			"SetFlightMode", param, NULL,
-			G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-			on_response_default_set, evt_cb_data);
-
-	return TAPI_API_SUCCESS;
-}
-
-EXPORT_API int tel_get_flight_mode(TapiHandle *handle, tapi_response_cb callback, void *user_data)
-{
-	struct tapi_resp_data *evt_cb_data = NULL;
-
-	dbg("Func Entrance");
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	g_dbus_connection_call(handle->dbus_connection,
-			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_MODEM_INTERFACE,
-			"GetFlightMode", NULL, NULL,
-			G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-			on_response_get_flight_mode, evt_cb_data);
-
-	return TAPI_API_SUCCESS;
-}
-
-EXPORT_API int tel_get_misc_me_version(TapiHandle *handle, tapi_response_cb callback, void *user_data)
-{
-	struct tapi_resp_data *evt_cb_data = NULL;
-
-	dbg("Func Entrance");
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	g_dbus_connection_call(handle->dbus_connection,
-			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_MODEM_INTERFACE,
-			"GetVersion", NULL, NULL,
-			G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-			on_response_get_version, evt_cb_data);
-
-	return TAPI_API_SUCCESS;
-}
-
-EXPORT_API TelMiscVersionInformation *tel_get_misc_me_version_sync(TapiHandle *handle)
-{
-	GVariant *dbus_result;
-	int result = -1;
-	TelMiscVersionInformation *data = NULL;
-	char *sw = NULL, *hw = NULL, *rf = NULL, *product = NULL;
-
-	dbg("Func Entrance");
-
-	if (!handle)
-		return NULL;
-
-	dbus_result = g_dbus_connection_call_sync(handle->dbus_connection,
-			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_MODEM_INTERFACE,
-			"GetVersion", NULL, NULL,
-			G_DBUS_CALL_FLAGS_NONE, -1, NULL, NULL);
-
-	g_variant_get (dbus_result, "(issss)", &result,
-			&sw, &hw, &rf, &product);
-
-	dbg("product code[%s]", product);
-
-	data = calloc(sizeof(TelMiscVersionInformation), 1);
-	if (!data)
-		return NULL;
-
-	g_strlcpy((gchar *)data->szSwVersion, sw, MAX_VERSION_LEN);
-	g_strlcpy((gchar *)data->szHwVersion, hw, MAX_VERSION_LEN);
-	g_strlcpy((gchar *)data->szRfCalDate, rf, MAX_VERSION_LEN);
-	g_strlcpy((gchar *)data->szProductCode, product, TAPI_MISC_PRODUCT_CODE_LEN_MAX);
-
-	return data;
-}
-
-EXPORT_API int tel_get_misc_me_imei(TapiHandle *handle, tapi_response_cb callback, void *user_data)
-{
-	struct tapi_resp_data *evt_cb_data = NULL;
-
-	dbg("Func Entrance");
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	g_dbus_connection_call(handle->dbus_connection,
-			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_MODEM_INTERFACE,
-			"GetIMEI", NULL, NULL,
-			G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-			on_response_get_imei, evt_cb_data);
-
-	return TAPI_API_SUCCESS;
-}
-
-EXPORT_API char *tel_get_misc_me_imei_sync(TapiHandle *handle)
-{
-	GVariant *dbus_result;
-	char *imei = NULL;
-	int result = 0;
-
-	dbg("Func Entrance");
-
-	if (!handle)
-		return NULL;
-
-	dbus_result = g_dbus_connection_call_sync(handle->dbus_connection,
-			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_MODEM_INTERFACE,
-			"GetIMEI", NULL, NULL,
-			G_DBUS_CALL_FLAGS_NONE, -1, NULL, NULL);
-
-	g_variant_get (dbus_result, "(is)", &result, &imei);
-
-	return imei;
-}
-
-EXPORT_API int tel_get_misc_me_sn(TapiHandle *handle, tapi_response_cb callback, void *user_data)
-{
-	struct tapi_resp_data *evt_cb_data = NULL;
-
-	dbg("Func Entrance");
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	g_dbus_connection_call(handle->dbus_connection,
-			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_MODEM_INTERFACE,
-			"GetSerialNumber", NULL, NULL,
-			G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-			on_response_get_serial_number, evt_cb_data);
-
-	return TAPI_API_SUCCESS;
-}
-
-EXPORT_API char *tel_get_misc_me_sn_sync(TapiHandle *handle)
-{
-	GVariant *dbus_result;
-	char *sn = NULL;
-	int result = 0;
-
-	dbg("Func Entrance");
-
-	if (!handle)
-		return NULL;
-
-	dbus_result = g_dbus_connection_call_sync(handle->dbus_connection,
-			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_MODEM_INTERFACE,
-			"GetSerialNumber", NULL, NULL,
-			G_DBUS_CALL_FLAGS_NONE, -1, NULL, NULL);
-
-	g_variant_get (dbus_result, "(is)", &result, &sn);
-
-	return sn;
-}
-
-EXPORT_API int tel_check_modem_power_status(TapiHandle *handle, int *result)
-{
-	return tel_get_property_int(handle, TAPI_PROP_MODEM_POWER, result);
-}
-
-EXPORT_API int tel_control_modem_dun_pin_ctrl(TapiHandle *handle, tapi_ps_btdun_pincontrol *pincontrol, tapi_response_cb callback, void *user_data)
-{
-	struct tapi_resp_data *evt_cb_data = NULL;
-	GVariant *param;
-
-	dbg("Func Entrance ");
-
-	if (!handle || !handle->dbus_connection || !pincontrol){
-		dbg("invalid parameter");
-		return TAPI_API_INVALID_INPUT;
+		memcpy(imei, dbus_imei, imei_len + 1);
+		result = TEL_RETURN_SUCCESS;
 	}
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	g_free(dbus_imei);
 
-	param = g_variant_new("(ib)", pincontrol->signal, pincontrol->status);
+out:
+	return result;
+}
 
-	g_dbus_connection_call(handle->dbus_connection,
-			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_MODEM_INTERFACE,
-			"SetDunPinCtrl", param, NULL,
-			G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-			on_response_set_dun_pin_ctrl, evt_cb_data);
 
-	return TAPI_API_SUCCESS;
+EXPORT_API TelReturn tapi_modem_get_power_status(TelHandle *handle,
+						TelModemPowerStatus *status)
+{
+	dbg("Entry");
+
+	TEL_RETURN_IF_CHECK_FAIL(handle, TEL_RETURN_INVALID_PARAMETER);
+
+	*status = telephony_modem_get_status(handle->modem_proxy);
+
+	return TEL_RETURN_SUCCESS;
 }

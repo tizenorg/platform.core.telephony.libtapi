@@ -1,9 +1,8 @@
 /*
- * libslp-tapi
+ * libtapi
  *
- * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
- *
- * Contact: Ja-young Gu <jygu@samsung.com>
+ * Copyright (c) 2013 Samsung Electronics Co. Ltd. All rights reserved.
+ * Copyright (c) 2013 Intel Corporation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,1496 +17,1124 @@
  * limitations under the License.
  */
 
-
-/**
- * @ingroup	TAPI
- * @defgroup	SMS
- * @{
- *
- * SMS APIs allow a client to accomplish the following features: @n
- * - Send, Recieve, Save, Delete, Read short messages  @n
- * - Set and Get information like Service Center Address, Cell Broadcast configuration,Preferred Bearer, SMS parameters @n
- * - Retrieve information like Current Memory selected, NetTextCount related to the messages @n
- * - Set delivery report @n
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "tapi_common.h"
-#include "TapiUtility.h"
-#include "TelSms.h"
-
-#include "common.h"
 #include "tapi_log.h"
-#include "ITapiNetText.h"
+#include "tapi.h"
+#include "tapi_private.h"
 
-static void on_response_default(GObject *source_object, GAsyncResult *res, gpointer user_data)
+#include "tapi_sms.h"
+
+static gboolean __tapi_check_sim_sms_data(const TelSmsSimDataInfo *data)
 {
-	GError *error = NULL;
-	GDBusConnection *conn = NULL;
-	struct tapi_resp_data *evt_cb_data = user_data;
-	int result = -1;
+	if (data == NULL)
+		return FALSE;
 
-	GVariant *dbus_result = NULL;
-	int data = 0;
-
-	conn = G_DBUS_CONNECTION (source_object);
-	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-
-	CHECK_DEINIT(error);
-
-	if (!dbus_result) {
-		if (evt_cb_data) {
-			if (evt_cb_data->cb_fn) {
-				evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
-			}
-
-			free(evt_cb_data);
-		}
-
-		if (error)
-			g_error_free(error);
-
-		return;
+	switch (data->status) {
+	case TEL_SMS_STATUS_MT_READ:
+	case TEL_SMS_STATUS_MT_UNREAD:
+	case TEL_SMS_STATUS_MO_SENT:
+	case TEL_SMS_STATUS_MO_NOT_SENT:
+	case TEL_SMS_STATUS_MO_DELIVERED:
+	case TEL_SMS_STATUS_MO_DELIVERY_NOT_CONFIRMED:
+	case TEL_SMS_STATUS_REPLACED:
+		break;
+	default:
+		return FALSE;
 	}
 
-	dbg("on_response_default type_format(%s)", g_variant_get_type_string(dbus_result));
+	if (data->data.tpdu_length > TEL_SMS_SMDATA_SIZE_MAX)
+		return FALSE;
 
-	g_variant_get (dbus_result, "(i)", &result);
-
-	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn) {
-			evt_cb_data->cb_fn(evt_cb_data->handle, result, &data, evt_cb_data->user_data);
-		}
-
-		free(evt_cb_data);
-	}
+	return TRUE;
 }
 
-static void on_response_read_msg(GObject *source_object, GAsyncResult *res, gpointer user_data)
+void on_sms_property_change_handler(TelephonySms *sms,
+	GVariant *changed_properties, const gchar *invalidated_properties,
+	gpointer user_data)
 {
-	GError *error = NULL;
-	GDBusConnection *conn = NULL;
-	struct tapi_resp_data *evt_cb_data = user_data;
-	int result = -1;
 
-	TelSmsData_t	readMsg = {0,};
+	TapiEvtCbData *evt_cb_data = NULL;
+	TelHandle *handle = user_data;
+	GVariantIter *iter;
+	const gchar *key;
+	GVariant *value;
 
-	GVariant *dbus_result = NULL;
-	const char *sca = NULL;
-	const char *tpdu = NULL;
-	gsize length;
-	guchar *decoded_sca = NULL;
-	guchar *decoded_tpdu = NULL;
+	if (handle == NULL)
+		return;
 
-	conn = G_DBUS_CONNECTION (source_object);
-	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_DEINIT(error);
+	if (g_variant_n_children(changed_properties) == 0)
+		return;
 
-	if (!dbus_result) {
+	dbg("Properties Changed:");
+
+	g_variant_get(changed_properties, "a{sv}", &iter);
+	while (g_variant_iter_loop(iter, "{sv}", &key, &value)) {
+		char *evt_id;
+
+		dbg("%s", key);
+
+		evt_id = g_strdup_printf("%s:%s", TELEPHONY_SMS_INTERFACE, key);
+
+		evt_cb_data = g_hash_table_lookup(handle->evt_table, evt_id);
+
 		if (evt_cb_data) {
-			if (evt_cb_data->cb_fn) {
-				evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
+			if (!g_strcmp0("SimMemoryStatus", key)
+				|| !g_strcmp0("InitStatus", key)) {
+				gboolean status = g_variant_get_boolean(value);
+				dbg("status[%d]", status);
+				EVT_CALLBACK_CALL(handle, evt_cb_data, evt_id, &status);
 			}
-
-			free(evt_cb_data);
 		}
+		g_free(evt_id);
+	}
+	g_variant_iter_free(iter);
+}
 
-		if (error)
-			g_error_free(error);
+void on_sms_signal_emit_handler(TelephonySms *sms, gchar *sender_name,
+		gchar *signal_name, GVariant *parameters, gpointer user_data)
+{
+	TapiEvtCbData *evt_cb_data = NULL;
+	TelHandle *handle = user_data;
+	char *evt_id = NULL;
 
+	dbg("Entry");
+
+	if (handle == NULL)
+		return;
+
+	evt_id = g_strdup_printf("%s:%s", TELEPHONY_SMS_INTERFACE,
+					signal_name);
+
+	evt_cb_data = g_hash_table_lookup(handle->evt_table, evt_id);
+	if (evt_cb_data == NULL) {
+		g_free(evt_id);
 		return;
 	}
 
-	dbg("on_response_read_msg type_format(%s)", g_variant_get_type_string(dbus_result));
+	if (!g_strcmp0(signal_name, "IncomingMsg")) {
+		TelSmsDatapackageInfo incoming_msg;
+		GVariant *sca;
+		char *sca_number = NULL;
+		char *tpdu = NULL;
+		guchar *decoded_tpdu = NULL;
 
-//	readMsg.SimIndex = 0xFFFFFFFF;
-	g_variant_get (dbus_result, "(iiisis)", &result,
-			&readMsg.SimIndex,
-			&readMsg.MsgStatus,
-			&sca,
-			&readMsg.SmsData.MsgLength,
-			&tpdu);
+		GVariantIter *iter = NULL;
+		GVariant *key_value;
+		const gchar *key;
 
-	decoded_sca = g_base64_decode(sca, &length);
-	if (decoded_sca) {
-		memcpy(&(readMsg.SmsData.Sca[0]), decoded_sca, TAPI_SMS_ENCODED_SCA_LEN_MAX);
-		g_free(decoded_sca);
-	}
+		memset(&incoming_msg, 0, sizeof(TelSmsDatapackageInfo));
 
-	decoded_tpdu = g_base64_decode(tpdu, &length);
-	if (decoded_tpdu) {
-		memcpy(&(readMsg.SmsData.szData[0]), decoded_tpdu, TAPI_NETTEXT_SMDATA_SIZE_MAX + 1);
+		g_variant_get(parameters, "(@a{sv}s)", &sca, &tpdu);
+		g_variant_get(sca, "a{sv}", &iter);
+		while (g_variant_iter_loop(iter, "{sv}", &key, &key_value)) {
+			if (g_strcmp0(key, "ton") == 0) {
+				incoming_msg.sca.ton = g_variant_get_byte(key_value);
+			}
+			else if (g_strcmp0(key, "npi") == 0) {
+				incoming_msg.sca.npi = g_variant_get_byte(key_value);
+			}
+			else if (g_strcmp0(key, "number") == 0) {
+				g_strlcpy(incoming_msg.sca.number,
+					g_variant_get_string(key_value, NULL),
+					TEL_SMS_SCA_LEN_MAX + 1);
+			}
+		}
+		g_variant_iter_free(iter);
+
+		dbg("TON: [%d] NPI: [%d] SCA: [%s]",
+			incoming_msg.sca.ton, incoming_msg.sca.npi,
+			incoming_msg.sca.number);
+
+		decoded_tpdu = g_base64_decode(tpdu, &incoming_msg.tpdu_length);
+		if (!decoded_tpdu) {
+			err("base64 decoding of tpdu failed");
+			goto out;
+		}
+		else if (incoming_msg.tpdu_length > TEL_SMS_SMDATA_SIZE_MAX) {
+			err("invalid tpdu length received: [%d]", incoming_msg.tpdu_length);
+			g_free(decoded_tpdu);
+			goto out;
+		}
+
+		memcpy((gchar*)incoming_msg.tpdu, (gchar*)decoded_tpdu,
+				TEL_SMS_SMDATA_SIZE_MAX);
+
+		dbg("Signal [%s] TPDU length: [%d]",
+			signal_name, incoming_msg.tpdu_length);
+
+		EVT_CALLBACK_CALL(handle, evt_cb_data, evt_id, &incoming_msg);
+
 		g_free(decoded_tpdu);
+out:
+		g_variant_unref(sca);
+		g_free(sca_number);
+		g_free(tpdu);
 	}
+	else if (!g_strcmp0(signal_name, "IncomingCbMsg")) {
+		TelSmsCbMsgInfo cb_msg;
+		char *pdu = NULL;
+		memset(&cb_msg, 0, sizeof(TelSmsCbMsgInfo));
 
-	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn) {
-			evt_cb_data->cb_fn(evt_cb_data->handle, result, &readMsg, evt_cb_data->user_data);
+		g_variant_get(parameters, "(is)", &cb_msg.cb_type, &pdu);
+
+		cb_msg.cb_data = g_base64_decode(pdu, &cb_msg.length);
+		if (cb_msg.cb_data) {
+			dbg("signal[%s] cb_type[%d] cb_data[%s] cb_data_len[%d]",
+				signal_name, cb_msg.cb_type, pdu, cb_msg.length);
+		} else {
+			dbg("signal[%s] cb_type[%d] cb_data_len[%d]",
+				signal_name, cb_msg.cb_type, cb_msg.length);
 		}
 
-		free(evt_cb_data);
+		EVT_CALLBACK_CALL(handle, evt_cb_data, evt_id, &cb_msg);
+		g_free(pdu);
+		g_free(cb_msg.cb_data);
 	}
+	else if (!g_strcmp0(signal_name, "IncomingEtwsMsg")) {
+		TelSmsEtwsMsgInfo etws_msg;
+		char *pdu = NULL;
+		memset(&etws_msg, 0, sizeof(TelSmsEtwsMsgInfo));
+
+		g_variant_get(parameters, "(is)", &etws_msg.etws_type, &pdu);
+		etws_msg.etws_data = g_base64_decode(pdu, &etws_msg.length);
+
+		if (etws_msg.etws_data) {
+			dbg("signal[%s] etws_type[%d]  etws_data[%s] etws_data_len[%d]",
+				signal_name, etws_msg.etws_type, pdu, etws_msg.length);
+		} else {
+			dbg("signal[%s] etws_type[%d]  etws_data_len[%d]",
+				signal_name, etws_msg.etws_type, etws_msg.length);
+		}
+
+		EVT_CALLBACK_CALL(handle, evt_cb_data, evt_id, &etws_msg);
+
+		g_free(pdu);
+		g_free(etws_msg.etws_data);
+
+	}
+	else {
+		err("Unsupported signal [%s]", signal_name);
+	}
+
+	g_free(evt_id);
 }
 
-static void on_response_write_msg(GObject *source_object, GAsyncResult *res, gpointer user_data)
+static void on_response_sms_send(GObject *source_object,
+			GAsyncResult *res, gpointer user_data)
 {
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+	TelSmsResult result = TEL_SMS_RESULT_FAILURE;
 	GError *error = NULL;
-	GDBusConnection *conn = NULL;
-	struct tapi_resp_data *evt_cb_data = user_data;
-	int result = -1;
-	int index = 0;
 
-	GVariant *dbus_result = NULL;
+	dbg("Entry");
 
-	conn = G_DBUS_CONNECTION (source_object);
-	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_DEINIT(error);
+	telephony_sms_call_send_finish(handle->sms_proxy, (int *)&result,
+			res, &error);
 
-	if (!dbus_result) {
-		if (evt_cb_data) {
-			if (evt_cb_data->cb_fn) {
-				evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
-			}
+	CHECK_DEINIT(error, rsp_cb_data, result);
 
-			free(evt_cb_data);
-		}
-
-		if (error)
-			g_error_free(error);
-
-		return;
-	}
-
-	dbg("on_response_write_msg type_format(%s)", g_variant_get_type_string(dbus_result));
-
-	g_variant_get (dbus_result, "(ii)", &result, &index);
-
-	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn) {
-			evt_cb_data->cb_fn(evt_cb_data->handle, result, &index, evt_cb_data->user_data);
-		}
-
-		free(evt_cb_data);
-	}
+	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
 }
 
-static void on_response_delete_msg(GObject *source_object, GAsyncResult *res, gpointer user_data)
+EXPORT_API TelReturn tapi_sms_send(TelHandle *handle,
+			const TelSmsSendInfo *info,
+			TapiResponseCb callback, void *user_data)
 {
-	GError *error = NULL;
-	GDBusConnection *conn = NULL;
-	struct tapi_resp_data *evt_cb_data = user_data;
-	int result = -1;
-	int index = -1;
+	TapiRespCbData *rsp_cb_data;
+	GVariantBuilder sca_builder;
+	GVariant *sca;
+	char *encoded_tpdu;
 
-	GVariant *dbus_result = NULL;
+	dbg("Entry");
 
-	conn = G_DBUS_CONNECTION (source_object);
-	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_DEINIT(error);
+	g_return_val_if_fail(handle != NULL && info != NULL &&
+			info->send_data.tpdu_length <= TEL_SMS_SMDATA_SIZE_MAX &&
+			callback != NULL,
+			TEL_RETURN_INVALID_PARAMETER);
 
-	if (!dbus_result) {
-		if (evt_cb_data) {
-			if (evt_cb_data->cb_fn) {
-				evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
-			}
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
 
-			free(evt_cb_data);
-		}
+	g_variant_builder_init(&sca_builder, G_VARIANT_TYPE("a{sv}"));
 
-		if (error)
-			g_error_free(error);
+	g_variant_builder_add(&sca_builder, "{sv}",
+		"ton", g_variant_new_byte(info->send_data.sca.ton));
+	g_variant_builder_add(&sca_builder, "{sv}",
+		"npi", g_variant_new_byte(info->send_data.sca.npi));
+	g_variant_builder_add(&sca_builder, "{sv}",
+		"number", g_variant_new_string(info->send_data.sca.number));
 
-		return;
-	}
+	sca = g_variant_builder_end(&sca_builder);
 
-	dbg("on_response_delete_msg type_format(%s)", g_variant_get_type_string(dbus_result));
+	encoded_tpdu = g_base64_encode(info->send_data.tpdu, info->send_data.tpdu_length);
 
-	g_variant_get (dbus_result, "(ii)", &result, &index);
+	telephony_sms_call_send(handle->sms_proxy,
+		info->more_msgs,
+		sca, encoded_tpdu, NULL,
+		on_response_sms_send, rsp_cb_data);
 
-	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn) {
-			evt_cb_data->cb_fn(evt_cb_data->handle, result, &index, evt_cb_data->user_data);
-		}
-
-		free(evt_cb_data);
-	}
+	g_free(encoded_tpdu);
+	return TEL_RETURN_SUCCESS;
 }
 
-static void on_response_get_msg_count(GObject *source_object, GAsyncResult *res, gpointer user_data)
+static void on_response_sms_read_sms_in_sim(GObject *source_object,
+	GAsyncResult *res, gpointer user_data)
 {
-	GError *error = NULL;
-	GDBusConnection *conn = NULL;
-	struct tapi_resp_data *evt_cb_data = user_data;
-	int result = -1;
-	TelSmsStoredMsgCountInfo_t storedMsgCnt = {0,};
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
 
-	GVariant *dbus_result = NULL;
-	const char *indexList = NULL;
-	gsize length;
-	guchar *decoded_indexList = NULL;
+	TelSmsSimDataInfo data;
+	TelSmsMsgStatus status;
+	GVariant *sca = NULL;
+	unsigned int pdu_len;
+	char *encoded_pdu = NULL;
+	guchar *pdu = NULL;
 
-	conn = G_DBUS_CONNECTION (source_object);
-	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_DEINIT(error);
-
-	if (!dbus_result) {
-		if (evt_cb_data) {
-			if (evt_cb_data->cb_fn) {
-				evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
-			}
-
-			free(evt_cb_data);
-		}
-
-		if (error)
-			g_error_free(error);
-
-		return;
-	}
-
-	dbg("on_response_get_msg_count type_format(%s)", g_variant_get_type_string(dbus_result));
-
-	g_variant_get (dbus_result, "(iiis)", &result,
-								&storedMsgCnt.TotalCount,
-								&storedMsgCnt.UsedCount,
-								&indexList);
-
-	decoded_indexList = g_base64_decode(indexList, &length);
-	if (decoded_indexList) {
-		memcpy(&(storedMsgCnt.IndexList[0]), decoded_indexList, TAPI_NETTEXT_GSM_SMS_MSG_NUM_MAX);
-		g_free(decoded_indexList);
-	}
-
-	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn) {
-			evt_cb_data->cb_fn(evt_cb_data->handle, result, &storedMsgCnt, evt_cb_data->user_data);
-		}
-
-		free(evt_cb_data);
-	}
-
-}
-
-static void on_response_get_sca(GObject *source_object, GAsyncResult *res, gpointer user_data)
-{
-	GError *error = NULL;
-	GDBusConnection *conn = NULL;
-	struct tapi_resp_data *evt_cb_data = user_data;
-	int result = -1;
-	TelSmsAddressInfo_t scaInfo = {0,};
-
-	GVariant *dbus_result = NULL;
-	const char *sca = NULL;
-	gsize length;
-	guchar *decoded_sca = NULL;
-
-	conn = G_DBUS_CONNECTION (source_object);
-	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_DEINIT(error);
-
-	if (!dbus_result) {
-		if (evt_cb_data) {
-			if (evt_cb_data->cb_fn) {
-				evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
-			}
-
-			free(evt_cb_data);
-		}
-
-		if (error)
-			g_error_free(error);
-
-		return;
-	}
-
-	dbg("on_response_get_sca type_format(%s)", g_variant_get_type_string(dbus_result));
-
-	g_variant_get (dbus_result, "(iiiis)", &result,
-					&scaInfo.Ton,
-					&scaInfo.Npi,
-					&scaInfo.DialNumLen,
-					&sca);
-
-	decoded_sca = g_base64_decode(sca, &length);
-	if (decoded_sca) {
-		memcpy(&(scaInfo.szDiallingNum[0]), decoded_sca, TAPI_SIM_SMSP_ADDRESS_LEN + 1);
-		g_free(decoded_sca);
-	}
-
-	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn) {
-			evt_cb_data->cb_fn(evt_cb_data->handle, result, &scaInfo, evt_cb_data->user_data);
-		}
-
-		free(evt_cb_data);
-	}
-}
-
-static void on_response_get_cb_config(GObject *source_object, GAsyncResult *res, gpointer user_data)
-{
-	GError *error = NULL;
-	GDBusConnection *conn = NULL;
-	struct tapi_resp_data *evt_cb_data = user_data;
-	int result = -1;
-	int i;
-	TelSmsCbConfig_t cbConfig = {0,};
-
-	GVariant *dbus_result = NULL;
-	GVariant *value = NULL;
 	GVariantIter *iter = NULL;
-	GVariantIter *iter_row = NULL;
-	const gchar *key = NULL;
+	GVariant *key_value;
+	const gchar *key;
 
-	conn = G_DBUS_CONNECTION (source_object);
-	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_DEINIT(error);
+	TelSmsResult result = TEL_SMS_RESULT_FAILURE;
+	GError *error = NULL;
 
-	if (!dbus_result) {
-		if (evt_cb_data) {
-			if (evt_cb_data->cb_fn) {
-				evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
-			}
+	dbg("Entry");
 
-			free(evt_cb_data);
+	telephony_sms_call_read_in_sim_finish(handle->sms_proxy,
+		(int *)&result, (int *)&status, &sca, &encoded_pdu, res, &error);
+
+	CHECK_DEINIT(error, rsp_cb_data, result);
+
+	if (result != TEL_SMS_RESULT_SUCCESS) {
+		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+		goto out;
+	}
+
+	pdu = g_base64_decode(encoded_pdu, &pdu_len);
+	if (pdu_len > TEL_SMS_SMDATA_SIZE_MAX) {
+		err("PDU length is wrong");
+		RESP_CALLBACK_CALL(rsp_cb_data, TEL_SMS_RESULT_FAILURE, NULL);
+		goto out;
+	}
+
+	data.status = status;
+	data.data.tpdu_length = pdu_len;
+	memcpy(data.data.tpdu, pdu, pdu_len);
+
+	g_variant_get(sca, "a{sv}", &iter);
+	while (g_variant_iter_loop(iter, "{sv}", &key, &key_value)) {
+		if (g_strcmp0(key, "ton") == 0) {
+			data.data.sca.ton = g_variant_get_byte(key_value);
 		}
+		else if (g_strcmp0(key, "npi") == 0) {
+			data.data.sca.npi = g_variant_get_byte(key_value);
+		}
+		else if (g_strcmp0(key, "number") == 0) {
+			g_strlcpy(data.data.sca.number,
+				g_variant_get_string(key_value, NULL),
+				TEL_SMS_SCA_LEN_MAX + 1);
+		}
+	}
+	g_variant_iter_free(iter);
 
-		if (error)
-			g_error_free(error);
+	RESP_CALLBACK_CALL(rsp_cb_data, result, &data);
 
+out:
+	g_variant_unref(sca);
+	g_free(encoded_pdu);
+	g_free(pdu);
+}
+
+EXPORT_API TelReturn tapi_sms_read_sms_in_sim(TelHandle *handle,
+		unsigned int index, TapiResponseCb callback, void *user_data)
+{
+	TapiRespCbData *rsp_cb_data;
+
+	dbg("Entry");
+
+	g_return_val_if_fail(handle != NULL &&
+			index < TEL_SMS_GSM_MSG_NUM_MAX &&
+			callback != NULL,
+			TEL_RETURN_INVALID_PARAMETER);
+
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+
+	telephony_sms_call_read_in_sim(handle->sms_proxy,
+		index, NULL,
+		on_response_sms_read_sms_in_sim, rsp_cb_data);
+
+	return TEL_RETURN_SUCCESS;
+}
+
+static void on_response_sms_write_sms_in_sim(GObject *source_object,
+	GAsyncResult *res, gpointer user_data)
+{
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+	TelSmsResult result = TEL_SMS_RESULT_FAILURE;
+	unsigned int index;
+	GError *error = NULL;
+
+	dbg("Entry");
+
+	telephony_sms_call_write_in_sim_finish(handle->sms_proxy,
+			(int *)&result, &index, res, &error);
+
+	CHECK_DEINIT(error, rsp_cb_data, result);
+
+	if (result != TEL_SMS_RESULT_SUCCESS) {
+		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+	} else {
+		RESP_CALLBACK_CALL(rsp_cb_data, result, &index);
+	}
+}
+
+EXPORT_API TelReturn tapi_sms_write_sms_in_sim(TelHandle *handle,
+	const TelSmsSimDataInfo *wdata,
+	TapiResponseCb callback, void *user_data)
+{
+	TapiRespCbData *rsp_cb_data;
+	GVariantBuilder sca_builder;
+	GVariant *sca;
+	char *encoded_tpdu;
+
+	dbg("Entry");
+
+	g_return_val_if_fail(handle != NULL &&
+			__tapi_check_sim_sms_data(wdata) && callback != NULL,
+			TEL_RETURN_INVALID_PARAMETER);
+
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+
+	g_variant_builder_init(&sca_builder, G_VARIANT_TYPE("a{sv}"));
+
+	g_variant_builder_add(&sca_builder, "{sv}",
+		"ton", g_variant_new_byte(wdata->data.sca.ton));
+	g_variant_builder_add(&sca_builder, "{sv}",
+		"npi", g_variant_new_byte(wdata->data.sca.npi));
+	g_variant_builder_add(&sca_builder, "{sv}",
+		"number", g_variant_new_string(wdata->data.sca.number));
+
+	sca = g_variant_builder_end(&sca_builder);
+
+	encoded_tpdu = g_base64_encode(wdata->data.tpdu, wdata->data.tpdu_length);
+
+	telephony_sms_call_write_in_sim(handle->sms_proxy,
+		wdata->status, sca, encoded_tpdu,
+		NULL,
+		on_response_sms_write_sms_in_sim, rsp_cb_data);
+
+	g_free(encoded_tpdu);
+	return TEL_RETURN_SUCCESS;
+}
+
+static void on_response_sms_delete_sms_in_sim(GObject *source_object,
+	GAsyncResult *res, gpointer user_data)
+{
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+	TelSmsResult result = TEL_SMS_RESULT_FAILURE;
+	GError *error = NULL;
+
+	dbg("Entry");
+
+	telephony_sms_call_delete_in_sim_finish(handle->sms_proxy,
+			(int *)&result, res, &error);
+
+	CHECK_DEINIT(error, rsp_cb_data, result);
+
+	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+}
+
+EXPORT_API TelReturn tapi_sms_delete_sms_in_sim(TelHandle *handle,
+	unsigned int index,
+	TapiResponseCb callback, void *user_data)
+{
+	TapiRespCbData *rsp_cb_data;
+
+	dbg("Entry");
+
+	g_return_val_if_fail(handle != NULL &&
+			callback != NULL,
+			TEL_RETURN_INVALID_PARAMETER);
+
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+
+	telephony_sms_call_delete_in_sim(handle->sms_proxy, index, NULL,
+			on_response_sms_delete_sms_in_sim, rsp_cb_data);
+
+	return TEL_RETURN_SUCCESS;
+}
+
+static void on_response_sms_get_count(GObject *source_object,
+	GAsyncResult *res, gpointer user_data)
+{
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+	TelSmsResult result = TEL_SMS_RESULT_FAILURE;
+	TelSmsStoredMsgCountInfo info;
+	GError *error = NULL;
+
+	GVariant *var;
+	GVariantIter *iter;
+	unsigned int index;
+	gint i = 0;
+
+	dbg("Entry");
+
+	memset(&info, 0, sizeof(TelSmsStoredMsgCountInfo));
+
+	telephony_sms_call_get_count_finish(handle->sms_proxy,
+			(int *)&result, &info.total_count, &info.used_count,
+			&var, res, &error);
+
+	CHECK_DEINIT(error, rsp_cb_data, result);
+
+	if (result != TEL_SMS_RESULT_SUCCESS) {
+		g_variant_unref(var);
+		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
 		return;
 	}
 
-	dbg("on_response_get_cb_config type_format(%s)", g_variant_get_type_string(dbus_result));
+	if (info.used_count == 0) {
+		g_variant_unref(var);
+		RESP_CALLBACK_CALL(rsp_cb_data, result, &info);
+		return;
+	}
 
-	g_variant_get (dbus_result, "(iiiiiaa{sv})", &result,
-					&cbConfig.Net3gppType,
-					&cbConfig.CBEnabled,
-					&cbConfig.MsgIdMaxCount,
-					&cbConfig.MsgIdRangeCount,
-					&iter);
+	if (info.used_count > TEL_SMS_GSM_MSG_NUM_MAX) {
+		err("Invalid result!");
+		g_variant_unref(var);
+		result = TEL_SMS_RESULT_FAILURE;
+		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+		return;
+	}
 
-	i = 0;
+	g_variant_get(var, "au", &iter);
+
+	dbg("Fetching index ...");
+	while (g_variant_iter_next(iter, "u", &index)) {
+		dbg("index - %d", index);
+		info.index_list[i] = index;
+		i++;
+	}
+
+	RESP_CALLBACK_CALL(rsp_cb_data, result, &info);
+
+	g_variant_iter_free(iter);
+	g_variant_unref(var);
+}
+
+EXPORT_API TelReturn tapi_sms_get_count(TelHandle *handle,
+	TapiResponseCb callback, void *user_data)
+{
+	TapiRespCbData *rsp_cb_data;
+
+	dbg("Entry");
+
+	g_return_val_if_fail(handle != NULL && callback != NULL,
+			TEL_RETURN_INVALID_PARAMETER);
+
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+
+	telephony_sms_call_get_count(handle->sms_proxy, NULL,
+			on_response_sms_get_count, rsp_cb_data);
+
+	return TEL_RETURN_SUCCESS;
+}
+
+static void on_response_sms_set_cb_config(GObject *source_object,
+	GAsyncResult *res, gpointer user_data)
+{
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+	TelSmsResult result = TEL_SMS_RESULT_FAILURE;
+	GError *error = NULL;
+
+	dbg("Entry");
+
+	telephony_sms_call_set_cb_config_finish(handle->sms_proxy,
+			(int *)&result, res, &error);
+
+	CHECK_DEINIT(error, rsp_cb_data, result);
+
+	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+}
+
+EXPORT_API TelReturn tapi_sms_set_cb_config(TelHandle *handle,
+	const TelSmsCbConfigInfo *cb_conf,
+	TapiResponseCb callback, void *user_data)
+{
+	TapiRespCbData *rsp_cb_data;
+	GVariant *mids;
+	GVariantBuilder builder;
+	unsigned int i;
+
+	dbg("Entry");
+
+	g_return_val_if_fail(handle != NULL && callback != NULL &&
+			cb_conf != NULL &&
+			cb_conf->msg_id_range_cnt < TEL_SMS_GSM_CBMI_LIST_SIZE_MAX,
+			TEL_RETURN_INVALID_PARAMETER);
+
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+
+	g_variant_builder_init(&builder, G_VARIANT_TYPE("aa{sv}"));
+	for (i = 0; i < cb_conf->msg_id_range_cnt; i++) {
+		g_variant_builder_open(&builder, G_VARIANT_TYPE("a{sv}"));
+
+		g_variant_builder_add(&builder, "{sv}",
+			"from_msg_id",
+			g_variant_new_uint16(cb_conf->msg_ids[i].from_msg_id));
+		g_variant_builder_add(&builder, "{sv}",
+			"to_msg_id",
+			g_variant_new_uint16(cb_conf->msg_ids[i].to_msg_id));
+		g_variant_builder_add(&builder, "{sv}",
+			"selected",
+			g_variant_new_boolean(cb_conf->msg_ids[i].selected));
+
+		g_variant_builder_close(&builder);
+	}
+	mids = g_variant_builder_end(&builder);
+
+	telephony_sms_call_set_cb_config(handle->sms_proxy,
+			cb_conf->cb_enabled, cb_conf->msg_id_range_cnt,
+			mids, NULL,
+			on_response_sms_set_cb_config, rsp_cb_data);
+
+	return TEL_RETURN_SUCCESS;
+}
+
+static void on_response_sms_get_cb_config(GObject *source_object,
+	GAsyncResult *res, gpointer user_data)
+{
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+	TelSmsResult result = TEL_SMS_RESULT_FAILURE;
+	TelSmsCbConfigInfo config;
+	GError *error = NULL;
+
+	GVariant *var;
+	GVariantIter *iter = NULL, *iter_row = NULL;
+	GVariant *key_value;
+	const gchar *key;
+
+	guint count = 0;
+
+	dbg("Entry");
+
+	memset(&config, 0, sizeof(TelSmsCbConfigInfo));
+
+	telephony_sms_call_get_cb_config_finish(handle->sms_proxy,
+			(int *)&result, &config.cb_enabled,
+			&config.msg_id_range_cnt, &var,
+			res, &error);
+
+	CHECK_DEINIT(error, rsp_cb_data, result);
+
+	if (result != TEL_SMS_RESULT_SUCCESS) {
+		g_variant_unref(var);
+		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+		return;
+	}
+
+	if (config.msg_id_range_cnt == 0) {
+		g_variant_unref(var);
+		RESP_CALLBACK_CALL(rsp_cb_data, result, &config);
+		return;
+	}
+
+	if (g_variant_n_children(var) != config.msg_id_range_cnt
+		|| config.msg_id_range_cnt > TEL_SMS_GSM_CBMI_LIST_SIZE_MAX) {
+		err("Invalid result!");
+		g_variant_unref(var);
+		result = TEL_SMS_RESULT_FAILURE;
+		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+		return;
+	}
+
+	g_variant_get(var, "aa{sv}", &iter);
 	while (g_variant_iter_next(iter, "a{sv}", &iter_row)) {
-		while (g_variant_iter_loop(iter_row, "{sv}", &key, &value)) {
-			if (!g_strcmp0(key, "FromMsgId")) {
-				cbConfig.MsgIDs[i].Net3gpp.FromMsgId = g_variant_get_uint16(value);
+		while (g_variant_iter_loop(iter_row, "{sv}", &key, &key_value)) {
+			if (g_strcmp0(key, "from_msg_id") == 0) {
+				config.msg_ids[count].from_msg_id =
+					g_variant_get_uint16(key_value);
 			}
-			if (!g_strcmp0(key, "ToMsgId")) {
-				cbConfig.MsgIDs[i].Net3gpp.ToMsgId = g_variant_get_uint16(value);
+			else if (g_strcmp0(key, "to_msg_id") == 0) {
+				config.msg_ids[count].to_msg_id =
+					g_variant_get_uint16(key_value);
 			}
-			if (!g_strcmp0(key, "CBCategory")) {
-				cbConfig.MsgIDs[i].Net3gpp2.CBCategory = g_variant_get_uint16(value);
-			}
-			if (!g_strcmp0(key, "CBLanguage")) {
-				cbConfig.MsgIDs[i].Net3gpp2.CBLanguage = g_variant_get_uint16(value);
-			}
-			if (!g_strcmp0(key, "Selected")) {
-				cbConfig.MsgIDs[i].Net3gpp.Selected = g_variant_get_byte(value);
+			else if (g_strcmp0(key, "number") == 0) {
+				config.msg_ids[count].selected =
+					g_variant_get_boolean(key_value);
 			}
 		}
-		i++;
+		count++;
 		g_variant_iter_free(iter_row);
 	}
 	g_variant_iter_free(iter);
 
-	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn) {
-			evt_cb_data->cb_fn(evt_cb_data->handle, result, &cbConfig, evt_cb_data->user_data);
-		}
+	RESP_CALLBACK_CALL(rsp_cb_data, result, &config);
 
-		free(evt_cb_data);
-	}
+	g_variant_unref(var);
 }
 
-static void on_response_get_sms_params(GObject *source_object, GAsyncResult *res, gpointer user_data)
+EXPORT_API TelReturn tapi_sms_get_cb_config(TelHandle *handle,
+	TapiResponseCb callback, void *user_data)
 {
+	TapiRespCbData *rsp_cb_data;
+
+	dbg("Entry");
+
+	g_return_val_if_fail(handle != NULL && callback != NULL,
+			TEL_RETURN_INVALID_PARAMETER);
+
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+
+	telephony_sms_call_get_cb_config(handle->sms_proxy, NULL,
+			on_response_sms_get_cb_config, rsp_cb_data);
+
+	return TEL_RETURN_SUCCESS;
+}
+
+static void on_response_sms_get_parameters(GObject *source_object,
+	GAsyncResult *res, gpointer user_data)
+{
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+	TelSmsResult result = TEL_SMS_RESULT_FAILURE;
+	TelSmsParamsInfoList param_list;
 	GError *error = NULL;
-	GDBusConnection *conn = NULL;
-	struct tapi_resp_data *evt_cb_data = user_data;
-	int result = -1;
-	TelSmsParams_t paramInfo = {0,};
 
-	GVariant *dbus_result = NULL;
-	const char *alphaId = NULL;
-	const char *destDialNum = NULL;
-	const char *scaDialNum = NULL;
-	gsize length;
-	guchar *decoded_alphaId = NULL;
-	guchar *decoded_destDialNum = NULL;
-	guchar *decoded_scaDialNum = NULL;
+	GVariant *var;
+	GVariantIter *iter = NULL, *iter_row = NULL;
+	GVariant *key_value;
+	const gchar *key;
 
-	conn = G_DBUS_CONNECTION (source_object);
-	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_DEINIT(error);
+	guint count = 0;
 
-	if (!dbus_result) {
-		if (evt_cb_data) {
-			if (evt_cb_data->cb_fn) {
-				evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
-			}
+	TelSmsParamsInfo *params;
 
-			free(evt_cb_data);
-		}
+	dbg("Entry");
 
-		if (error)
-			g_error_free(error);
+	telephony_sms_call_get_parameters_finish(handle->sms_proxy,
+		(int *)&result, &param_list.count, &var, res, &error);
 
+	CHECK_DEINIT(error, rsp_cb_data, result);
+
+	if (result != TEL_SMS_RESULT_SUCCESS) {
+		g_variant_unref(var);
+		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
 		return;
 	}
 
-	dbg("on_response_get_sms_params type_format(%s)", g_variant_get_type_string(dbus_result));
-
-	g_variant_get (dbus_result, "(iiiisiiiisiiisiii)", &result,
-								&paramInfo.RecordIndex,
-								&paramInfo.RecordLen,
-								&paramInfo.AlphaIdLen,
-								&alphaId,
-								&paramInfo.ParamIndicator,
-								&paramInfo.TpDestAddr.DialNumLen,
-								&paramInfo.TpDestAddr.Ton,
-								&paramInfo.TpDestAddr.Npi,
-								&destDialNum,
-								&paramInfo.TpSvcCntrAddr.DialNumLen,
-								&paramInfo.TpSvcCntrAddr.Ton,
-								&paramInfo.TpSvcCntrAddr.Npi,
-								&scaDialNum,
-								&paramInfo.TpProtocolId,
-								&paramInfo.TpDataCodingScheme,
-								&paramInfo.TpValidityPeriod);
-
-	decoded_alphaId = g_base64_decode(alphaId, &length);
-	if (decoded_alphaId) {
-		memcpy(&(paramInfo.szAlphaId[0]), decoded_alphaId, TAPI_SIM_SMSP_ALPHA_ID_LEN_MAX + 1);
-		g_free(decoded_alphaId);
-	}
-
-	decoded_destDialNum = g_base64_decode(destDialNum, &length);
-	if (decoded_destDialNum) {
-		memcpy(&(paramInfo.TpDestAddr.szDiallingNum[0]), decoded_destDialNum, TAPI_SIM_SMSP_ADDRESS_LEN + 1);
-		g_free(decoded_destDialNum);
-	}
-
-	decoded_scaDialNum = g_base64_decode(scaDialNum, &length);
-	if (decoded_scaDialNum) {
-		memcpy(&(paramInfo.TpSvcCntrAddr.szDiallingNum[0]), decoded_scaDialNum, TAPI_SIM_SMSP_ADDRESS_LEN + 1);
-		g_free(decoded_scaDialNum);
-	}
-
-	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn) {
-			evt_cb_data->cb_fn(evt_cb_data->handle, result, &paramInfo, evt_cb_data->user_data);
-		}
-
-		free(evt_cb_data);
-	}
-
-}
-
-static void on_response_get_sms_param_cnt(GObject *source_object, GAsyncResult *res, gpointer user_data)
-{
-	GError *error = NULL;
-	GDBusConnection *conn = NULL;
-	struct tapi_resp_data *evt_cb_data = user_data;
-	int result = -1;
-	int recordCount = 0;
-
-	GVariant *dbus_result = NULL;
-
-	conn = G_DBUS_CONNECTION (source_object);
-	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_DEINIT(error);
-
-	if (!dbus_result) {
-		if (evt_cb_data) {
-			if (evt_cb_data->cb_fn) {
-				evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
-			}
-
-			free(evt_cb_data);
-		}
-
-		if (error)
-			g_error_free(error);
-
+	if (param_list.count == 0) {
+		g_variant_unref(var);
+		RESP_CALLBACK_CALL(rsp_cb_data, result, &param_list);
 		return;
 	}
 
-	dbg("on_response_get_sms_param_cnt type_format(%s)", g_variant_get_type_string(dbus_result));
+	if (g_variant_n_children(var) != param_list.count) {
+		err("Invalid result!");
+		g_variant_unref(var);
+		result = TEL_SMS_RESULT_FAILURE;
+		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+		return;
+	}
 
-	g_variant_get (dbus_result, "(ii)", &result,
-			&recordCount);
+	param_list.params =
+		g_malloc0(sizeof(TelSmsParamsInfo) * param_list.count);
 
-	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn) {
-			evt_cb_data->cb_fn(evt_cb_data->handle, result, &recordCount, evt_cb_data->user_data);
+	params = param_list.params;
+
+	g_variant_get(var, "aa{sv}", &iter);
+	while (g_variant_iter_next(iter, "a{sv}", &iter_row)) {
+		while (g_variant_iter_loop(iter_row, "{sv}", &key, &key_value)) {
+			if (g_strcmp0(key, "index") == 0) {
+				params[count].index = g_variant_get_uint32(key_value);
+			}
+			else if (g_strcmp0(key, "sca") == 0) {
+				GVariantIter *iter2 = NULL;
+				GVariant *key_value2;
+				const gchar *key2;
+
+				g_variant_get(key_value, "a{sv}", &iter2);
+				while (g_variant_iter_loop(iter2, "{sv}", &key2, &key_value2)) {
+					if (g_strcmp0(key, "ton") == 0) {
+						params[count].sca.ton =
+							g_variant_get_byte(key_value2);
+					}
+					else if (g_strcmp0(key2, "npi") == 0) {
+						params[count].sca.npi =
+							g_variant_get_byte(key_value2);
+					}
+					else if (g_strcmp0(key2, "number") == 0) {
+						g_strlcpy(params[count].sca.number,
+							g_variant_get_string(key_value2, NULL),
+							TEL_SMS_SCA_LEN_MAX + 1);
+					}
+				}
+				g_variant_iter_free(iter2);
+			}
+			else if (g_strcmp0(key, "vp") == 0) {
+				params[count].vp = g_variant_get_boolean(key_value);
+			}
 		}
-
-		free(evt_cb_data);
+		count++;
+		g_variant_iter_free(iter_row);
 	}
+	g_variant_iter_free(iter);
+
+	RESP_CALLBACK_CALL(rsp_cb_data, result, &param_list);
+
+	g_variant_unref(var);
+	g_free(param_list.params);
 }
 
-/**
- *
- * This function enables the applications to send SMS to the network.
- *
- * @return		Returns appropriate error code. Refer TapiResult_t .
- * @param[in]	       pDataPackage - SMS-SUBMIT TPDU or SMS-COMMAND, and its length have to be passed in this structure.
- *				tapi_sms_more_to_send_t parameter denotes whether the sms is short or concatenated.
- *
- * @param[out]	RequestId-Unique identifier for a particular request
- *                         Its value can be any value from 0 to 255 if the API is returned successfully
- *	                     -1 (INVALID_REQUEST_ID) will be sent in case of failure
- * @Interface		Asynchronous.
- * @remark
- * @Refer		tapi_sms_datapackage, tapi_sms_more_to_send_t.
- */
-EXPORT_API int tel_send_sms(struct tapi_handle *handle,
-		const TelSmsDatapackageInfo_t *pDataPackage,
-		int bMoreMsgToSend,
-		tapi_response_cb callback, void* user_data)
+EXPORT_API TelReturn tapi_sms_get_parameters(TelHandle *handle,
+	TapiResponseCb callback, void *user_data)
 {
-	struct tapi_resp_data *evt_cb_data = NULL;
-	GVariant *param;
-	gchar *encoded_sca = NULL;
-	gchar *encoded_tpdu = NULL;
+	TapiRespCbData *rsp_cb_data;
 
-	dbg("Func Entrance ");
+	dbg("Entry");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(pDataPackage ,TAPI_API_INVALID_PTR);
+	g_return_val_if_fail(handle != NULL && callback != NULL,
+			TEL_RETURN_INVALID_PARAMETER);
 
-	if ((pDataPackage->Sca[0] > TAPI_SIM_SMSP_ADDRESS_LEN)
-			|| (pDataPackage->MsgLength > TAPI_NETTEXT_SMDATA_SIZE_MAX))
-		return TAPI_API_INVALID_INPUT;
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	telephony_sms_call_get_parameters(handle->sms_proxy, NULL,
+			on_response_sms_get_parameters, rsp_cb_data);
 
-	encoded_sca = g_base64_encode(&(pDataPackage->Sca[0]), TAPI_SMS_ENCODED_SCA_LEN_MAX);
-	if (encoded_sca == NULL) {
-		dbg("g_base64_encode: Failed to Enocde the SCA");
-		return TAPI_API_OPERATION_FAILED;
-	}
+	return TEL_RETURN_SUCCESS;
+}
 
-	encoded_tpdu = g_base64_encode(&(pDataPackage->szData[0]), pDataPackage->MsgLength);
-	if (encoded_tpdu == NULL) {
-		dbg("g_base64_encode: Failed to Enocde the TPDU");
-		return TAPI_API_OPERATION_FAILED;
-	}
+static void on_response_sms_set_parameters(GObject *source_object,
+	GAsyncResult *res, gpointer user_data)
+{
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+	TelSmsResult result = TEL_SMS_RESULT_FAILURE;
+	GError *error = NULL;
 
-	param = g_variant_new("(sisi)", encoded_sca,
-							pDataPackage->MsgLength,
-							encoded_tpdu,
-							bMoreMsgToSend);
+	dbg("Entry");
 
-	g_dbus_connection_call(handle->dbus_connection,
-		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,
-		"SendMsg", param, NULL,
-		G_DBUS_CALL_FLAGS_NONE, 120000, handle->ca,
-		on_response_default, evt_cb_data);
+	telephony_sms_call_set_parameters_finish(handle->sms_proxy,
+			(int *)&result, res, &error);
 
-	g_free(encoded_sca);
+	CHECK_DEINIT(error, rsp_cb_data, result);
+
+	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+}
+
+EXPORT_API TelReturn tapi_sms_set_parameters(TelHandle *handle,
+	const TelSmsParamsInfo *params,
+	TapiResponseCb callback, void *user_data)
+{
+	TapiRespCbData *rsp_cb_data;
+	GVariantBuilder sca_builder;
+	GVariant *sca;
+
+	dbg("Entry");
+
+	g_return_val_if_fail(handle != NULL && callback != NULL &&
+			params != NULL && params->index > 0,
+			TEL_RETURN_INVALID_PARAMETER);
+
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+
+	g_variant_builder_init(&sca_builder, G_VARIANT_TYPE("a{sv}"));
+
+	g_variant_builder_add(&sca_builder, "{sv}",
+		"ton", g_variant_new_byte(params->sca.ton));
+	g_variant_builder_add(&sca_builder, "{sv}",
+		"npi", g_variant_new_byte(params->sca.npi));
+	g_variant_builder_add(&sca_builder, "{sv}",
+		"number", g_variant_new_string(params->sca.number));
+
+	sca = g_variant_builder_end(&sca_builder);
+
+	telephony_sms_call_set_parameters(handle->sms_proxy, params->index,
+			sca, params->vp, NULL,
+			on_response_sms_set_parameters, rsp_cb_data);
+
+	return TEL_RETURN_SUCCESS;
+}
+
+static void on_response_sms_send_deliver_report(GObject *source_object,
+	GAsyncResult *res, gpointer user_data)
+{
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+	TelSmsResult result = TEL_SMS_RESULT_FAILURE;
+	GError *error = NULL;
+
+	dbg("Entry");
+
+	telephony_sms_call_send_deliver_report_finish(handle->sms_proxy,
+			(int *)&result, res, &error);
+
+	CHECK_DEINIT(error, rsp_cb_data, result);
+
+	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+}
+
+EXPORT_API TelReturn tapi_sms_send_deliver_report(TelHandle *handle,
+	const TelSmsDeliverReportInfo *dr_info,
+	TapiResponseCb callback, void *user_data)
+{
+	TapiRespCbData *rsp_cb_data;
+	GVariantBuilder sca_builder;
+	GVariant *sca;
+	char *encoded_tpdu;
+
+	dbg("Entry");
+
+	g_return_val_if_fail(handle != NULL && dr_info != NULL &&
+			dr_info->report <= TEL_SMS_DELIVERY_REPORT_UNSPECIFIED_ERROR &&
+			dr_info->data.tpdu_length <= TEL_SMS_SMDATA_SIZE_MAX &&
+			callback != NULL,
+			TEL_RETURN_INVALID_PARAMETER);
+
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+
+	g_variant_builder_init(&sca_builder, G_VARIANT_TYPE("a{sv}"));
+
+	g_variant_builder_add(&sca_builder, "{sv}",
+		"ton", g_variant_new_byte(dr_info->data.sca.ton));
+	g_variant_builder_add(&sca_builder, "{sv}",
+		"npi", g_variant_new_byte(dr_info->data.sca.npi));
+	g_variant_builder_add(&sca_builder, "{sv}",
+		"number", g_variant_new_string(dr_info->data.sca.number));
+
+	sca = g_variant_builder_end(&sca_builder);
+
+	encoded_tpdu = g_base64_encode(dr_info->data.tpdu, dr_info->data.tpdu_length);
+	telephony_sms_call_send_deliver_report(handle->sms_proxy,
+			dr_info->report, sca, encoded_tpdu, NULL,
+			on_response_sms_send_deliver_report, rsp_cb_data);
+
 	g_free(encoded_tpdu);
+	g_variant_unref(sca);
 
-	return TAPI_API_SUCCESS;
+	return TEL_RETURN_SUCCESS;
 }
 
-
-/**
- *
- * This function enables the applications to read sms from the preferred storage.
- *
- * @return		Returns appropriate error code. Refer TapiResult_t .
- * @param[in]		index - the message to be read
- *
- * @param[out]	RequestId-Unique identifier for a particular request
- *                         Its value can be any value from 0 to 255 if the API is returned successfully
- *	                     -1 (INVALID_REQUEST_ID) will be sent in case of failure
- * @Interface		Asynchronous.
- * @remark		tapi_sms_selmem_set is to be called always to select the
- *				preferred memory before calling this api.
- * @Refer
- */
-EXPORT_API int tel_read_sms_in_sim(struct tapi_handle *handle, int index, tapi_response_cb callback, void* user_data)
+static void on_response_sms_set_sca(GObject *source_object,
+			GAsyncResult *res, gpointer user_data)
 {
-	struct tapi_resp_data *evt_cb_data = NULL;
-	GVariant *param;
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+	TelSmsResult result = TEL_SMS_RESULT_FAILURE;
+	GError *error = NULL;
 
-	dbg("Func Entrance ");
+	dbg("Entry");
 
-	if( (index < 0) || (index > TAPI_NETTEXT_MAX_INDEX) ) {
-		err("Invalid Input -Read SMS %d",index);
+	telephony_sms_call_set_sca_finish(handle->sms_proxy,
+			(int *)&result, res, &error);
 
-		return TAPI_API_INVALID_INPUT;
-	}
+	CHECK_DEINIT(error, rsp_cb_data, result);
 
-	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	param = g_variant_new("(i)", index);
-
-	g_dbus_connection_call(handle->dbus_connection,
-		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,
-		"ReadMsg", param, NULL,
-		G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-		on_response_read_msg, evt_cb_data);
-
-	return TAPI_API_SUCCESS;
+	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
 }
 
-
-/**
- *
- * This function enables the applications to write/save sms to the preferred storage.
- *
- * @return		Returns appropriate error code. Refer TapiResult_t .
- * @param[in]		index - the message to be saved, msg_status will denote the status
- *				of the message whether Sent, Unsent, Read, Unread, Unknown.
- *				pDataPackage- the SMS-SUBMIT PDU or SMS-DELIVER,SMS-STATUSREPORT
- *				being passed to be saved in memory.
- *
- * @param[out]	RequestId-Unique identifier for a particular request
- *                         Its value can be any value from 0 to 255 if the API is returned successfully
- *	                     -1 (INVALID_REQUEST_ID) will be sent in case of failure
- * @Interface		Asynchronous.
- * @Refer		tapi_sms_datapackage, tapi_sms_status_type.
- */
-EXPORT_API int tel_write_sms_in_sim(struct tapi_handle *handle, const TelSmsData_t *pWriteData, tapi_response_cb callback, void* user_data)
+EXPORT_API TelReturn tapi_sms_set_sca(TelHandle *handle, TelSmsSca *sca,
+			TapiResponseCb callback, void *user_data)
 {
-	struct tapi_resp_data *evt_cb_data = NULL;
-	GVariant *param;
-	gchar *encoded_sca = NULL;
-	gchar *encoded_tpdu = NULL;
+	TapiRespCbData *rsp_cb_data;
+	GVariantBuilder sca_builder;
+	GVariant *var_sca;
 
-	dbg("Func Entrance ");
+	dbg("Entry");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(pWriteData ,TAPI_API_INVALID_PTR);
+	g_return_val_if_fail(handle != NULL && sca != NULL &&
+			callback != NULL,
+			TEL_RETURN_INVALID_PARAMETER);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
 
-	encoded_sca = g_base64_encode(&(pWriteData->SmsData.Sca[0]), TAPI_SMS_ENCODED_SCA_LEN_MAX);
-	if (encoded_sca == NULL) {
-		dbg("g_base64_encode: Failed to Enocde the SCA");
-		return TAPI_API_OPERATION_FAILED;
-	}
+	g_variant_builder_init(&sca_builder, G_VARIANT_TYPE("a{sv}"));
 
-	encoded_tpdu = g_base64_encode(&(pWriteData->SmsData.szData[0]), TAPI_NETTEXT_SMDATA_SIZE_MAX + 1);
-	if (encoded_tpdu == NULL) {
-		dbg("g_base64_encode: Failed to Enocde the TPDU");
-		return TAPI_API_OPERATION_FAILED;
-	}
+	g_variant_builder_add(&sca_builder, "{sv}",
+		"ton", g_variant_new_byte(sca->ton));
+	g_variant_builder_add(&sca_builder, "{sv}",
+		"npi", g_variant_new_byte(sca->npi));
+	g_variant_builder_add(&sca_builder, "{sv}",
+		"number", g_variant_new_string(sca->number));
 
-	param = g_variant_new("(isis)", pWriteData->MsgStatus,
-							encoded_sca,
-							pWriteData->SmsData.MsgLength,
-							encoded_tpdu);
+	var_sca = g_variant_builder_end(&sca_builder);
 
-	g_dbus_connection_call(handle->dbus_connection,
-		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,
-		"SaveMsg", param, NULL,
-		G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-		on_response_write_msg, evt_cb_data);
+	telephony_sms_call_set_sca(handle->sms_proxy, var_sca, NULL,
+			on_response_sms_set_sca, rsp_cb_data);
 
-	g_free(encoded_sca);
-	g_free(encoded_tpdu);
-
-	return TAPI_API_SUCCESS;
+	return TEL_RETURN_SUCCESS;
 }
 
-
-/**
- *
- * This function enables the applications to delete sms to the preferred storage.
- *
- * @return		Returns appropriate error code. Refer TapiResult_t .
- * @param[in]		index - the message to be deleted. if index is -1, all sms in the sim are deleted.
- *
- * @param[out]	RequestId-Unique identifier for a particular request
- *                         Its value can be any value from 0 to 255 if the API is returned successfully
- *	                     -1 (INVALID_REQUEST_ID) will be sent in case of failure
- * @Interface		Asynchronous.
- * @remark		tapi_sms_selmem_set has to be called always before calling this API
- * @Refer
- */
-EXPORT_API int tel_delete_sms_in_sim(struct tapi_handle *handle, int index, tapi_response_cb callback, void* user_data)
+static void on_response_sms_get_sca(GObject *source_object,
+			GAsyncResult *res, gpointer user_data)
 {
-	struct tapi_resp_data *evt_cb_data = NULL;
-	GVariant *param;
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
 
-	dbg("Func Entrance ");
+	TelSmsSca sca;
+	GVariant *var_sca;
 
-	if ((index < -1) || (index > TAPI_NETTEXT_MAX_INDEX)) {
-		err("Invalid Index Input");
-		return TAPI_API_INVALID_INPUT;
+	GVariantIter *iter = NULL;
+	GVariant *key_value;
+	const gchar *key;
+
+	GError *error = NULL;
+	TelSmsResult result = TEL_SMS_RESULT_FAILURE;
+
+	dbg("Entry");
+
+	telephony_sms_call_get_sca_finish(handle->sms_proxy,
+			(int *)&result, &var_sca, res, &error);
+
+	CHECK_DEINIT(error, rsp_cb_data, result);
+
+	if (result != TEL_SMS_RESULT_SUCCESS) {
+		g_variant_unref(var_sca);
+		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+		return;
 	}
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	g_variant_get(var_sca, "a{sv}", &iter);
+	while (g_variant_iter_loop(iter, "{sv}", &key, &key_value)) {
+		if (g_strcmp0(key, "ton") == 0) {
+			sca.ton = g_variant_get_byte(key_value);
+		}
+		else if (g_strcmp0(key, "npi") == 0) {
+			sca.npi = g_variant_get_byte(key_value);
+		}
+		else if (g_strcmp0(key, "number") == 0) {
+			g_strlcpy(sca.number,
+				g_variant_get_string(key_value, NULL),
+				TEL_SMS_SCA_LEN_MAX + 1);
+		}
+	}
+	g_variant_iter_free(iter);
 
-	param = g_variant_new("(i)", index);
+	RESP_CALLBACK_CALL(rsp_cb_data, result, &sca);
 
-	g_dbus_connection_call(handle->dbus_connection,
-		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,
-		"DeleteMsg", param, NULL,
-		G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-		on_response_delete_msg, evt_cb_data);
-
-	return TAPI_API_SUCCESS;
+	g_variant_unref(var_sca);
 }
 
-
-/**
- *
- * This function enables the applications to get the count of the messages stored in the memory
- *
- * @return		Returns appropriate error code. Refer TapiResult_t .
- * @param[in]	None
- *
- * @param[out]	RequestId-Unique identifier for a particular request
- *              Its value can be any value from 0 to 255 if the API is returned successfully
- *	            -1 (INVALID_REQUEST_ID) will be sent in case of failure
- * @Interface	Asynchronous
- * @remark		The requested memory details come in response API
- * @Refer	    None
- */
-EXPORT_API int tel_get_sms_count(struct tapi_handle *handle, tapi_response_cb callback, void* user_data)
+EXPORT_API TelReturn tapi_sms_get_sca(TelHandle *handle,
+			TapiResponseCb callback, void *user_data)
 {
-	struct tapi_resp_data *evt_cb_data = NULL;
+	TapiRespCbData *rsp_cb_data;
 
-	dbg("Func Entrance ");
+	dbg("Entry");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
+	g_return_val_if_fail(handle != NULL && callback != NULL,
+			TEL_RETURN_INVALID_PARAMETER);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
 
-	g_dbus_connection_call(handle->dbus_connection,
-		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,
-		"GetMsgCount", NULL, NULL,
-		G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-		on_response_get_msg_count, evt_cb_data);
+	telephony_sms_call_get_sca(handle->sms_proxy, NULL,
+			on_response_sms_get_sca, rsp_cb_data);
 
-	return TAPI_API_SUCCESS;
+	return TEL_RETURN_SUCCESS;
 }
 
-
-/**
- *
- * This function enables the applications to get the service center address from the SIM storage
- *
- * @return		Returns appropriate error code. Refer TapiResult_t .
- * @param[in]		pSCA - the service center address that is to be set in the SIM storage
- *					    refer to 3GPP TS 23.040:9.1.2.5 Address fields
- *				index - the index that is to be set in the SIM storage
- *
- * @param[out]	RequestId-Unique identifier for a particular request
- *                         Its value can be any value from 0 to 255 if the API is returned successfully
- *	                     -1 (INVALID_REQUEST_ID) will be sent in case of failure
- * @Interface		Asynchronous.
- * @remark
- * @Refer	       tapi_sms_sms_addr_info
- */
-EXPORT_API int tel_get_sms_sca(struct tapi_handle *handle, int index, tapi_response_cb callback, void* user_data)
+static void on_response_sms_set_memory_status(GObject *source_object,
+			GAsyncResult *res, gpointer user_data)
 {
-	struct tapi_resp_data *evt_cb_data = NULL;
-	GVariant *param;
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+	TelSmsResult result = TEL_SMS_RESULT_FAILURE;
+	GError *error = NULL;
 
-	dbg("Func Entrance ");
+	dbg("Entry");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
+	telephony_sms_call_set_memory_status_finish(handle->sms_proxy,
+			(int *)&result, res, &error);
 
-	if ((index < 0) || (index > TAPI_NETTEXT_MAX_INDEX)) {
-		err("Invalid Index Input");
-		return TAPI_API_INVALID_INPUT;
-	}
+	CHECK_DEINIT(error, rsp_cb_data, result);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	param = g_variant_new("(i)", index);
-
-	g_dbus_connection_call(handle->dbus_connection,
-		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,
-		"GetSca", param, NULL,
-		G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-		on_response_get_sca, evt_cb_data);
-
-	return TAPI_API_SUCCESS;
+	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
 }
 
-
-/**
- *
- * This function enables the applications to set the service center address in the SIM storage
- *
- * @return		Returns appropriate error code. Refer TapiResult_t .
- * @param[in]		pSCA - the service center address that is to be set in the SIM storage
- *					    refer to 3GPP TS 23.040:9.1.2.5 Address fields
- *				index - the index that is to be set in the SIM storage
- *
- * @param[out]	RequestId-Unique identifier for a particular request
- *                         Its value can be any value from 0 to 255 if the API is returned successfully
- *	                     -1 (INVALID_REQUEST_ID) will be sent in case of failure
- * @Interface		ASynchronous.
- * @remark
- * @Refer	       tapi_sms_sms_addr_info
- */
-EXPORT_API int tel_set_sms_sca(struct tapi_handle *handle, const TelSmsAddressInfo_t *pSCA, int index, tapi_response_cb callback, void* user_data)
+EXPORT_API TelReturn tapi_sms_set_memory_status(TelHandle *handle,
+			gboolean available, TapiResponseCb callback,
+			void *user_data)
 {
-	struct tapi_resp_data *evt_cb_data = NULL;
-	GVariant *param;
-	gchar *encoded_sca = NULL;
+	TapiRespCbData *rsp_cb_data;
 
-	dbg("Func Entrance ");
+	dbg("Entry");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(pSCA ,TAPI_API_INVALID_PTR);
+	g_return_val_if_fail(handle != NULL && callback != NULL,
+			TEL_RETURN_INVALID_PARAMETER);
 
-	if ((index < 0) || (index > TAPI_NETTEXT_MAX_INDEX)) {
-		err("Invalid Index Input");
-		return TAPI_API_INVALID_INPUT;
-	}
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	telephony_sms_call_set_memory_status(handle->sms_proxy, available,
+			NULL, on_response_sms_set_memory_status, rsp_cb_data);
 
-	encoded_sca = g_base64_encode(&(pSCA->szDiallingNum[0]), TAPI_SIM_SMSP_ADDRESS_LEN);
-	if (encoded_sca == NULL) {
-		dbg("g_base64_encode: Failed to Enocde the SCA");
-		return TAPI_API_OPERATION_FAILED;
-	}
-
-	param = g_variant_new("(iiiis)", index,
-							pSCA->Ton,
-							pSCA->Npi,
-							pSCA->DialNumLen,
-							encoded_sca);
-
-	g_dbus_connection_call(handle->dbus_connection,
-		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,
-		"SetSca", param, NULL,
-		G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-		on_response_default, evt_cb_data);
-
-	g_free(encoded_sca);
-
-
-	return TAPI_API_SUCCESS;
+	return TEL_RETURN_SUCCESS;
 }
 
-
-/**
- *
- * This function enables the applications to set the configuration for cell broadcast messages
- *
- * @return		Returns appropriate error code. Refer TapiResult_t .
- * @param[in]		None
- *
- * @param[out]	RequestId-Unique identifier for a particular request
- *                         Its value can be any value from 0 to 255 if the API is returned successfully
- *	                     -1 (INVALID_REQUEST_ID) will be sent in case of failure
- * @Interface		Asynchronous.
- * @remark
- * @Refer	       None
- */
-EXPORT_API int tel_get_sms_cb_config(struct tapi_handle *handle, tapi_response_cb callback, void* user_data)
+static void on_response_sms_set_message_status(GObject *source_object,
+			GAsyncResult *res, gpointer user_data)
 {
-	struct tapi_resp_data *evt_cb_data = NULL;
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+	TelSmsResult result = TEL_SMS_RESULT_FAILURE;
+	GError *error = NULL;
 
-	dbg("Func Entrance ");
+	dbg("Entry");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
+	telephony_sms_call_set_message_status_finish(handle->sms_proxy,
+			(int *)&result, res, &error);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	CHECK_DEINIT(error, rsp_cb_data, result);
 
-	g_dbus_connection_call(handle->dbus_connection,
-		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,
-		"GetCbConfig", NULL, NULL,
-		G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-		on_response_get_cb_config, evt_cb_data);
-
-	return TAPI_API_SUCCESS;
+	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
 }
 
-/**
- *
- * This function enables the applications to set the configuration for cell broadcast messages
- *
- * @return		Returns appropriate error code. Refer TapiResult_t .
- * @param[in]		tapi_sms_cb_config the configuration details to be set
- *
- * @param[out]	RequestId-Unique identifier for a particular request
- *                         Its value can be any value from 0 to 255 if the API is returned successfully
- *	                     -1 (INVALID_REQUEST_ID) will be sent in case of failure
- * @Interface		Asynchronous.
- * @remark
- * @Refer	       tapi_sms_cb_config
- */
-EXPORT_API int tel_set_sms_cb_config(struct tapi_handle *handle, const TelSmsCbConfig_t *pCBConfig, tapi_response_cb callback, void* user_data)
+EXPORT_API TelReturn tapi_sms_set_message_status(TelHandle *handle,
+			TelSmsStatusInfo *info, TapiResponseCb callback,
+			void *user_data)
 {
-	struct tapi_resp_data *evt_cb_data = NULL;
-	GVariant *param;
-	gchar *encoded_cbConfig = NULL;
+	TapiRespCbData *rsp_cb_data;
 
-	dbg("Func Entrance ");
+	dbg("Entry");
 
-	TAPI_RET_ERR_NUM_IF_FAIL(pCBConfig ,TAPI_API_INVALID_PTR);
+	g_return_val_if_fail(handle != NULL && callback != NULL &&
+			info != NULL && info->index > 0 &&
+			info->status <= TEL_SMS_STATUS_REPLACED,
+			TEL_RETURN_INVALID_PARAMETER);
 
-	if ((pCBConfig->Net3gppType > 2) || (pCBConfig->MsgIdRangeCount < 0)) {
-		err("Invalid Input -3gppType(%d)",pCBConfig->Net3gppType);
-		err("Invalid Input -MsgIdRangeCount(%d)",pCBConfig->MsgIdRangeCount);
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
 
-		return TAPI_API_INVALID_INPUT;
-	}
+	telephony_sms_call_set_message_status(handle->sms_proxy, info->index,
+			info->status, NULL, on_response_sms_set_message_status,
+			rsp_cb_data);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	encoded_cbConfig = g_base64_encode((const guchar *)&(pCBConfig->MsgIDs[0]), TAPI_NETTEXT_GSM_SMS_CBMI_LIST_SIZE_MAX*5);
-	if (encoded_cbConfig == NULL) {
-		dbg("g_base64_encode: Failed to Enocde the CB Config");
-		return TAPI_API_OPERATION_FAILED;
-	}
-
-	param = g_variant_new("(iiiis)", pCBConfig->Net3gppType,
-							pCBConfig->CBEnabled,
-							pCBConfig->MsgIdMaxCount,
-							pCBConfig->MsgIdRangeCount,
-							encoded_cbConfig);
-
-	g_dbus_connection_call(handle->dbus_connection,
-		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,
-		"SetCbConfig", param, NULL,
-		G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-		on_response_default, evt_cb_data);
-
-	g_free(encoded_cbConfig);
-
-	return TAPI_API_SUCCESS;
+	return TEL_RETURN_SUCCESS;
 }
 
-/**
- *
- * This function enables the applications to set the phone memory status whether full or available
- *
- * @return		Returns appropriate error code. Refer TapiResult_t .
- * @param[in]		memory_status whether full or available
- *
- * @param[out]	RequestId-Unique identifier for a particular request
- *                         Its value can be any value from 0 to 255 if the API is returned successfully
- *	                     -1 (INVALID_REQUEST_ID) will be sent in case of failure
- * @Interface		Asynchronous.
- * @remark
- * @Refer	       tapi_sms_memstatus_type
- */
-EXPORT_API int tel_set_sms_memory_status(struct tapi_handle *handle, int memoryStatus, tapi_response_cb callback, void* user_data)
+EXPORT_API TelReturn tapi_sms_get_init_status(TelHandle *handle,
+			gboolean *init_status)
 {
-	struct tapi_resp_data *evt_cb_data = NULL;
-	GVariant *param;
+	g_return_val_if_fail(handle != NULL && init_status != NULL,
+			TEL_RETURN_INVALID_PARAMETER);
 
-	dbg("Func Entrance ");
+	*init_status = telephony_sms_get_init_status(handle->sms_proxy);
 
-	if ((memoryStatus < TAPI_NETTEXT_PDA_MEMORY_STATUS_AVAILABLE) || (memoryStatus > TAPI_NETTEXT_PDA_MEMORY_STATUS_FULL)) {
-		err("Invalid Input -MemoryStatus Nettext");
-		return TAPI_API_INVALID_INPUT;
-	}
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	param = g_variant_new("(i)", memoryStatus);
-
-	g_dbus_connection_call(handle->dbus_connection,
-		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,
-		"SetMemStatus", param, NULL,
-		G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-		on_response_default, evt_cb_data);
-
-	return TAPI_API_SUCCESS;
+	return TEL_RETURN_SUCCESS;
 }
 
-/**
- *
- * This function is used to get SMS preferred bearer on which SMS has to be transmitted. This is a synchronous function
- *
- * @return		TRUE in case of success and FALSE in case of error .
- * @param[in]        None
- *
- * @param[out]	requestId-Unique identifier for a particular request
- *                          Its value can be any value from 0 to 255 if the API is returned successfully
- *	                     -1 (INVALID_REQUEST_ID) will be sent in case of failure
- * @Interface		Asynchronous.
- * @remark
- * @Refer
- */
-EXPORT_API int tel_get_sms_preferred_bearer(struct tapi_handle *handle, tapi_response_cb callback, void* user_data)
+EXPORT_API TelReturn tapi_sms_get_sim_memory_status(TelHandle *handle,
+			gboolean *memory_full)
 {
-	struct tapi_resp_data *evt_cb_data = NULL;
+	g_return_val_if_fail(handle != NULL && memory_full != NULL,
+			TEL_RETURN_INVALID_PARAMETER);
 
-	dbg("Func Entrance ");
+	*memory_full = telephony_sms_get_sim_memory_status(handle->sms_proxy);
 
-	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	g_dbus_connection_call(handle->dbus_connection,
-		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,
-		"GetPrefBearer", NULL, NULL,
-		G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-		on_response_default, evt_cb_data);
-
-	return TAPI_API_SUCCESS;
+	return TEL_RETURN_SUCCESS;
 }
-
-/**
- *
- * This function enables the applications to set the preferred bearer
- *
- * @return		Returns appropriate error code. Refer TapiResult_t .
- * @param[in]		service option ie the bearer type to be set
- *
- * @param[out]	RequestId-Unique identifier for a particular request
- *                         Its value can be any value from 0 to 255 if the API is returned successfully
- *	                     -1 (INVALID_REQUEST_ID) will be sent in case of failure
- * @Interface		Asynchronous.
- * @remark
- * @Refer	       tapi_sms_bearer_type
- */
-EXPORT_API int tel_set_sms_preferred_bearer(struct tapi_handle *handle, TelSmsBearerType_t BearerType, tapi_response_cb callback, void* user_data)
-{
-	struct tapi_resp_data *evt_cb_data = NULL;
-	GVariant *param;
-
-	dbg("Func Entrance ");
-
-	if ((TAPI_NETTEXT_BEARER_PS_ONLY > BearerType) || (TAPI_NETTEXT_NO_PREFERRED_BEARER < BearerType)) {
-		err("Invalid Input -PrefBearer Set Nettext");
-		return TAPI_API_INVALID_INPUT;
-	}
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	param = g_variant_new("(i)", BearerType);
-
-	g_dbus_connection_call(handle->dbus_connection,
-		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,
-		"SetPrefBearer", param, NULL,
-		G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-		on_response_default, evt_cb_data);
-
-	return TAPI_API_SUCCESS;
-}
-
-/**
- *
- * This function enables the applications to set the deliver report for an incoming message(MT).
- *
- * @return		Returns appropriate error code. Refer TapiResult_t .
- * @param[in]	       pDataPackage - SMS-DELIVER-REPORT, and its length have to be passed in this structure.
- * @param[in]		RPCause - the result cause
- *
- * @param[out]	RequestId-Unique identifier for a particular request
- *                         Its value can be any value from 0 to 255 if the API is returned successfully
- *	                     -1 (INVALID_REQUEST_ID) will be sent in case of failure
- * @Interface		Synchronous.
- * @remark
- * @Refer	       tapi_sms_deliver_report
- */
-EXPORT_API int tel_send_sms_deliver_report(struct tapi_handle *handle,
-		const TelSmsDatapackageInfo_t *pDataPackage,
-		TelSmsResponse_t RPCause,
-		tapi_response_cb callback, void* user_data)
-{
-	struct tapi_resp_data *evt_cb_data = NULL;
-	GVariant *param;
-	gchar *encoded_sca = NULL;
-	gchar *encoded_tpdu = NULL;
-
-	dbg("Func Entrance ");
-
-	TAPI_RET_ERR_NUM_IF_FAIL(pDataPackage ,TAPI_API_INVALID_PTR);
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	encoded_sca = g_base64_encode(&(pDataPackage->Sca[0]), TAPI_SMS_ENCODED_SCA_LEN_MAX);
-	if (encoded_sca == NULL) {
-		dbg("g_base64_encode: Failed to Enocde the SCA");
-		return TAPI_API_OPERATION_FAILED;
-	}
-
-	encoded_tpdu = g_base64_encode(&(pDataPackage->szData[0]), TAPI_NETTEXT_SMDATA_SIZE_MAX + 1);
-	if (encoded_tpdu == NULL) {
-		dbg("g_base64_encode: Failed to Enocde the TPDU");
-		return TAPI_API_OPERATION_FAILED;
-	}
-
-	param = g_variant_new("(sisi)", encoded_sca,
-							pDataPackage->MsgLength,
-							encoded_tpdu,
-							RPCause);
-
-	g_dbus_connection_call(handle->dbus_connection,
-		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,
-		"SetDeliveryReport", param, NULL,
-		G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-		on_response_default, evt_cb_data);
-
-	g_free(encoded_sca);
-	g_free(encoded_tpdu);
-
-	return TAPI_API_SUCCESS;
-}
-
-/**
- *
- * This function enables the application to set the status of a message
- *
- * @return		Returns appropriate error code. Refer TapiResult_t .
- * @param[in]		index - the message to be changed
- *				msgStatus -SMS message status
- *
- * @param[out]	RequestId-Unique identifier for a particular request
- *                         Its value can be any value from 0 to 255 if the API is returned successfully
- *	                     -1 (INVALID_REQUEST_ID) will be sent in case of failure
- * @Interface		Asynchronous.
- * @remark
- * @Refer	       tapi_sms_memory_type,tapi_sms_status_type
- */
-EXPORT_API int tel_set_sms_message_status(struct tapi_handle *handle, int index, TelSmsMsgStatus_t msgStatus, tapi_response_cb callback, void* user_data)
-{
-	struct tapi_resp_data *evt_cb_data = NULL;
-	GVariant *param;
-
-	dbg("Func Entrance ");
-
-	if ((index < 0) || (index > TAPI_NETTEXT_MAX_INDEX) ||
-		(msgStatus > TAPI_NETTEXT_STATUS_RESERVED)) {
-		err("Invalid Input -MsgStatus Set Nettext");
-		return TAPI_API_INVALID_INPUT;
-	}
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	param = g_variant_new("(ii)", index, msgStatus);
-
-	g_dbus_connection_call(handle->dbus_connection,
-		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,
-		"SetMsgStatus", param, NULL,
-		G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-		on_response_default, evt_cb_data);
-
-	return TAPI_API_SUCCESS;
-}
-
-/**
- *
- * This function enables to application to get the sms parameters
- *
- * @return		Returns appropriate error code. Refer TapiResult_t .
- * @param[in]		record index of the record in which the sms parameters are stored in the EFsmsp file
- *
- * @param[out]	RequestId-Unique identifier for a particular request
- *                         Its value can be any value from 0 to 255 if the API is returned successfully
- *	                     -1 (INVALID_REQUEST_ID) will be sent in case of failure
- * @Interface		ASynchronous.
- * @remark		Requested details come in response API
- * @Refer
- */
-EXPORT_API int tel_get_sms_parameters(struct tapi_handle *handle, int index, tapi_response_cb callback, void* user_data)
-{
-	struct tapi_resp_data *evt_cb_data = NULL;
-	GVariant *param;
-
-	dbg("Func Entrance ");
-
-	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
-
-	if ((index < 0) || (index > TAPI_NETTEXT_MAX_INDEX)) {
-		err("Invalid Input -SMS Param Get Nettext");
-		return TAPI_API_INVALID_INPUT;
-	}
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	param = g_variant_new("(i)", index);
-
-	g_dbus_connection_call(handle->dbus_connection,
-		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,
-		"GetSmsParams", param, NULL,
-		G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-		on_response_get_sms_params, evt_cb_data);
-
-	return TAPI_API_SUCCESS;
-}
-
-/**
- *
- * This function enables to application to get the sms parameters
- *
- * @return		Returns appropriate error code. Refer TapiResult_t .
- * @param[in]		tapi_smsp_set_param_t sms parameters to be set in the EFsmsp file
- *
- * @param[out]	RequestId-Unique identifier for a particular request
- *                         Its value can be any value from 0 to 255 if the API is returned successfully
- *	                     -1 (INVALID_REQUEST_ID) will be sent in case of failure
- * @Interface		ASynchronous.
- * @remark
- * @Refer	       tapi_smsp_set_param_t
- */
-EXPORT_API int tel_set_sms_parameters(struct tapi_handle *handle, const TelSmsParams_t *pSmsSetParameters, tapi_response_cb callback, void* user_data)
-{
-	struct tapi_resp_data *evt_cb_data = NULL;
-	GVariant *param;
-	gchar *encoded_alphaId = NULL;
-	gchar *encoded_destDialNum = NULL;
-	gchar *encoded_scaDialNum = NULL;
-
-	dbg("Func Entrance ");
-
-	TAPI_RET_ERR_NUM_IF_FAIL(pSmsSetParameters ,TAPI_API_INVALID_PTR);
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	encoded_alphaId = g_base64_encode((guchar *)&(pSmsSetParameters->szAlphaId[0]), TAPI_SIM_SMSP_ALPHA_ID_LEN_MAX + 1);
-	if (encoded_alphaId == NULL) {
-		dbg("g_base64_encode: Failed to Enocde the AlphaId");
-		return TAPI_API_OPERATION_FAILED;
-	}
-
-	encoded_destDialNum = g_base64_encode(&(pSmsSetParameters->TpDestAddr.szDiallingNum[0]), TAPI_SIM_SMSP_ADDRESS_LEN + 1);
-	if (encoded_destDialNum == NULL) {
-		dbg("g_base64_encode: Failed to Enocde the DestAddr.DiallingNum");
-		return TAPI_API_OPERATION_FAILED;
-	}
-
-	encoded_scaDialNum = g_base64_encode(&(pSmsSetParameters->TpSvcCntrAddr.szDiallingNum[0]), TAPI_SIM_SMSP_ADDRESS_LEN + 1);
-	if (encoded_scaDialNum == NULL) {
-		dbg("g_base64_encode: Failed to Enocde the ScaAddr.DiallingNum");
-		return TAPI_API_OPERATION_FAILED;
-	}
-
-	param = g_variant_new("(iiisiiiisiiisiii)", pSmsSetParameters->RecordIndex,
-									pSmsSetParameters->RecordLen,
-									pSmsSetParameters->AlphaIdLen,
-									encoded_alphaId,
-									pSmsSetParameters->ParamIndicator,
-									pSmsSetParameters->TpDestAddr.DialNumLen,
-									pSmsSetParameters->TpDestAddr.Ton,
-									pSmsSetParameters->TpDestAddr.Npi,
-									encoded_destDialNum,
-									pSmsSetParameters->TpSvcCntrAddr.DialNumLen,
-									pSmsSetParameters->TpSvcCntrAddr.Ton,
-									pSmsSetParameters->TpSvcCntrAddr.Npi,
-									encoded_scaDialNum,
-									pSmsSetParameters->TpProtocolId,
-									pSmsSetParameters->TpDataCodingScheme,
-									pSmsSetParameters->TpValidityPeriod);
-
-	g_dbus_connection_call(handle->dbus_connection,
-		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,
-		"SetSmsParams", param, NULL,
-		G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-		on_response_default, evt_cb_data);
-
-	g_free(encoded_alphaId);
-	g_free(encoded_destDialNum);
-	g_free(encoded_scaDialNum);
-
-	return TAPI_API_SUCCESS;
-}
-
-/**
- *
- * This function enables to application to get the sms parameter count from the EFsmsp file.
- *
- * @return		Returns appropriate error code. Refer TapiResult_t .
- * @param[in]		None
- *
- * @param[out]	RequestId-Unique identifier for a particular request
- *                         Its value can be any value from 0 to 255 if the API is returned successfully
- *	                     -1 (INVALID_REQUEST_ID) will be sent in case of failure
- * @Interface		ASynchronous.
- * @remark		Requested details come in response API
- * @Refer
- */
-EXPORT_API int tel_get_sms_parameter_count(struct tapi_handle *handle, tapi_response_cb callback, void* user_data)
-{
-	struct tapi_resp_data *evt_cb_data = NULL;
-
-	dbg("Func Entrance ");
-
-	TAPI_RET_ERR_NUM_IF_FAIL(callback ,TAPI_API_INVALID_PTR);
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	g_dbus_connection_call(handle->dbus_connection,
-		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,
-		"GetSmsParamCnt", NULL, NULL,
-		G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-		on_response_get_sms_param_cnt, evt_cb_data);
-
-	return TAPI_API_SUCCESS;
-}
-
-#if 0
-/**
- *
- *  This API is used to send an SMS message to the network. This API allows keeping
- *  the dedicated link at lower layers by passing information as more messages to send in parameters.
- * This will enable not to release if a dedicated connection is used for transmission.
- *
- * @return		TRUE in case of success and FALSE in case of error .
- * @param[in]		TelSmsMsgInfo_t - SMS_SUBMIT/ACK/CANCEL and its length have to be passed in this structure.
- *
- *				unsigned int MoreMsgToSend will be set to TRUE when there are more than one message to be
- *                         send or Multiple segmented concatenated message to be send, otherwise FALSE. This flag
- *                         indicates OEM that more messages to send.
- *
- * @param[out]	RequestId-Unique identifier for a particular request
- *                         Its value can be any value from 0 to 255 if the API is returned successfully
- *	                     -1 (INVALID_REQUEST_ID) will be sent in case of failure
- *
- * @Interface		Asynchronous.
- * @remark
- * @Refer		TelSmsMsgInfo_t.
- */
-EXPORT_API int tel_send_sms_msg(struct tapi_handle *handle, const TelSmsMsgInfo_t *pSmsMsgInfo, unsigned int MoreMsgToSend, tapi_response_cb callback, void* user_data)
-{
-	struct tapi_resp_data *evt_cb_data = NULL;
-	GVariant *param;
-
-	dbg("Func Entrance ");
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-	TS_BOOL ret = FALSE;
-	int api_err = TAPI_API_SUCCESS;
-	int emergency_mode = 0;
-
-	if (vconf_get_int("db/telephony/emergency", &emergency_mode) != 0) {
-		TAPI_LIB_DEBUG(LEVEL_ERR, "[FAIL]GET db/telephony/emergency");
-		return TAPI_API_OPERATION_FAILED;
-	}
-	if (emergency_mode) {
-		TAPI_LIB_DEBUG(LEVEL_DEBUG, "emergency mode on");
-		return TAPI_API_OPERATION_FAILED;
-	}
-
-	TAPI_RET_ERR_NUM_IF_FAIL(pSmsMsgInfo ,TAPI_API_INVALID_PTR);
-
-	if (conn_name.length_of_name == 0) {
-		TAPI_LIB_DEBUG(LEVEL_ERR, "No dbus connection name");
-		return TAPI_API_OPERATION_FAILED;
-	}
-
-	TAPI_RET_ERR_NUM_IF_FAIL(tapi_check_dbus_status(), TAPI_API_SYSTEM_RPC_LINK_NOT_EST);
-	TAPI_GLIB_INIT_PARAMS();
-
-	TAPI_GLIB_ALLOC_PARAMS(in_param1,in_param2,in_param3,in_param4,
-			out_param1,out_param2,out_param3,out_param4);
-
-	g_array_append_vals(in_param1, pSmsMsgInfo, sizeof(TelSmsMsgInfo_t));
-	g_array_append_vals(in_param2, &MoreMsgToSend, sizeof(unsigned int));
-	g_array_append_vals(in_param4, &conn_name, sizeof(tapi_dbus_connection_name));
-
-	ret = tapi_send_request(TAPI_CS_SERVICE_NETTEXT, TAPI_CS_NETTEXT_SEND_EX, in_param1, in_param2, in_param3,
-			in_param4, &out_param1, &out_param2, &out_param3, &out_param4);
-
-	if (ret) {
-		api_err = g_array_index(out_param1, int, 0);
-	}
-	else {
-		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
-	}
-
-	TAPI_GLIB_FREE_PARAMS(in_param1,in_param2,in_param3,in_param4,
-			out_param1,out_param2,out_param3,out_param4);
-
-	return api_err;
-}
-#endif
-
-/**
- *
- * This function enables the applications to check the device status
- *
- * @return		Returns appropriate error code. Refer TapiResult_t .
- * @param[in]		None
- *
- *
- * @param[out]	Device status whether Ready or Not Ready
- * @Interface		Synchronous.
- * @remark
- * @Refer
- */
-EXPORT_API int tel_check_sms_device_status(struct tapi_handle *handle, int *pReadyStatus)
-{
-	GError *error;
-	GVariant *smsReady = NULL;
-
-	dbg("Func Entrance ");
-
-	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
-	TAPI_RET_ERR_NUM_IF_FAIL(pReadyStatus, TAPI_API_INVALID_PTR);
-
-	memset(pReadyStatus, 0, sizeof(int));
-
-	error = NULL;
-	smsReady = g_dbus_connection_call_sync(handle->dbus_connection, DBUS_TELEPHONY_SERVICE , handle->path,
-			DBUS_TELEPHONY_SMS_INTERFACE, "GetSmsReadyStatus", NULL, NULL, G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
-
-	if(!smsReady){
-		dbg( "error to get SMS ready_status(%s)", error->message);
-		g_error_free (error);
-		return TAPI_API_OPERATION_FAILED;
-	}
-
-	dbg("get SMS ready_status type_format(%s)", g_variant_get_type_string(smsReady));
-
-	g_variant_get(smsReady, "(b)", pReadyStatus);
-
-	dbg("************SMS_device_status (%d)", *pReadyStatus);
-
-	return TAPI_API_SUCCESS;
-}
-
-#if 0
-/**
- *
- * This function enables to application to set that the device is ready to recieve messages from network.
- *
- * @return		Returns appropriate error code. Refer TapiResult_t .
- * @param[in]		None
- *
- * @param[out]	None
- * @Interface		Synchronous.
- * @remark
- * @Refer
- */
-EXPORT_API int tel_set_sms_device_status(struct tapi_handle *handle)
-{
-	struct tapi_resp_data *evt_cb_data = NULL;
-	GVariant *param;
-
-	dbg("Func Entrance ");
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	TS_BOOL ret = FALSE;
-	int api_err = TAPI_API_SUCCESS;
-
-	TAPI_RET_ERR_NUM_IF_FAIL(tapi_check_dbus_status_internal(), TAPI_API_SYSTEM_RPC_LINK_NOT_EST);
-	TAPI_GLIB_INIT_PARAMS();
-	TAPI_GLIB_ALLOC_PARAMS(in_param1, in_param2, in_param3, in_param4, out_param1, out_param2, out_param3, out_param4);
-
-	ret = tapi_send_request_internal(TAPI_CS_SERVICE_NETTEXT, TAPI_CS_NETTEXT_DEVICEREADY,
-			in_param1, in_param2, in_param3, in_param4,
-			&out_param1, &out_param2, &out_param3, &out_param4);
-
-	if (ret) {
-		api_err	= g_array_index(out_param1, int, 0);
-	}
-	else {
-		api_err = TAPI_API_SYSTEM_RPC_LINK_DOWN;
-	}
-
-	TAPI_GLIB_FREE_PARAMS(in_param1, in_param2, in_param3, in_param4, out_param1, out_param2, out_param3, out_param4);
-
-	return api_err;
-}
-#endif
-//eof

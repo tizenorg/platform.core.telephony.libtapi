@@ -1,9 +1,8 @@
 /*
- * libslp-tapi
+ * libtapi
  *
- * Copyright (c) 2011 Samsung Electronics Co., Ltd. All rights reserved.
- *
- * Contact: Ja-young Gu <jygu@samsung.com>
+ * Copyright (c) 2013 Samsung Electronics Co. Ltd. All rights reserved.
+ * Copyright (c) 2013 Intel Corporation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,659 +17,826 @@
  * limitations under the License.
  */
 
+#include "tapi_private.h"
+#include "tapi.h"
+#include "tapi_ss.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <tel_ss.h>
 
-#include "tapi_common.h"
-#include "TapiUtility.h"
-#include "TelSs.h"
-
-#include "common.h"
-#include "tapi_log.h"
-#include "ITapiSs.h"
-
-static void on_response_get_ss_barring_status(GObject *source_object, GAsyncResult *res, gpointer user_data)
+void on_ss_signal_emit_handler(TelephonySs *ss, gchar *sender_name,
+					gchar *signal_name, GVariant *parameters,
+					gpointer user_data)
 {
-	GError *error = 0;
-	GDBusConnection *conn = 0;
-	struct tapi_resp_data *evt_cb_data = user_data;
-	int result = -1, i = 0;
-	TelSsBarringResp_t resp;
+	TapiEvtCbData *evt_cb_data = NULL;
+	TelHandle *handle = user_data;
+	char *evt_id = NULL;
 
-	GVariant *dbus_result = 0, *value = 0;
-	GVariantIter *iter = 0;
-	GVariantIter *iter_row = 0;
-	const gchar *key = 0;
+	dbg("Entry");
 
-	memset(&resp, '\0', sizeof(TelSsBarringResp_t));
-
-	conn = G_DBUS_CONNECTION (source_object);
-	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_DEINIT(error);
-
-	if (!dbus_result) {
-		if (evt_cb_data->cb_fn) {
-			evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
-		}
-
-		if (error)
-			g_error_free(error);
-
-		free(evt_cb_data);
+	if (handle == NULL) {
+		err("invalid handle");
 		return;
 	}
 
-	g_variant_get (dbus_result, "(aa{sv}i)", &iter, &result);
+	evt_id = g_strdup_printf("%s:%s", TELEPHONY_SS_INTERFACE,
+					signal_name);
 
-	resp.record_num = g_variant_iter_n_children(iter);
-
-	while ( g_variant_iter_next(iter, "a{sv}", &iter_row ) ) {
-		while ( g_variant_iter_loop( iter_row, "{sv}", &key, &value ) ) {
-
-			if ( !g_strcmp0(key, "ss_class") ) {
-				resp.record[i].Class = g_variant_get_int32(value);
-			}
-
-			if ( !g_strcmp0(key, "ss_status") ) {
-				resp.record[i].Status = g_variant_get_int32(value);
-			}
-
-			if ( !g_strcmp0(key, "barring_mode") ) {
-				resp.record[i].Flavour = g_variant_get_int32(value);
-			}
-
-		}
-		i++;
-		g_variant_iter_free(iter_row);
-	}
-	g_variant_iter_free(iter);
-
-	if (evt_cb_data->cb_fn) {
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &resp, evt_cb_data->user_data);
-	}
-
-	free(evt_cb_data);
-}
-
-static void on_response_change_ss_barring_password(GObject *source_object, GAsyncResult *res, gpointer user_data)
-{
-	GError *error = 0;
-	GDBusConnection *conn = 0;
-	struct tapi_resp_data *evt_cb_data = user_data;
-	int result = -1;
-
-	GVariant *dbus_result = 0;
-
-	conn = G_DBUS_CONNECTION (source_object);
-	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_DEINIT(error);
-
-	if (!dbus_result) {
-		if (evt_cb_data->cb_fn) {
-			evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
-		}
-
-		if (error)
-			g_error_free(error);
-
-		free(evt_cb_data);
+	evt_cb_data = g_hash_table_lookup(handle->evt_table, evt_id);
+	if (evt_cb_data == NULL) {
+		err("invalid evt_id[%s]", evt_id);
+		g_free(evt_id);
 		return;
 	}
 
-	g_variant_get (dbus_result, "(i)",  &result);
-
-	if (evt_cb_data->cb_fn) {
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
-	}
-
-	free(evt_cb_data);
-}
-
-static void on_response_get_ss_forward_status(GObject *source_object, GAsyncResult *res, gpointer user_data)
-{
-	GError *error = 0;
-	GDBusConnection *conn = 0;
-	struct tapi_resp_data *evt_cb_data = user_data;
-	int result = -1, i = 0;
-	TelSsForwardResp_t resp;
-
-	GVariant *dbus_result = 0, *value = 0;
-	GVariantIter *iter = 0;
-	GVariantIter *iter_row = 0;
-	const gchar *key = 0;
-
-
-	memset(&resp, '\0', sizeof(TelSsForwardResp_t));
-
-	conn = G_DBUS_CONNECTION (source_object);
-	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_DEINIT(error);
-
-	if (!dbus_result) {
-		if (evt_cb_data->cb_fn) {
-			evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
-		}
-
-		if (error)
-			g_error_free(error);
-
-		free(evt_cb_data);
-		return;
-	}
-
-	g_variant_get (dbus_result, "(aa{sv}i)", &iter, &result);
-
-	resp.record_num = g_variant_iter_n_children(iter);
-
-	while ( g_variant_iter_next(iter, "a{sv}", &iter_row ) ) {
-		while ( g_variant_iter_loop( iter_row, "{sv}", &key, &value ) ) {
-
-			if ( !g_strcmp0(key, "ss_class") ) {
-				resp.record[i].Class = g_variant_get_int32(value);
-			}
-
-			if ( !g_strcmp0(key, "ss_status") ) {
-				resp.record[i].Status = g_variant_get_int32(value);
-			}
-
-			if ( !g_strcmp0(key, "forwarding_mode") ) {
-				resp.record[i].ForwardCondition = g_variant_get_int32(value);
-			}
-
-			if ( !g_strcmp0(key, "no_reply_time") ) {
-				resp.record[i].NoReplyWaitTime = g_variant_get_int32(value);
-			}
-
-			if ( !g_strcmp0(key, "number_present") ) {
-				resp.record[i].bCallForwardingNumberPresent = g_variant_get_int32(value);
-			}
-
-			if ( !g_strcmp0(key, "forwarding_number") ) {
-				strncpy((char *)resp.record[i].szCallForwardingNumber, g_variant_get_string(value, 0), TAPI_CALL_DIALDIGIT_LEN_MAX );
-			}
-
-		}
-		i++;
-		g_variant_iter_free(iter_row);
-	}
-	g_variant_iter_free(iter);
-
-	if (evt_cb_data->cb_fn) {
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &resp, evt_cb_data->user_data);
-	}
-
-	free(evt_cb_data);
-}
-
-static void on_response_get_ss_waiting_status(GObject *source_object, GAsyncResult *res, gpointer user_data)
-{
-	GError *error = 0;
-	GDBusConnection *conn = 0;
-	struct tapi_resp_data *evt_cb_data = user_data;
-	int result = -1, i = 0;
-	TelSsWaitingResp_t resp;
-
-	GVariant *dbus_result = 0, *value = 0;
-	GVariantIter *iter = 0;
-	GVariantIter *iter_row = 0;
-	const gchar *key = 0;
-
-
-	memset(&resp, '\0', sizeof(TelSsWaitingResp_t));
-
-	conn = G_DBUS_CONNECTION (source_object);
-	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_DEINIT(error);
-
-	if (!dbus_result) {
-		if (evt_cb_data->cb_fn) {
-			evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
-		}
-
-		if (error)
-			g_error_free(error);
-
-		free(evt_cb_data);
-		return;
-	}
-
-	g_variant_get (dbus_result, "(aa{sv}i)", &iter, &result);
-
-	resp.record_num = g_variant_iter_n_children(iter);
-
-	while ( g_variant_iter_next(iter, "a{sv}", &iter_row ) ) {
-		while ( g_variant_iter_loop( iter_row, "{sv}", &key, &value ) ) {
-
-			if ( !g_strcmp0(key, "ss_class") ) {
-				resp.record[i].Class = g_variant_get_int32(value);
-			}
-
-			if ( !g_strcmp0(key, "ss_status") ) {
-				resp.record[i].Status = g_variant_get_int32(value);
-			}
-		}
-		i++;
-		g_variant_iter_free(iter_row);
-	}
-	g_variant_iter_free(iter);
-
-	if (evt_cb_data->cb_fn) {
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &resp, evt_cb_data->user_data);
-	}
-
-	free(evt_cb_data);
-}
-
-
-static void on_response_get_ss_cli_status(GObject *source_object, GAsyncResult *res, gpointer user_data)
-{
-	GError *error = 0;
-	GDBusConnection *conn = 0;
-	struct tapi_resp_data *evt_cb_data = user_data;
-	int result = -1;
-	TelSsCliResp_t resp;
-
-	GVariant *dbus_result = 0;
-
-	memset(&resp, '\0', sizeof(TelSsCliResp_t));
-
-	conn = G_DBUS_CONNECTION (source_object);
-	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_DEINIT(error);
-
-	if (!dbus_result) {
-		if (evt_cb_data->cb_fn) {
-			evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
-		}
-
-		if (error)
-			g_error_free(error);
-
-		free(evt_cb_data);
-		return;
-	}
-
-	g_variant_get (dbus_result, "(iii)",  &result, &resp.Type, &resp.Status);
-
-	if (evt_cb_data->cb_fn) {
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &resp, evt_cb_data->user_data);
-	}
-
-	free(evt_cb_data);
-}
-
-static void on_response_send_ss_ussd_request(GObject *source_object, GAsyncResult *res, gpointer user_data)
-{
-	GError *error = 0;
-	GDBusConnection *conn = 0;
-	struct tapi_resp_data *evt_cb_data = user_data;
-	int result = -1;
-	char *tmp_str = 0;
-	TelSsUssdResp_t resp;
-
-	GVariant *dbus_result = 0;
-
-	memset(&resp, '\0', sizeof(TelSsUssdResp_t));
-
-	conn = G_DBUS_CONNECTION (source_object);
-	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_DEINIT(error);
-
-	if (!dbus_result) {
-		if (evt_cb_data->cb_fn) {
-			evt_cb_data->cb_fn(evt_cb_data->handle, -1, NULL, evt_cb_data->user_data);
-		}
-
-		if (error)
-			g_error_free(error);
-
-		free(evt_cb_data);
-		return;
-	}
-
-	g_variant_get (dbus_result, "(iiiis)",  &result, &resp.Type, &resp.Status, &resp.Length, &tmp_str);
-
-	if (!result) {
-		memcpy( resp.szString, tmp_str, resp.Length );
-		g_free(tmp_str);
-	}
-
-	if (evt_cb_data->cb_fn) {
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &resp, evt_cb_data->user_data);
-	}
-
-	free(evt_cb_data);
-}
-
-EXPORT_API int tel_set_ss_barring(TapiHandle *handle, TelSsBarringInfo_t *info, tapi_response_cb callback, void *user_data)
-{
-	struct tapi_resp_data *evt_cb_data = 0;
-	GVariant *param = 0;
-	gchar *method = 0;
-
-	dbg("Func Entrance ");
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	param = g_variant_new("(iis)", info->Class, info->Type, info->szPassword);
-
-	if ( info->Mode == TAPI_SS_CB_MODE_ACTIVATE ) {
-		dbg("[ check ] barring activate");
-		method = "ActivateBarring";
-
+	if (!g_strcmp0(signal_name, "NotifyUssd")) {
+		TelSsUssdNoti ussd_noti;
+		memset(&ussd_noti, 0, sizeof(TelSsUssdNoti));
+		g_variant_get(parameters, "(is)", &ussd_noti.status, &ussd_noti.str);
+
+		dbg("signal[%s] status[%d] str[%s]", signal_name,
+					ussd_noti.status, ussd_noti.str);
+
+		EVT_CALLBACK_CALL(handle, evt_cb_data, evt_id, &ussd_noti);
+		g_free(ussd_noti.str);
 	} else {
-		dbg("[ check ] barring deactivate");
-		method = "DeactivateBarring";
-
+		err("Unsupported signal %s", signal_name);
 	}
 
-	g_dbus_connection_call(handle->dbus_connection,
-			DBUS_TELEPHONY_SERVICE, handle->path, DBUS_TELEPHONY_SS_INTERFACE,
-			method, param, 0,
-			G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-			on_response_get_ss_barring_status, evt_cb_data );
-
-	return TAPI_API_SUCCESS;
+	g_free(evt_id);
 }
 
-EXPORT_API int tel_get_ss_barring_status(TapiHandle *handle, TelSsClass_t class, TelSsBarringType_t type, tapi_response_cb callback, void *user_data)
+static gboolean __tapi_check_ss_class(TelSsClass ss_class)
 {
-	struct tapi_resp_data *evt_cb_data = 0;
-	GVariant *param = 0;
-
-	dbg("Func Entrance ");
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	param = g_variant_new("(ii)", class, type);
-
-	g_dbus_connection_call(handle->dbus_connection,
-			DBUS_TELEPHONY_SERVICE, handle->path, DBUS_TELEPHONY_SS_INTERFACE,
-			"GetBarringStatus", param, 0,
-			G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-			on_response_get_ss_barring_status, evt_cb_data );
-
-	return TAPI_API_SUCCESS;
-}
-
-/**********************************************************************************************
- *
- * This function is used to change call barring password.
- *
- * @param	pOldPassword[IN] of type char* Specifies the Old Call Barring Password.
- * @param	pNewPassword[IN] of type char* Specifies the New Call Barring Password.
- * @param	pNewPasswordAgain[IN] of type char* Specifies the New Call Barring Password for Confirm.
- * @return	enum type TapiResult_t Specifies the API's Return result.
- * @remark
- *
- ***********************************************************************************************/
-EXPORT_API int tel_change_ss_barring_password(TapiHandle *handle,
-		const char *old_password,
-		const char *new_password,
-		const char *new_password_again,
-		tapi_response_cb callback, void *user_data)
-{
-	struct tapi_resp_data *evt_cb_data = 0;
-	GVariant *param = 0;
-
-	dbg("Func Entrance ");
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	param = g_variant_new("(sss)", old_password, new_password, new_password_again);
-
-	g_dbus_connection_call(handle->dbus_connection,
-			DBUS_TELEPHONY_SERVICE, handle->path, DBUS_TELEPHONY_SS_INTERFACE,
-			"ChangeBarringPassword", param, 0,
-			G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-			on_response_change_ss_barring_password, evt_cb_data );
-
-	return TAPI_API_SUCCESS;
-}
-
-/**********************************************************************************************
- *
- * This function is used to Activate or Deactivate the call forwarding feature.
- *
- * @param	forwardInfo[IN] of type TelSsForwardInfo_t which specifies the Teleservice and CF flavour, Forwarded to number.
- * @return	enum type TapiResult_t Specifies the API's Return result.
- * @remark
- *
- ***********************************************************************************************/
-EXPORT_API int tel_set_ss_forward(TapiHandle *handle, const TelSsForwardInfo_t *info, tapi_response_cb callback, void *user_data)
-{
-	struct tapi_resp_data *evt_cb_data = 0;
-	GVariant *param = 0;
-	gchar *method = 0;
-
-	dbg("Func Entrance ");
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	param = g_variant_new("(iiis)", info->Class, info->Condition, info->NoReplyConditionTimer, info->szPhoneNumber);
-
-	switch ( info->Mode ) {
-		case TAPI_SS_CF_MODE_DISABLE_EV: {
-			dbg("[ check ] forwarding deactivate");
-			method = "DeactivateForwarding";
-		} break;
-
-		case TAPI_SS_CF_MODE_ENABLE_EV: {
-			dbg("[ check ] forwarding activate");
-			method = "ActivateForwarding";
-		} break;
-
-		case TAPI_SS_CF_MODE_REGISTRATION_EV: {
-			dbg("[ check ] forwarding registration");
-			method = "RegisterForwarding";
-		} break;
-
-		case TAPI_SS_CF_MODE_ERASURE_EV: {
-			dbg("[ check ] forwarding deregistration");
-			method = "DeregisterForwarding";
-		} break;
-
-		default:
-			dbg("[ error ] invalid input : (0x%x)", info->Mode);
-			return TAPI_API_INVALID_INPUT;
+	switch (ss_class) {
+	case TEL_SS_CLASS_ALL_TELE_BEARER:
+	case TEL_SS_CLASS_ALL_TELE:
+	case TEL_SS_CLASS_VOICE:
+	case TEL_SS_CLASS_ALL_DATA_TELE:
+	case TEL_SS_CLASS_FAX:
+	case TEL_SS_CLASS_SMS:
+	case TEL_SS_CLASS_VGCS:
+	case TEL_SS_CLASS_VBS:
+	case TEL_SS_CLASS_ALL_TELE_EXPT_SMS:
+	case TEL_SS_CLASS_ALL_BEARER:
+	case TEL_SS_CLASS_ALL_ASYNC:
+	case TEL_SS_CLASS_ALL_SYNC:
+	case TEL_SS_CLASS_ALL_CS_SYNC:
+	case TEL_SS_CLASS_ALL_CS_ASYNC:
+	case TEL_SS_CLASS_ALL_DEDI_PS:
+	case TEL_SS_CLASS_ALL_DEDI_PAD:
+	case TEL_SS_CLASS_ALL_DATA_CDA:
+	case TEL_SS_CLASS_ALL_GPRS_BEARER:
+	case TEL_SS_CLASS_AUX_VOICE:
+		return TRUE;
 	}
 
-	g_dbus_connection_call(handle->dbus_connection,
-			DBUS_TELEPHONY_SERVICE, handle->path, DBUS_TELEPHONY_SS_INTERFACE,
-			method, param, 0,
-			G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-			on_response_get_ss_forward_status, evt_cb_data );
-
-	return TAPI_API_SUCCESS;
+	return FALSE;
 }
 
-/**********************************************************************************************
- *
- * This function is used to interrogate the status of call forwarding feature.
- *
- * @param	forwardType[IN] of type TelSsForwardType_t which specifies the telecommunication service.
- * @param	condition[IN]	is of type TelSsForwardWhen_t specified the CF flavour
- * @return	enum type TapiResult_t Specifies the API's Return result.
- * @remark
- *
- ***********************************************************************************************/
-EXPORT_API int tel_get_ss_forward_status(TapiHandle *handle, TelSsClass_t class, TelSsForwardWhen_t condition, tapi_response_cb callback, void *user_data)
+static gboolean __tapi_check_barring_type(TelSsBarringType type)
 {
-	struct tapi_resp_data *evt_cb_data = 0;
-	GVariant *param = 0;
-
-	dbg("Func Entrance ");
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	param = g_variant_new("(ii)", class, condition);
-
-	g_dbus_connection_call(handle->dbus_connection,
-			DBUS_TELEPHONY_SERVICE, handle->path, DBUS_TELEPHONY_SS_INTERFACE,
-			"GetForwardingStatus", param, 0,
-			G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-			on_response_get_ss_forward_status, evt_cb_data );
-
-	return TAPI_API_SUCCESS;
-}
-
-/**********************************************************************************************
- *
- * This function is used to Activate or dectivate call waiting feature.
- *
- * @param	waitInfo[IN] of type TelSsWaitingInfo_t which specifies the telecommunication service and mode.
- * @return	enum type TapiResult_t Specifies the API's Return result.
- * @remark
- *
- ***********************************************************************************************/
-EXPORT_API int tel_set_ss_waiting(TapiHandle *handle, const TelSsWaitingInfo_t *info, tapi_response_cb callback, void *user_data)
-{
-	struct tapi_resp_data *evt_cb_data = 0;
-	GVariant *param = 0;
-	gchar *method = 0;
-
-	dbg("Func Entrance ");
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	param = g_variant_new("(i)", info->Class);
-
-	if ( info->Mode == TAPI_SS_CW_MODE_ACTIVATE ) {
-		dbg("[ check ] waiting activate");
-		method = "ActivateWaiting";
-
-	} else {
-		dbg("[ check ] waiting deactivate");
-		method = "DeactivateWaiting";
-
+	switch (type) {
+	case TEL_SS_CB_TYPE_BAOC:
+	case TEL_SS_CB_TYPE_BOIC:
+	case TEL_SS_CB_TYPE_BOIC_NOT_HC:
+	case TEL_SS_CB_TYPE_BAIC:
+	case TEL_SS_CB_TYPE_BIC_ROAM:
+	case TEL_SS_CB_TYPE_NS:
+	case TEL_SS_CB_TYPE_AB:
+	case TEL_SS_CB_TYPE_AOB:
+	case TEL_SS_CB_TYPE_AIB:
+		return TRUE;
 	}
 
-	g_dbus_connection_call(handle->dbus_connection,
-			DBUS_TELEPHONY_SERVICE, handle->path, DBUS_TELEPHONY_SS_INTERFACE,
-			method, param, 0,
-			G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-			on_response_get_ss_waiting_status, evt_cb_data );
-
-	return TAPI_API_SUCCESS;
+	return FALSE;
 }
-
-/**********************************************************************************************
- *
- * This function is used to interrogate the status of call waiting feature.
- *
- * @param	CallType[IN] of type TelSsCallType_t which specifies the telecommunication service .
- * @return	enum type TapiResult_t Specifies the API's Return result.
- * @remark
- *
- ***********************************************************************************************/
-
-EXPORT_API int tel_get_ss_waiting_status(TapiHandle *handle, const TelSsClass_t class, tapi_response_cb callback, void *user_data)
+static gboolean __tapi_check_barring_pwd(const char *pwd)
 {
-	struct tapi_resp_data *evt_cb_data = 0;
-	GVariant *param = 0;
-
-	dbg("Func Entrance ");
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	param = g_variant_new("(i)", class);
-
-	g_dbus_connection_call(handle->dbus_connection,
-			DBUS_TELEPHONY_SERVICE, handle->path, DBUS_TELEPHONY_SS_INTERFACE,
-			"GetWaitingStatus", param, 0,
-			G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-			on_response_get_ss_waiting_status, evt_cb_data );
-
-	return TAPI_API_SUCCESS;
+	if (pwd == NULL || (strlen(pwd) > TEL_SS_BARRING_PASSWORD_LEN_MAX))
+		return FALSE;
+	else
+		return TRUE;
 }
-
-/**********************************************************************************************
- *
- * This function is used to interrogate the status of CLI services feature.
- *
- * @param	CliType[IN] of type TelSsCliType_t which specifies the CLI service .
- * @return	enum type TapiResult_t Specifies the API's Return result.
- * @remark
- *
- ***********************************************************************************************/
-EXPORT_API int tel_get_ss_cli_status(TapiHandle *handle, TelSsCliType_t type, tapi_response_cb callback, void *user_data)
+static gboolean __tapi_check_forwarding_mode(TelSsForwardMode mode)
 {
-	struct tapi_resp_data *evt_cb_data = 0;
-	GVariant *param = 0;
+	switch (mode) {
+	case TEL_SS_CF_MODE_DISABLE:
+	case TEL_SS_CF_MODE_ENABLE:
+	case TEL_SS_CF_MODE_REGISTER:
+	case TEL_SS_CF_MODE_DEREGISTER:
+		return TRUE;
+	}
 
-	dbg("Func Entrance ");
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	param = g_variant_new("(i)", type);
-
-	g_dbus_connection_call(handle->dbus_connection,
-			DBUS_TELEPHONY_SERVICE, handle->path, DBUS_TELEPHONY_SS_INTERFACE,
-			"GetCLIStatus", param, 0,
-			G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-			on_response_get_ss_cli_status, evt_cb_data );
-
-	return TAPI_API_SUCCESS;
+	return FALSE;
 }
 
-/**********************************************************************************************
- *
- * This function is used to send a USSD string and also the User response for a NW intiated USSD.
- *
- * @param	pAppMsg[IN] of type TelSsUssdMsgInfo_t which specifies the USSD String,length of the string, format of the string.
- * @return	enum type TapiResult_t Specifies the API's Return result.
- * @remark	TelSsUssdMsgInfo_t ->IndType is not used while calling this function, This is used for sending the response.
- *			Limo standard defines only one structure for Request and response.
- *
- ***********************************************************************************************/
-EXPORT_API int tel_send_ss_ussd_request(TapiHandle *handle, const TelSsUssdMsgInfo_t *info, tapi_response_cb callback, void *user_data)
+static gboolean __tapi_check_forwarding_condition(TelSsForwardCondition condition)
 {
-	struct tapi_resp_data *evt_cb_data = 0;
-	GVariant *param = 0;
+	switch (condition) {
+	case TEL_SS_CF_COND_CFU:
+	case TEL_SS_CF_COND_CFB:
+	case TEL_SS_CF_COND_CFNRY:
+	case TEL_SS_CF_COND_CFNRC:
+	case TEL_SS_CF_COND_ALL:
+	case TEL_SS_CF_COND_ALL_CFC:
+		return TRUE;
+	}
 
-	dbg("Func Entrance ");
-
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
-
-	param = g_variant_new("(iis)", info->Type, info->Length, info->szString);
-
-	g_dbus_connection_call(handle->dbus_connection,
-			DBUS_TELEPHONY_SERVICE, handle->path, DBUS_TELEPHONY_SS_INTERFACE,
-			"SendUSSD", param, 0,
-			G_DBUS_CALL_FLAGS_NONE, -1, handle->ca,
-			on_response_send_ss_ussd_request, evt_cb_data );
-
-	return TAPI_API_SUCCESS;
+	return FALSE;
 }
 
-/**********************************************************************************************
- *
- * This function is used to Sets AOC information.
- *
- * @param	AocType[IN] of type TelSsAocType_t which specifies the which AOC type to read.
- * @return	enum type TapiResult_t Specifies the API's Return result.
- * @remark
- *
- ***********************************************************************************************/
-EXPORT_API int tel_get_ss_aoc_info(TapiHandle *handle, TelSsAocType_t AocType, tapi_response_cb callback, void *user_data)
+static gboolean __tapi_check_forwarding_number(const char *number)
 {
-	return 0;
+	if (number == NULL || (strlen(number) > TEL_SS_NUMBER_LEN_MAX))
+		return FALSE;
+	else
+		return TRUE;
 }
 
-/**********************************************************************************************
- *
- * This function is used to Sets AOC information.
- *
- * @param	AocSetInfo[IN] of type TelCallAocInfo_t which specifies the AOC info parameters .
- * @return	enum type TapiResult_t Specifies the API's Return result.
- * @remark
- *
- ***********************************************************************************************/
-EXPORT_API int tel_set_ss_aoc_info(TapiHandle *handle, TelCallAocInfo_t *AocSetInfo, tapi_response_cb callback, void *user_data)
+static gboolean __tapi_check_and_get_cli_status(const TelSsCliInfo *cli_info, gint *status)
 {
-	return 0;
+	switch (cli_info->type) {
+	case TEL_SS_CLI_CLIR:
+		if (cli_info->status.clir <= TEL_CLIR_STATUS_SUPPRESSION) {
+			*status = cli_info->status.clir;
+			return TRUE;
+		}
+	break;
+	case TEL_SS_CLI_CLIP:
+		if (cli_info->status.clip == TEL_SS_CLI_DISABLE || cli_info->status.clip == TEL_SS_CLI_ENABLE) {
+			*status = cli_info->status.clip;
+			return TRUE;
+		}
+	break;
+	case TEL_SS_CLI_COLP:
+		if (cli_info->status.colp == TEL_SS_CLI_DISABLE || cli_info->status.colp == TEL_SS_CLI_ENABLE) {
+			*status = cli_info->status.colp;
+			return TRUE;
+		}
+	break;
+	case TEL_SS_CLI_COLR:
+		if (cli_info->status.colr == TEL_SS_CLI_DISABLE || cli_info->status.colr == TEL_SS_CLI_ENABLE) {
+			*status = cli_info->status.colr;
+			return TRUE;
+		}
+	break;
+	case TEL_SS_CLI_CDIP:
+		if (cli_info->status.cdip == TEL_SS_CLI_DISABLE || cli_info->status.cdip == TEL_SS_CLI_ENABLE) {
+			*status = cli_info->status.cdip;
+			return TRUE;
+		}
+	break;
+	case TEL_SS_CLI_CNAP:
+		if (cli_info->status.cnap == TEL_SS_CLI_DISABLE || cli_info->status.cnap == TEL_SS_CLI_ENABLE) {
+			*status = cli_info->status.cnap;
+			return TRUE;
+		}
+	}
+
+	return FALSE;
 }
 
+static gboolean __tapi_check_cli_type(TelSsCliType type)
+{
+	switch (type) {
+	case TEL_SS_CLI_CLIR:
+	case TEL_SS_CLI_CLIP:
+	case TEL_SS_CLI_COLP:
+	case TEL_SS_CLI_COLR:
+	case TEL_SS_CLI_CDIP:
+	case TEL_SS_CLI_CNAP:
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+static gboolean __tapi_check_ussd_type(TelSsUssdType type)
+{
+	switch (type) {
+	case TEL_SS_USSD_TYPE_USER_INIT:
+	case TEL_SS_USSD_TYPE_USER_RSP:
+	case TEL_SS_USSD_TYPE_USER_REL:
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+static gboolean __tapi_check_ussd_string(unsigned char *string)
+{
+	if (string == NULL)
+		return FALSE;
+
+	return TRUE;
+}
+
+static void on_response_ss_set_barring(GObject *source_object,
+	GAsyncResult *res, gpointer user_data)
+{
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+	TelSsResult result = TEL_SS_RESULT_FAILURE;
+	GError *error = NULL;
+
+	dbg("Entry");
+
+	telephony_ss_call_set_barring_finish(handle->ss_proxy, (int *)&result, res, &error);
+	CHECK_DEINIT(error, rsp_cb_data, result);
+
+	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+}
+
+EXPORT_API TelReturn tapi_ss_set_barring(TelHandle *handle,
+	const TelSsBarringInfo *barring_info,
+	TapiResponseCb callback, void *user_data)
+{
+	TapiRespCbData *rsp_cb_data = NULL;
+
+	dbg("Entry");
+
+	TEL_RETURN_IF_CHECK_FAIL(handle && callback
+		&& barring_info && __tapi_check_ss_class(barring_info->class)
+		&& __tapi_check_barring_type(barring_info->type)
+		&& __tapi_check_barring_pwd(barring_info->pwd),
+		TEL_RETURN_INVALID_PARAMETER);
+
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+
+	telephony_ss_call_set_barring(handle->ss_proxy,
+		barring_info->class, barring_info->enable,
+		barring_info->type, barring_info->pwd, NULL,
+		on_response_ss_set_barring, rsp_cb_data);
+
+	return TEL_RETURN_SUCCESS;
+}
+
+static void on_response_ss_get_barring_status(GObject *source_object,
+	GAsyncResult *res, gpointer user_data)
+{
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+	TelSsResult result = TEL_SS_RESULT_FAILURE;
+
+	GVariant *record_list;
+	TelSsBarringResp barring_resp = {0, };
+
+	GError *error = NULL;
+
+	dbg("Entry");
+
+	telephony_ss_call_get_barring_status_finish(handle->ss_proxy,
+		(int *)&result, &(barring_resp.record_num),
+		&record_list, res, &error);
+
+	CHECK_DEINIT(error, rsp_cb_data, result);
+
+	if (result != TEL_SS_RESULT_SUCCESS) {
+		g_variant_unref(record_list);
+		err("Failed to get barring status: %d", result);
+
+		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+		return;
+	}
+
+	if ((barring_resp.record_num != 0)
+			&& (g_variant_n_children(record_list)
+			== barring_resp.record_num)) {
+		GVariantIter *iter = NULL, *iter_row = NULL;
+		GVariant *key_value;
+		const gchar *key;
+		guint i = 0;
+
+		dbg("Barring status list count: [%d]", barring_resp.record_num);
+		barring_resp.records =
+			g_malloc0(sizeof(TelSsBarringInfoRecord)*barring_resp.record_num);
+
+		g_variant_get(record_list, "aa{sv}", &iter);
+		while (g_variant_iter_next(iter, "a{sv}", &iter_row)) {
+			while (g_variant_iter_loop(iter_row, "{sv}", &key, &key_value)) {
+				if (g_strcmp0(key, "class") == 0) {
+					barring_resp.records[i].class = g_variant_get_int32(key_value);
+				}
+
+				if (g_strcmp0(key, "enable") == 0) {
+					barring_resp.records[i].enable = g_variant_get_boolean(key_value);
+				}
+
+				if (g_strcmp0(key, "type") == 0) {
+					barring_resp.records[i].type = g_variant_get_int32(key_value);
+				}
+			}
+			i++;
+			g_variant_iter_free(iter_row);
+		}
+		g_variant_iter_free(iter);
+	}
+	else {
+		warn("Barring status list count is NOT valid - Count: [%d]", barring_resp.record_num);
+		barring_resp.record_num = 0;
+	}
+	g_variant_unref(record_list);
+
+	RESP_CALLBACK_CALL(rsp_cb_data, result, &barring_resp);
+
+	g_free(barring_resp.records);
+}
+
+EXPORT_API TelReturn tapi_ss_get_barring_status(TelHandle *handle,
+	const TelSsBarringGetInfo *get_barring_info,
+	TapiResponseCb callback, void *user_data)
+{
+	TapiRespCbData *rsp_cb_data = NULL;
+
+	dbg("Entry");
+
+	TEL_RETURN_IF_CHECK_FAIL(handle && callback
+		&& get_barring_info && __tapi_check_ss_class(get_barring_info->class)
+		&& __tapi_check_barring_type(get_barring_info->type),
+		TEL_RETURN_INVALID_PARAMETER);
+
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+
+	telephony_ss_call_get_barring_status(handle->ss_proxy,
+		get_barring_info->class, get_barring_info->type, NULL,
+		on_response_ss_get_barring_status, rsp_cb_data);
+
+	return TEL_RETURN_SUCCESS;
+}
+
+static void on_response_ss_change_barring_password(GObject *source_object,
+	GAsyncResult *res, gpointer user_data)
+{
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+	TelSsResult result = TEL_SS_RESULT_FAILURE;
+	GError *error = NULL;
+
+	dbg("Entry");
+
+	telephony_ss_call_change_barring_password_finish(handle->ss_proxy, (int *)&result, res, &error);
+	CHECK_DEINIT(error, rsp_cb_data, result);
+
+	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+}
+
+EXPORT_API TelReturn tapi_ss_change_barring_password(TelHandle *handle,
+	const TelSsBarringPwdInfo *barring_pwd_info,
+	TapiResponseCb callback, void *user_data)
+{
+	TapiRespCbData *rsp_cb_data = NULL;
+
+	dbg("Entry");
+
+	TEL_RETURN_IF_CHECK_FAIL(handle && callback
+		&& barring_pwd_info && __tapi_check_barring_pwd(barring_pwd_info->new_pwd)
+		&& __tapi_check_barring_pwd(barring_pwd_info->old_pwd),
+		TEL_RETURN_INVALID_PARAMETER);
+
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+
+	telephony_ss_call_change_barring_password(handle->ss_proxy,
+		barring_pwd_info->old_pwd, barring_pwd_info->new_pwd, NULL,
+		on_response_ss_change_barring_password, rsp_cb_data);
+
+	return TEL_RETURN_SUCCESS;
+}
+
+static void on_response_ss_set_forwarding(GObject *source_object,
+	GAsyncResult *res, gpointer user_data)
+{
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+	TelSsResult result = TEL_SS_RESULT_FAILURE;
+	GError *error = NULL;
+
+	dbg("Entry");
+
+	telephony_ss_call_set_forwarding_finish(handle->ss_proxy, (int *)&result, res, &error);
+	CHECK_DEINIT(error, rsp_cb_data, result);
+
+	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+}
+
+EXPORT_API TelReturn tapi_ss_set_forwarding(TelHandle *handle,
+	const TelSsForwardInfo *forwarding_info,
+	TapiResponseCb callback, void *user_data)
+{
+	TapiRespCbData *rsp_cb_data = NULL;
+
+	dbg("Entry");
+
+	TEL_RETURN_IF_CHECK_FAIL(handle && callback
+		&& forwarding_info && __tapi_check_ss_class(forwarding_info->class)
+		&& __tapi_check_forwarding_mode(forwarding_info->mode)
+		&& __tapi_check_forwarding_condition(forwarding_info->condition)
+		&& __tapi_check_forwarding_number(forwarding_info->number),
+		TEL_RETURN_INVALID_PARAMETER);
+
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+
+	telephony_ss_call_set_forwarding(handle->ss_proxy,
+		forwarding_info->class, forwarding_info->mode, forwarding_info->condition,
+		forwarding_info->number, forwarding_info->wait_time, NULL,
+		on_response_ss_set_forwarding, rsp_cb_data);
+
+	return TEL_RETURN_SUCCESS;
+}
+
+static void on_response_ss_get_forwarding_status(GObject *source_object,
+	GAsyncResult *res, gpointer user_data)
+{
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+
+	GVariant *record_list;
+	TelSsForwardingResp forwarding_resp = {0, };
+
+	GError *error = NULL;
+	TelSsResult result = TEL_SS_RESULT_FAILURE;
+
+	dbg("Entry");
+
+	telephony_ss_call_get_forwarding_status_finish(handle->ss_proxy,
+		(int *)&result, &(forwarding_resp.record_num),
+		&record_list, res, &error);
+	CHECK_DEINIT(error, rsp_cb_data, result);
+
+	if (result != TEL_SS_RESULT_SUCCESS) {
+		g_variant_unref(record_list);
+		err("Failed to get forwarding status: %d", result);
+
+		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+		return;
+	}
+
+	if ((forwarding_resp.record_num != 0)
+			&& (g_variant_n_children(record_list)
+			== forwarding_resp.record_num)) {
+		GVariantIter *iter = NULL, *iter_row = NULL;
+		GVariant *key_value;
+		const gchar *key;
+		guint i = 0;
+
+		dbg("Forwarding status list count: [%d]", forwarding_resp.record_num);
+		forwarding_resp.records =
+			g_malloc0(sizeof(TelSsForwardingInfoRecord)*forwarding_resp.record_num);
+
+		g_variant_get(record_list, "aa{sv}", &iter);
+		while (g_variant_iter_next(iter, "a{sv}", &iter_row)) {
+			while (g_variant_iter_loop(iter_row, "{sv}", &key, &key_value)) {
+				if (g_strcmp0(key, "class") == 0) {
+					forwarding_resp.records[i].class = g_variant_get_int32(key_value);
+				}
+
+				if (g_strcmp0(key, "enable") == 0) {
+					forwarding_resp.records[i].enable = g_variant_get_boolean(key_value);
+				}
+
+				if (g_strcmp0(key, "condition") == 0) {
+					forwarding_resp.records[i].condition = g_variant_get_int32(key_value);
+				}
+
+				if (g_strcmp0(key, "number") == 0) {
+					g_strlcpy(forwarding_resp.records[i].number,
+						g_variant_get_string(key_value, NULL),
+						TEL_SS_NUMBER_LEN_MAX + 1);
+				}
+
+				if (g_strcmp0(key, "wait_time") == 0) {
+					forwarding_resp.records[i].wait_time = g_variant_get_int32(key_value);
+				}
+			}
+			i++;
+			g_variant_iter_free(iter_row);
+		}
+		g_variant_iter_free(iter);
+	}
+	else {
+		warn("Forwarding status list count is NOT valid - Count: [%d]",
+			forwarding_resp.record_num);
+		forwarding_resp.record_num = 0;
+	}
+	g_variant_unref(record_list);
+
+	RESP_CALLBACK_CALL(rsp_cb_data, result, &forwarding_resp);
+
+	g_free(forwarding_resp.records);
+}
+
+EXPORT_API TelReturn tapi_ss_get_forwarding_status(TelHandle *handle,
+	const TelSsForwardGetInfo *get_forwarding_info,
+	TapiResponseCb callback, void *user_data)
+{
+	TapiRespCbData *rsp_cb_data = NULL;
+
+	dbg("Entry");
+
+	TEL_RETURN_IF_CHECK_FAIL(handle && callback
+		&& get_forwarding_info && __tapi_check_ss_class(get_forwarding_info->class)
+		&& __tapi_check_forwarding_condition(get_forwarding_info->condition),
+		TEL_RETURN_INVALID_PARAMETER);
+
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+
+	telephony_ss_call_get_forwarding_status(handle->ss_proxy,
+		get_forwarding_info->class, get_forwarding_info->condition, NULL,
+		on_response_ss_get_forwarding_status, rsp_cb_data);
+
+	return TEL_RETURN_SUCCESS;
+}
+
+static void on_response_ss_set_waiting(GObject *source_object,
+	GAsyncResult *res, gpointer user_data)
+{
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+	TelSsResult result = TEL_SS_RESULT_FAILURE;
+	GError *error = NULL;
+
+	dbg("Entry");
+
+	telephony_ss_call_set_waiting_finish(handle->ss_proxy, (int *)&result, res, &error);
+	CHECK_DEINIT(error, rsp_cb_data, result);
+
+	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+}
+
+EXPORT_API TelReturn tapi_ss_set_waiting(TelHandle *handle,
+	const TelSsWaitingInfo *waiting_info,
+	TapiResponseCb callback, void *user_data)
+{
+	TapiRespCbData *rsp_cb_data = NULL;
+
+	dbg("Entry");
+
+	TEL_RETURN_IF_CHECK_FAIL(handle && callback
+		&& waiting_info && __tapi_check_ss_class(waiting_info->class),
+		TEL_RETURN_INVALID_PARAMETER);
+
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+
+	telephony_ss_call_set_waiting(handle->ss_proxy,
+		waiting_info->class, waiting_info->enable, NULL,
+		on_response_ss_set_waiting, rsp_cb_data);
+
+	return TEL_RETURN_SUCCESS;
+}
+
+static void on_response_ss_get_waiting_status(GObject *source_object,
+	GAsyncResult *res, gpointer user_data)
+{
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+
+	GVariant *record_list;
+	TelSsWaitingResp waiting_resp = {0, };
+
+	GError *error = NULL;
+	TelSsResult result = TEL_SS_RESULT_FAILURE;
+
+	dbg("Entry");
+
+	telephony_ss_call_get_waiting_status_finish(handle->ss_proxy,
+		(int *)&result, &(waiting_resp.record_num),
+		&record_list, res, &error);
+	CHECK_DEINIT(error, rsp_cb_data, result);
+
+	if (result != TEL_SS_RESULT_SUCCESS) {
+		g_variant_unref(record_list);
+		err("Failed to get waiting status: %d", result);
+		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+		return;
+	}
+
+	if ((waiting_resp.record_num != 0)
+			&& (g_variant_n_children(record_list)
+			== waiting_resp.record_num)) {
+		GVariantIter *iter = NULL, *iter_row = NULL;
+		GVariant *key_value;
+		const gchar *key;
+		guint i = 0;
+
+		dbg("Waiting status list count: [%d]", waiting_resp.record_num);
+		waiting_resp.records =
+			g_malloc0(sizeof(TelSsWaitingInfo)*waiting_resp.record_num);
+
+		g_variant_get(record_list, "aa{sv}", &iter);
+		while (g_variant_iter_next(iter, "a{sv}", &iter_row)) {
+			while (g_variant_iter_loop(iter_row, "{sv}", &key, &key_value)) {
+				if (g_strcmp0(key, "class") == 0) {
+					waiting_resp.records[i].class = g_variant_get_int32(key_value);
+				}
+
+				if (g_strcmp0(key, "enable") == 0) {
+					waiting_resp.records[i].enable = g_variant_get_boolean(key_value);
+				}
+			}
+			i++;
+			g_variant_iter_free(iter_row);
+		}
+		g_variant_iter_free(iter);
+	}
+	else {
+		warn("Waiting status list count is NOT valid - Count: [%d]",
+			waiting_resp.record_num);
+		waiting_resp.record_num = 0;
+	}
+	g_variant_unref(record_list);
+
+	RESP_CALLBACK_CALL(rsp_cb_data, result, &waiting_resp);
+
+	g_free(waiting_resp.records);
+}
+
+EXPORT_API TelReturn tapi_ss_get_waiting_status(TelHandle *handle,
+	TelSsClass class,
+	TapiResponseCb callback, void *user_data)
+{
+	TapiRespCbData *rsp_cb_data = NULL;
+
+	dbg("Entry");
+
+	TEL_RETURN_IF_CHECK_FAIL(handle
+		&& callback
+		&& __tapi_check_ss_class(class),
+		TEL_RETURN_INVALID_PARAMETER);
+
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+
+	telephony_ss_call_get_waiting_status(handle->ss_proxy,
+		class, NULL,
+		on_response_ss_get_waiting_status, rsp_cb_data);
+
+	return TEL_RETURN_SUCCESS;
+}
+
+static void on_response_ss_set_cli(GObject *source_object,
+	GAsyncResult *res, gpointer user_data)
+{
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+	TelSsResult result = TEL_SS_RESULT_FAILURE;
+	GError *error = NULL;
+
+	dbg("Entry");
+
+	telephony_ss_call_set_cli_finish(handle->ss_proxy, (int *)&result, res, &error);
+
+	CHECK_DEINIT(error, rsp_cb_data, result);
+
+	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+}
+
+EXPORT_API TelReturn tapi_ss_set_cli(TelHandle *handle,
+	const TelSsCliInfo *cli_info,
+	TapiResponseCb callback, void *user_data)
+{
+	TapiRespCbData *rsp_cb_data = NULL;
+	int cli_status;
+
+	dbg("Entry");
+
+	TEL_RETURN_IF_CHECK_FAIL(handle
+		&& callback && cli_info
+		&& __tapi_check_and_get_cli_status(cli_info, &cli_status),
+		TEL_RETURN_INVALID_PARAMETER);
+
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+
+	telephony_ss_call_set_cli(handle->ss_proxy,
+		cli_info->type, cli_status, NULL,
+		on_response_ss_set_cli, rsp_cb_data);
+
+	return TEL_RETURN_SUCCESS;
+}
+
+static void on_response_ss_get_cli_status(GObject *source_object,
+	GAsyncResult *res, gpointer user_data)
+{
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+	TelSsResult result = TEL_SS_RESULT_FAILURE;
+	TelSsCliResp cli_resp = {0, };
+	int net_status;
+	int dev_status;
+	GError *error = NULL;
+
+	dbg("Entry");
+
+	telephony_ss_call_get_cli_status_finish(handle->ss_proxy,
+		(int *)&result, (int *)(&(cli_resp.type)), &net_status, &dev_status,
+		res, &error);
+
+	CHECK_DEINIT(error, rsp_cb_data, result);
+
+	if (result != TEL_SS_RESULT_SUCCESS) {
+		err("Failed to get CLI status: %d", result);
+		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+		return;
+	}
+
+	switch (cli_resp.type) {
+	case TEL_SS_CLI_CLIR:
+		cli_resp.status.clir.net_status = (TelSsClirNetworkStatus)net_status;
+		cli_resp.status.clir.dev_status = (TelSsClirDeviceStatus)dev_status;
+	break;
+	case TEL_SS_CLI_CLIP:
+		cli_resp.status.clip.net_status = (TelSsCliNetworkStatus)net_status;
+		cli_resp.status.clip.dev_status = (TelSsCliDeviceStatus)dev_status;
+	break;
+	case TEL_SS_CLI_COLP:
+		cli_resp.status.colp.net_status = (TelSsCliNetworkStatus)net_status;
+		cli_resp.status.colp.dev_status = (TelSsCliDeviceStatus)dev_status;
+	break;
+	case TEL_SS_CLI_COLR:
+		cli_resp.status.colr.net_status = (TelSsCliNetworkStatus)net_status;
+		cli_resp.status.colr.dev_status = (TelSsCliDeviceStatus)dev_status;
+	break;
+	case TEL_SS_CLI_CDIP:
+		cli_resp.status.cdip.net_status = (TelSsCliNetworkStatus)net_status;
+		cli_resp.status.cdip.dev_status = (TelSsCliDeviceStatus)dev_status;
+	break;
+	case TEL_SS_CLI_CNAP:
+		cli_resp.status.cnap.net_status = (TelSsCliNetworkStatus)net_status;
+		cli_resp.status.cnap.dev_status = (TelSsCliDeviceStatus)dev_status;
+	break;
+	default :
+		result = TEL_SS_RESULT_FAILURE;
+		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+		return;
+	}
+
+	RESP_CALLBACK_CALL(rsp_cb_data, result, &cli_resp);
+}
+
+EXPORT_API TelReturn tapi_ss_get_cli_status(TelHandle *handle,
+	TelSsCliType type,
+	TapiResponseCb callback, void *user_data)
+{
+	TapiRespCbData *rsp_cb_data = NULL;
+
+	dbg("Entry");
+
+	TEL_RETURN_IF_CHECK_FAIL(handle && callback
+		&& __tapi_check_cli_type(type), TEL_RETURN_INVALID_PARAMETER);
+
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+
+	telephony_ss_call_get_cli_status(handle->ss_proxy,
+		type, NULL, on_response_ss_get_cli_status, rsp_cb_data);
+
+	return TEL_RETURN_SUCCESS;
+}
+
+static void on_response_ss_send_ussd_request(GObject *source_object,
+	GAsyncResult *res, gpointer user_data)
+{
+	TapiRespCbData *rsp_cb_data = user_data;
+	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
+	TelSsResult result = TEL_SS_RESULT_FAILURE;
+	TelSsUssdResp ussd_resp = {0, };
+	GError *error = NULL;
+
+	dbg("Entry");
+
+	telephony_ss_call_send_ussd_request_finish(handle->ss_proxy,
+		(int *)&result, (int *)(&(ussd_resp.type)), (int *)(&(ussd_resp.status)),
+		(gchar **)&(ussd_resp.str), res, &error);
+
+	CHECK_DEINIT(error, rsp_cb_data, result);
+
+	if (result != TEL_SS_RESULT_SUCCESS) {
+		g_free(ussd_resp.str);
+		err("USSD request failed: %d", result);
+		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+		return;
+	}
+
+	RESP_CALLBACK_CALL(rsp_cb_data, result, &ussd_resp);
+
+	g_free(ussd_resp.str);
+}
+
+EXPORT_API TelReturn tapi_ss_send_ussd_request(TelHandle *handle,
+	const TelSsUssdInfo *ussd_request,
+	TapiResponseCb callback, void *user_data)
+{
+	TapiRespCbData *rsp_cb_data = NULL;
+
+	dbg("Entry");
+
+	TEL_RETURN_IF_CHECK_FAIL(handle && callback
+		&& ussd_request && __tapi_check_ussd_type(ussd_request->type)
+		&& __tapi_check_ussd_string(ussd_request->str),
+		TEL_RETURN_INVALID_PARAMETER);
+
+	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+
+	telephony_ss_call_send_ussd_request(handle->ss_proxy,
+		ussd_request->type, (const gchar *)ussd_request->str, NULL,
+		on_response_ss_send_ussd_request, rsp_cb_data);
+
+	return TEL_RETURN_SUCCESS;
+}
 /*	EOF  */
