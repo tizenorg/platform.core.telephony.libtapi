@@ -1196,6 +1196,7 @@ static void on_response_sim_get_sp_display_info(GObject *source_object,
 		guint i = 0;
 
 		dbg("SPN list count: [%d]", sp_info.count);
+		sp_info.list = g_malloc0(sp_info.count * sizeof(TelSimSpPlmnList));
 
 		g_variant_get(sp_list, "aa{sv}", &iter);
 		while (g_variant_iter_next(iter, "a{sv}", &iter_row)) {
