@@ -810,7 +810,7 @@ static void on_response_sim_get_mailbox_info(GObject *source_object,
 		while (g_variant_iter_next(iter, "a{sv}", &iter_row)) {
 			while (g_variant_iter_loop(iter_row, "{sv}", &key, &key_value)) {
 				if (g_strcmp0(key, "profile_id") == 0) {
-					mb_info.list[i].profile_id = g_variant_get_int32(key_value);
+					mb_info.list[i].profile_id = g_variant_get_byte(key_value);
 				}
 
 				if (g_strcmp0(key, "mb_type") == 0) {
@@ -818,7 +818,7 @@ static void on_response_sim_get_mailbox_info(GObject *source_object,
 				}
 
 				if (g_strcmp0(key, "alpha_id_len") == 0) {
-					mb_info.list[i].alpha_id_len = g_variant_get_int32(key_value);
+					mb_info.list[i].alpha_id_len = g_variant_get_uint32(key_value);
 				}
 
 				if (g_strcmp0(key, "alpha_id") == 0) {
