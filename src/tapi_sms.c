@@ -762,7 +762,7 @@ static void on_response_sms_get_parameters(GObject *source_object,
 
 				g_variant_get(key_value, "a{sv}", &iter2);
 				while (g_variant_iter_loop(iter2, "{sv}", &key2, &key_value2)) {
-					if (g_strcmp0(key, "ton") == 0) {
+					if (g_strcmp0(key2, "ton") == 0) {
 						params[count].sca.ton =
 							g_variant_get_byte(key_value2);
 					}
@@ -779,7 +779,7 @@ static void on_response_sms_get_parameters(GObject *source_object,
 				g_variant_iter_free(iter2);
 			}
 			else if (g_strcmp0(key, "vp") == 0) {
-				params[count].vp = g_variant_get_boolean(key_value);
+				params[count].vp = g_variant_get_uint16(key_value);
 			}
 		}
 		count++;
