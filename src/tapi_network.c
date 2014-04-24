@@ -814,7 +814,7 @@ static void on_response_network_get_neighboring_cell_info(GObject *source_object
 	g_variant_unref(gsm_var);
 
 	if ((cell_info.umts_list_count != 0)
-			&& (g_variant_n_children(gsm_var) == cell_info.umts_list_count)) {
+			&& (g_variant_n_children(umts_var) == cell_info.umts_list_count)) {
 		GVariantIter *iter = NULL, *iter_row = NULL;
 		GVariant *key_value;
 		const gchar *key;

@@ -207,7 +207,7 @@ static int run_call_dial(MManager *mm, struct menu_data *menu)
 
 	call_dial_info.call_type = atoi(data_call_type);
 	call_dial_info.ecc = atoi(data_call_ecc);
-	memcpy(call_dial_info.number, data_call_number, strlen(data_call_number));
+	memcpy(call_dial_info.number, data_call_number, TEL_CALL_CALLING_NUMBER_LEN_MAX + 1);
 
 	msg("call type : (%d)", call_dial_info.call_type);
 	msg("emergency call category : (%d)", call_dial_info.ecc);

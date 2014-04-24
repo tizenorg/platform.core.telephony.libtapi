@@ -313,7 +313,7 @@ static int __decode_sms_deliver_tpdu (unsigned int tpdu_len, char *tpdu)
 	position++;
 
 	/* TP-UD */
-	tpdu_deliver.user_data = g_try_malloc0(sizeof(TEL_SMS_SMDATA_SIZE_MAX + 1));
+	tpdu_deliver.user_data = g_try_malloc0(TEL_SMS_SMDATA_SIZE_MAX + 1);
 
 	if (tpdu_deliver.dcs.alphabet_type == SMS_ALPHABET_DEFAULT) {
 		char in_data[TEL_SMS_SMDATA_SIZE_MAX + 1];
@@ -450,7 +450,7 @@ static void __decode_sms_status_report_tpdu(unsigned int tpdu_len, char *tpdu)
 			position++;
 
 			/* TP-UD */
-			status_report.user_data = g_try_malloc0(sizeof(TEL_SMS_SMDATA_SIZE_MAX + 1));
+			status_report.user_data = g_try_malloc0(TEL_SMS_SMDATA_SIZE_MAX + 1);
 
 			if (status_report.dcs.alphabet_type == SMS_ALPHABET_DEFAULT) {
 				char in_data[TEL_SMS_SMDATA_SIZE_MAX + 1];

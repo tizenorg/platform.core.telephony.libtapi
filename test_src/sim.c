@@ -106,6 +106,8 @@ static int _sim_str_to_hex(char a)
 		ret = a - 'a' + 10;
 	else if (a >= 'A' && a <= 'F')
 		ret = a - 'A' + 10;
+	else
+		ret = -1;
 	return ret;
 }
 
@@ -472,7 +474,7 @@ static int run_sim_set_mb_info(MManager *mm, struct menu_data *menu)
 		msg("Mail box number input too long");
 		return 0;
 	}
-	memcpy(mb_info.number, data_sim_set_mb_number, strlen(data_sim_set_mb_number));
+	memcpy(mb_info.number, data_sim_set_mb_number, TEL_SIM_MBDN_NUM_LEN_MAX);
 
 	msg("profile id[%d]", mb_info.profile_id);
 	msg("mb type[%d]", mb_info.mb_type);
@@ -973,7 +975,7 @@ static int run_sim_request_apdu(MManager *mm, struct menu_data *menu)
 	TelHandle *handle = menu_manager_ref_user_data(mm);
 	TelReturn rt = 0;
 	TelSimApdu apdu_data;
-	char result_apdu[MENU_DATA_SIZE +1] = {0,};
+	char result_apdu[TEL_SIM_APDU_LEN_MAX +1] = {0,};
 	unsigned int i, j;
 	unsigned int len;
 
