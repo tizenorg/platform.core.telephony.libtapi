@@ -16,6 +16,7 @@ BuildRequires:  python-xml
 BuildRequires:  pkgconfig(dlog)
 BuildRequires:  pkgconfig(glib-2.0)
 BuildRequires:  pkgconfig(security-server)
+BuildRequires:  pkgconfig(tel-headers)
 
 %description
 Telephony client API library
@@ -54,7 +55,6 @@ make %{?_smp_mflags}
 %manifest libtapi.manifest
 %defattr(-,root,root,-)
 %{_includedir}/tapi-3.0/*.h
-%{_includedir}/tapi-3.0/common/*.h
 %{_includedir}/tapi-3.0/private/*.h
 %{_libdir}/pkgconfig/*.pc
 %{_libdir}/*.so

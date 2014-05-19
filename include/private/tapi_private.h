@@ -27,7 +27,7 @@
 #include "tapi_log.h"
 #include "tapi_events.h"
 
-#include "generated-code.h"
+#include <tel_generated_code.h>
 
 #define TAPI_DBUS_TIMEOUT_DEFAULT		(60000)
 #define TAPI_DBUS_TIMEOUT_MAX			(180000)

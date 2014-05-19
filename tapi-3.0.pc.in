@@ -8,4 +8,4 @@ Description: Telephony client API library
 Requires: glib-2.0
 Version: @TAPI_VERSION@
 Libs: -L${libdir} -ltapi-3.0
-Cflags: -I${includedir}/tapi-3.0 -I${includedir}/tapi-3.0/common
+Cflags: -I${includedir}/tapi-3.0 -I${includedir}/tel-headers/include

@@ -9,7 +9,7 @@ SET(TAPI_VERSION ${TAPI_VERSION})
 
 # Set required packages
 INCLUDE(FindPkgConfig)
-pkg_check_modules(pkgs REQUIRED glib-2.0 gio-unix-2.0 dlog security-server)
+pkg_check_modules(pkgs REQUIRED glib-2.0 gio-unix-2.0 dlog security-server tel-headers)
 
 FOREACH(flag ${pkgs_CFLAGS})
 	SET(EXTRA_CFLAGS "${EXTRA_CFLAGS} ${flag}")
@@ -23,7 +23,6 @@ SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fdata-sections -ffunction-sections -Wl,--gc
 INCLUDE_DIRECTORIES(
 	${CMAKE_BINARY_DIR}
 	${CMAKE_SOURCE_DIR}/include
-	${CMAKE_SOURCE_DIR}/include/common
 	${CMAKE_SOURCE_DIR}/include/private
 )
 
@@ -50,29 +49,7 @@ SET(SRCS
 	src/tapi_gps.c
 )
 
-SET(INTROSPECTION_PATH ${CMAKE_SOURCE_DIR}/introspection)
-
-ADD_CUSTOM_COMMAND(
-	OUTPUT ${CMAKE_BINARY_DIR}/generated-code.c
-	COMMAND gdbus-codegen --interface-prefix org.tizen.telephony.
-	--generate-c-code generated-code
-	--c-namespace Telephony
-	--c-generate-object-manager
-	--generate-docbook generated-docs
-	${INTROSPECTION_PATH}/network.xml
-	${INTROSPECTION_PATH}/sim.xml
-	${INTROSPECTION_PATH}/phonebook.xml
-	${INTROSPECTION_PATH}/sap.xml
-	${INTROSPECTION_PATH}/sat.xml
-	${INTROSPECTION_PATH}/sms.xml
-	${INTROSPECTION_PATH}/call.xml
-	${INTROSPECTION_PATH}/ss.xml
-	${INTROSPECTION_PATH}/modem.xml
-	${INTROSPECTION_PATH}/gps.xml
-	COMMENT "Generating GDBus .c/.h"
-)
-
-ADD_LIBRARY(${PROJECT_NAME} SHARED ${SRCS} ${CMAKE_BINARY_DIR}/generated-code.c)
+ADD_LIBRARY(${PROJECT_NAME} SHARED ${SRCS})
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${pkgs_LDFLAGS})
 SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES VERSION 0.0.0 SOVERSION 0 OUTPUT_NAME ${PROJECT_NAME})
 
