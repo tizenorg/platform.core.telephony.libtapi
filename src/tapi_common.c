@@ -17,11 +17,12 @@
  * limitations under the License.
  */
 
-#include <tel_modem.h>
-#include <tel_call.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "tapi_private.h"
+
 #include <tapi_events.h>
 #include <tel_modem.h>
 #include <tel_sim.h>
@@ -35,22 +36,30 @@
 #include <tel_gps.h>
 
 /* Signal Callbacks */
-extern void on_network_signal_emit_handler(TelephonyNetwork *network, gchar *sender_name,
-		gchar *signal_name, GVariant *parameters, gpointer user_data);
-extern void on_phonebook_signal_emit_handler(TelephonyPhonebook *phonebook, gchar *sender_name,
-		gchar *signal_name, GVariant *parameters, gpointer user_data);
-extern void on_call_signal_emit_handler(TelephonyCall *call, gchar *sender_name,
-		gchar *signal_name, GVariant *parameters, gpointer user_data);
-extern void on_ss_signal_emit_handler(TelephonySs *ss, gchar *sender_name,
-		gchar *signal_name, GVariant *parameters, gpointer user_data);
-extern void on_sms_signal_emit_handler(TelephonySms *sms, gchar *sender_name,
-		gchar *signal_name, GVariant *parameters, gpointer user_data);
-extern void on_sat_signal_emit_handler(TelephonySat *sat, gchar *sender_name,
-		gchar *signal_name, GVariant *parameters, gpointer user_data);
-extern void on_sap_signal_emit_handler(TelephonySap *sap, gchar *sender_name,
-		gchar *signal_name, GVariant *parameters, gpointer user_data);
-extern void on_gps_signal_emit_handler(TelephonyGps *gps, gchar *sender_name,
-		gchar *signal_name, GVariant *parameters, gpointer user_data);
+extern void on_network_signal_emit_handler(TelephonyNetwork *network,
+	gchar *sender_name, gchar *signal_name,
+	GVariant *parameters, gpointer user_data);
+extern void on_phonebook_signal_emit_handler(TelephonyPhonebook *phonebook,
+	gchar *sender_name, gchar *signal_name,
+	GVariant *parameters, gpointer user_data);
+extern void on_call_signal_emit_handler(TelephonyCall *call,
+	gchar *sender_name, gchar *signal_name,
+	GVariant *parameters, gpointer user_data);
+extern void on_ss_signal_emit_handler(TelephonySs *ss,
+	gchar *sender_name, gchar *signal_name,
+	GVariant *parameters, gpointer user_data);
+extern void on_sms_signal_emit_handler(TelephonySms *sms,
+	gchar *sender_name, gchar *signal_name,
+	GVariant *parameters, gpointer user_data);
+extern void on_sat_signal_emit_handler(TelephonySat *sat,
+	gchar *sender_name, gchar *signal_name,
+	GVariant *parameters, gpointer user_data);
+extern void on_sap_signal_emit_handler(TelephonySap *sap,
+	gchar *sender_name, gchar *signal_name,
+	GVariant *parameters, gpointer user_data);
+extern void on_gps_signal_emit_handler(TelephonyGps *gps,
+	gchar *sender_name, gchar *signal_name,
+	GVariant *parameters, gpointer user_data);
 
 /* Property change Callbacks */
 extern void on_modem_property_change_handler(TelephonyModem *modem,
@@ -89,7 +98,7 @@ EXPORT_API TelReturn tapi_get_cp_name_list(char ***cp_list)
 	if (cp_count == 0)
 		goto out;
 
-	/* This will be freed by caller. +1 for NULL str at the end */
+	/* This will be freed by caller. +1 for NULL 'str' at the end */
 	*cp_list = calloc((cp_count + 1), sizeof(char*));
 
 	for (iter = objects, index = 0; iter != NULL; iter = iter->next, index++) {
@@ -114,12 +123,12 @@ out:
 
 EXPORT_API TelHandle *tapi_init(const char *cp_name)
 {
-	#define HANDLE_GERROR(error, log_msg) \
-		if (error) { \
-			err(log_msg": %s", error->message); \
-			g_error_free(error); \
-			goto fail; \
-		}
+#define HANDLE_GERROR(error, log_msg) \
+	if (error) { \
+		err(log_msg": %s", error->message); \
+		g_error_free(error); \
+		goto fail; \
+	}
 
 	TelHandle *handle = NULL;
 	GDBusObjectManager *obj_manager = NULL;
@@ -129,13 +138,11 @@ EXPORT_API TelHandle *tapi_init(const char *cp_name)
 	GList *iter = NULL;
 	GError *error = NULL;
 	const gchar *cp_found = NULL;
-	dbg("Func Entrance");
 
 #if !GLIB_CHECK_VERSION (2, 35, 3)
 	g_type_init();
-	dbg("g_type_init");
-
 #endif
+
 	/* Find CP objects */
 	obj_manager = telephony_object_manager_client_new_for_bus_sync(
 					G_BUS_TYPE_SYSTEM,
@@ -149,10 +156,7 @@ EXPORT_API TelHandle *tapi_init(const char *cp_name)
 		return NULL;
 	}
 
-	dbg("g_type_init");
-
 	objects = g_dbus_object_manager_get_objects(obj_manager);
-
 	for (iter = objects; iter != NULL; iter = iter->next) {
 		tel_object = TELEPHONY_OBJECT(iter->data);
 		const gchar *object_path = g_dbus_object_get_object_path(G_DBUS_OBJECT(tel_object));
@@ -177,6 +181,7 @@ EXPORT_API TelHandle *tapi_init(const char *cp_name)
 	for (iter = interfaces; iter != NULL; iter = iter->next) {
 		GDBusInterface *interface = G_DBUS_INTERFACE(iter->data);
 		const gchar *interface_name = g_dbus_interface_get_info(interface)->name;
+
 		/* Create proxies and register for Signals and Property change events */
 		if ((handle->modem_proxy == NULL)
 			&& (g_strcmp0(interface_name, TELEPHONY_MODEM_INTERFACE) == 0)) {
@@ -391,8 +396,10 @@ out:
 
 EXPORT_API TelReturn tapi_deinit(TelHandle *handle)
 {
-	if (handle == NULL)
+	if (handle == NULL) {
+		err("TAPI handle is NULL");
 		return TEL_RETURN_INVALID_PARAMETER;
+	}
 
 	if (handle->modem_proxy) {
 		if (handle->modem_property_handler > 0)
