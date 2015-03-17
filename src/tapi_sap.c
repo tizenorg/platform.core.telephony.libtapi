@@ -1,8 +1,9 @@
 /*
- * libtapi
+ * libslp-tapi
  *
- * Copyright (c) 2013 Samsung Electronics Co. Ltd. All rights reserved.
- * Copyright (c) 2013 Intel Corporation. All rights reserved.
+ * Copyright (c) 2014 Samsung Electronics Co., Ltd. All rights reserved.
+ *
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,366 +18,432 @@
  * limitations under the License.
  */
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "tapi_common.h"
+#include "TapiUtility.h"
+#include "TelSim.h"
+
+#include "common.h"
 #include "tapi_log.h"
-#include "tapi.h"
-#include "tapi_private.h"
+#include "ITapiSap.h"
 
-#include "tel_sap.h"
-#include "tapi_sap.h"
-
-void on_sap_signal_emit_handler(TelephonySap *sap, gchar *sender_name,
-							gchar *signal_name, GVariant *parameters,
-							gpointer user_data)
+static void on_response_sap_connect(GObject *source_object, GAsyncResult *res, gpointer user_data)
 {
-	TapiEvtCbData *evt_cb_data = NULL;
-	TelHandle *handle = user_data;
-	char *evt_id = NULL;
+	GError *error = NULL;
+	GDBusConnection *conn = NULL;
+	GVariant *dbus_result;
 
-	dbg("Entry");
+	struct tapi_resp_data *evt_cb_data = user_data;
+	TelSimSapConnectionStatus_t result = TAPI_SIM_SAP_CONNECTION_STATUS_OK;
+	gint max_msg_size = 0;
 
-	if (handle == NULL) {
-		err("handle is null");
-		return;
+	dbg("Func Entrance");
+
+	conn = G_DBUS_CONNECTION (source_object);
+	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
+	CHECK_ERROR(error);
+
+	g_variant_get(dbus_result, "(ii)", &result, &max_msg_size);
+
+	if (evt_cb_data->cb_fn) {
+		evt_cb_data->cb_fn(evt_cb_data->handle, result, (void*)&max_msg_size, evt_cb_data->user_data);
 	}
 
-	evt_id = g_strdup_printf("%s:%s", TELEPHONY_SAP_INTERFACE,
-					signal_name);
+	g_free(evt_cb_data);
+	g_variant_unref(dbus_result);
+}
 
-	evt_cb_data = g_hash_table_lookup(handle->evt_table, evt_id);
-	if (evt_cb_data == NULL) {
-		warn("evt_cb_data is null for the signal[%s]", signal_name);
-		g_free(evt_id);
-		return;
+EXPORT_API int tel_req_sap_connect(TapiHandle *handle, int max_msg_size, tapi_response_cb callback, void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data = NULL;
+	GVariant *param = NULL;
+
+	dbg("Func Entrance w/ max_msg_size[%d]",max_msg_size);
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
+
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	param = g_variant_new("(i)", max_msg_size);
+	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE, handle->path,
+			DBUS_TELEPHONY_SAP_INTERFACE, "Connect", param, NULL, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT,
+			handle->ca, on_response_sap_connect, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+}
+
+static void on_response_sap_disconnect(GObject *source_object, GAsyncResult *res, gpointer user_data)
+{
+	GError *error = NULL;
+	GDBusConnection *conn = NULL;
+	GVariant *dbus_result;
+
+	struct tapi_resp_data *evt_cb_data = user_data;
+	TelSimSapResultCode_t result = TAPI_SIM_SAP_RESULT_CODE_OK;
+
+	dbg("Func Entrance");
+
+	conn = G_DBUS_CONNECTION (source_object);
+	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
+	CHECK_ERROR(error);
+
+	g_variant_get(dbus_result, "(i)", &result);
+
+	if (evt_cb_data->cb_fn) {
+		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
 	}
 
-	if (!g_strcmp0(signal_name, "Status")) {
-		TelSapCardStatus status;
-
-		g_variant_get(parameters, "(i)", &status);
-		dbg("signal[%s] status[%d]", signal_name, status);
-
-		EVT_CALLBACK_CALL(handle, evt_cb_data, evt_id, &status);
-	} else {
-		err("Unsupported signal %s", signal_name);
-	}
-	g_free(evt_id);
+	g_free(evt_cb_data);
+	g_variant_unref(dbus_result);
 }
 
-static void on_response_sap_req_connect(GObject *source_object,
-			GAsyncResult *res, gpointer user_data)
+EXPORT_API int tel_req_sap_disconnect(TapiHandle *handle, tapi_response_cb callback, void *user_data)
 {
-	TapiRespCbData *rsp_cb_data = user_data;
-	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
-	TelSapResult result = TEL_SAP_RESULT_FAILURE_NO_REASON;
-	unsigned int max_msg_size;
+	struct tapi_resp_data *evt_cb_data = NULL;
+
+	dbg("Func Entrance ");
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
+
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+		g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE, handle->path,
+			DBUS_TELEPHONY_SAP_INTERFACE, "Disconnect", NULL, NULL, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT,
+			handle->ca, on_response_sap_disconnect, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+}
+
+static void on_response_sap_connection_status(GObject *source_object, GAsyncResult *res, gpointer user_data)
+{
 	GError *error = NULL;
+	GDBusConnection *conn = NULL;
+	GVariant *dbus_result;
 
-	dbg("Entry");
+	struct tapi_resp_data *evt_cb_data = user_data;
+	TelSimSapStatusInfo_t result = TAPI_SIM_SAP_STATUS_UNKNOWN;
 
-	telephony_sap_call_req_connect_finish(handle->sap_proxy,
-			(int *)&result, &max_msg_size, res, &error);
+	dbg("Func Entrance");
 
-	CHECK_DEINIT(error, rsp_cb_data, result);
+	conn = G_DBUS_CONNECTION (source_object);
+	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
+	CHECK_ERROR(error);
 
-	RESP_CALLBACK_CALL(rsp_cb_data, result, &max_msg_size);
-}
+	g_variant_get(dbus_result, "(i)", &result);
 
-EXPORT_API TelReturn tapi_sap_req_connect(TelHandle *handle,
-			unsigned int max_msg_size,
-			TapiResponseCb callback, void *user_data)
-{
-	TapiRespCbData *rsp_cb_data;
-
-	dbg("Entry");
-
-	g_return_val_if_fail(handle != NULL && callback != NULL,
-			TEL_RETURN_INVALID_PARAMETER);
-
-	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
-
-	telephony_sap_call_req_connect(handle->sap_proxy, max_msg_size, NULL,
-			on_response_sap_req_connect, rsp_cb_data);
-
-	return TEL_RETURN_SUCCESS;
-}
-
-static void on_response_sap_req_disconnect(GObject *source_object,
-			GAsyncResult *res, gpointer user_data)
-{
-	TapiRespCbData *rsp_cb_data = user_data;
-	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
-	TelSapResult result = TEL_SAP_RESULT_FAILURE_NO_REASON;
-	GError *error = NULL;
-
-	dbg("Entry");
-
-	telephony_sap_call_req_disconnect_finish(handle->sap_proxy,
-			(int *)&result, res, &error);
-
-	CHECK_DEINIT(error, rsp_cb_data, result);
-
-	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
-}
-
-EXPORT_API TelReturn tapi_sap_req_disconnect(TelHandle *handle,
-			TapiResponseCb callback, void *user_data)
-{
-	TapiRespCbData *rsp_cb_data;
-
-	dbg("Entry");
-
-	g_return_val_if_fail(handle != NULL && callback != NULL,
-			TEL_RETURN_INVALID_PARAMETER);
-
-	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
-
-	telephony_sap_call_req_disconnect(handle->sap_proxy, NULL,
-			on_response_sap_req_disconnect, rsp_cb_data);
-
-	return TEL_RETURN_SUCCESS;
-}
-
-static void on_response_sap_get_atr(GObject *source_object,
-			GAsyncResult *res, gpointer user_data)
-{
-	TapiRespCbData *rsp_cb_data = user_data;
-	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
-	TelSapResult result = TEL_SAP_RESULT_FAILURE_NO_REASON;
-	TelSapAtr atr;
-	char *content = NULL;
-	GError *error = NULL;
-
-	guchar *binary_content;
-
-	dbg("Entry");
-
-	telephony_sap_call_get_atr_finish(handle->sap_proxy,
-			(int *)&result, &content, res, &error);
-
-	CHECK_DEINIT(error, rsp_cb_data, result);
-
-	if (result != TEL_SAP_RESULT_SUCCESS) {
-		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
-		g_free(content);
-		return;
+	if (evt_cb_data->cb_fn) {
+		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
 	}
 
-	binary_content = g_base64_decode(content, &atr.atr_len);
+	g_free(evt_cb_data);
+	g_variant_unref(dbus_result);
+}
 
-	if (atr.atr_len > TEL_SAP_ATR_LEN_MAX) {
-		err("ATR length is too long");
-		RESP_CALLBACK_CALL(rsp_cb_data,
-				TEL_SAP_RESULT_FAILURE_NO_REASON, NULL);
-		g_free(content);
-		g_free(binary_content);
-		return;
+EXPORT_API int tel_req_sap_connection_status(TapiHandle *handle, tapi_response_cb callback, void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data = NULL;
+
+	dbg("Func Entrance");
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
+
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE, handle->path,
+			DBUS_TELEPHONY_SAP_INTERFACE, "GetStatus", NULL, NULL, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT,
+			handle->ca, on_response_sap_connection_status, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+}
+
+static void on_response_sap_transfer_atr(GObject *source_object, GAsyncResult *res, gpointer user_data)
+{
+	GError *error = NULL;
+	GDBusConnection *conn = NULL;
+	GVariant *dbus_result;
+
+	GVariantIter *iter = NULL;
+	GVariant *param_gv = NULL;
+	GVariant *inner_gv = NULL;
+	guchar rt_i;
+	int i = 0;
+
+	struct tapi_resp_data *evt_cb_data = user_data;
+	TelSimSapResultCode_t result = TAPI_SIM_SAP_RESULT_CODE_OK;
+	TelSapAtrInfo_t r_atr;
+
+	dbg("Func Entrance");
+	memset(&r_atr, 0, sizeof(TelSapAtrInfo_t));
+
+	conn = G_DBUS_CONNECTION (source_object);
+	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
+	CHECK_ERROR(error);
+
+	/*	dbg("dbus_result type_format(%s)", g_variant_get_type_string(dbus_result));*/
+	g_variant_get(dbus_result, "(i@v)", &result, &param_gv);
+	inner_gv = g_variant_get_variant(param_gv);
+
+	g_variant_get(inner_gv, "ay", &iter);
+	while (g_variant_iter_loop(iter, "y", &rt_i)) {
+		r_atr.atr_data[i] = rt_i;
+		i++;
+	}
+	r_atr.atr_len = (int) i;
+	g_variant_iter_free(iter);
+	g_variant_unref(inner_gv);
+	g_variant_unref(param_gv);
+	/*		for(i=0; i < (int)r_atr.atr_len; i++)
+	 dbg("r_atr[%d][0x%02x]",i, r_atr.atr_data[i]);*/
+
+	if (evt_cb_data->cb_fn) {
+		evt_cb_data->cb_fn(evt_cb_data->handle, result, (void*)&r_atr, evt_cb_data->user_data);
 	}
 
-	memcpy(atr.atr, binary_content, atr.atr_len);
-
-	RESP_CALLBACK_CALL(rsp_cb_data, result, &atr);
-	g_free(content);
-	g_free(binary_content);
+	g_free(evt_cb_data);
+	g_variant_unref(dbus_result);
 }
 
-EXPORT_API TelReturn tapi_sap_get_atr(TelHandle *handle,
-			TapiResponseCb callback, void *user_data)
+EXPORT_API int tel_req_sap_transfer_atr(TapiHandle *handle, tapi_response_cb callback, void *user_data)
 {
-	TapiRespCbData *rsp_cb_data;
+	struct tapi_resp_data *evt_cb_data = NULL;
 
-	dbg("Entry");
+	dbg("Func Entrance");
 
-	g_return_val_if_fail(handle != NULL && callback != NULL,
-			TEL_RETURN_INVALID_PARAMETER);
+	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
-	telephony_sap_call_get_atr(handle->sap_proxy, NULL,
-			on_response_sap_get_atr, rsp_cb_data);
+	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE, handle->path,
+			DBUS_TELEPHONY_SAP_INTERFACE, "GetATR", NULL, NULL, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT,
+			handle->ca, on_response_sap_transfer_atr, evt_cb_data);
 
-	return TEL_RETURN_SUCCESS;
+	return TAPI_API_SUCCESS;
 }
 
-static void on_response_sap_req_transfer_apdu(GObject *source_object,
-			GAsyncResult *res, gpointer user_data)
+static void on_response_sap_transfer_apdu(GObject *source_object, GAsyncResult *res, gpointer user_data)
 {
-	TapiRespCbData *rsp_cb_data = user_data;
-	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
-	TelSapResult result = TEL_SAP_RESULT_FAILURE_NO_REASON;
-	TelSapApduResp rsp;
-	char *pdu = NULL;
 	GError *error = NULL;
+	GDBusConnection *conn = NULL;
+	GVariant *dbus_result;
 
-	guchar *binary_pdu;
+	GVariantIter *iter = NULL;
+	GVariant *param_gv = NULL;
+	GVariant *inner_gv = NULL;
+	guchar rt_i;
+	int i = 0;
 
-	dbg("Entry");
+	struct tapi_resp_data *evt_cb_data = user_data;
+	TelSimSapResultCode_t result = TAPI_SIM_SAP_RESULT_CODE_OK;
+	TelSapApduData_t r_apdu;
 
-	telephony_sap_call_req_transfer_apdu_finish(handle->sap_proxy,
-			(int *)&result, &pdu, res, &error);
+	dbg("Func Entrance");
+	memset(&r_apdu, 0, sizeof(TelSapApduData_t));
 
-	CHECK_DEINIT(error, rsp_cb_data, result);
+	conn = G_DBUS_CONNECTION (source_object);
+	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
+	CHECK_ERROR(error);
 
-	if (result != TEL_SAP_RESULT_SUCCESS) {
-		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
-		g_free(pdu);
-		return;
+	/*	dbg("dbus_result type_format(%s)", g_variant_get_type_string(dbus_result));*/
+	g_variant_get(dbus_result, "(i@v)", &result, &param_gv);
+	inner_gv = g_variant_get_variant(param_gv);
+
+	g_variant_get(inner_gv, "ay", &iter);
+	while (g_variant_iter_loop(iter, "y", &rt_i)) {
+		r_apdu.apdu_data[i] = rt_i;
+		i++;
+	}
+	r_apdu.apdu_len = (int) i;
+	g_variant_iter_free(iter);
+	g_variant_unref(inner_gv);
+	g_variant_unref(param_gv);
+	/*		for(i=0; i < (int)r_apdu.apdu_len; i++)
+	 dbg("apdu[%d][0x%02x]",i, r_apdu.apdu_data[i]);*/
+
+	if (evt_cb_data->cb_fn) {
+		evt_cb_data->cb_fn(evt_cb_data->handle, result, (void*)&r_apdu, evt_cb_data->user_data);
 	}
 
-	binary_pdu = g_base64_decode(pdu, &rsp.apdu_resp_len);
+	g_free(evt_cb_data);
+	g_variant_unref(dbus_result);
+}
 
-	if (rsp.apdu_resp_len > TEL_SAP_APDU_RESP_LEN_MAX) {
-		err("Req Transfer APDU response pdu length is too long");
-		RESP_CALLBACK_CALL(rsp_cb_data,
-				TEL_SAP_RESULT_FAILURE_NO_REASON, NULL);
-		g_free(pdu);
-		g_free(binary_pdu);
-		return;
+EXPORT_API int tel_req_sap_transfer_apdu(TapiHandle *handle, TelSapApduData_t *apdu_data, tapi_response_cb callback, void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data = NULL;
+	GVariantBuilder builder;
+	GVariant *param = NULL;
+	GVariant *inner_gv = NULL;
+	int i = 0;
+
+	dbg("Func Entrance");
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
+	TAPI_RET_ERR_NUM_IF_FAIL(apdu_data, TAPI_API_INVALID_PTR);
+
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	g_variant_builder_init(&builder, G_VARIANT_TYPE ("ay"));
+	for (i = 0; i < apdu_data->apdu_len; i++) {
+		dbg("apdu_data->apdu_data[%d][0x%02x]", i,apdu_data->apdu_data[i]);
+		g_variant_builder_add(&builder, "y", apdu_data->apdu_data[i]);
+	}
+	inner_gv = g_variant_builder_end(&builder);
+	param = g_variant_new("(v)", inner_gv);
+	/*g_variant_builder_unref (builder);*/
+
+	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE, handle->path,
+			DBUS_TELEPHONY_SAP_INTERFACE, "TransferAPDU", param, NULL, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT,
+			handle->ca, on_response_sap_transfer_apdu, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+}
+
+static void on_response_sap_transport_protocol(GObject *source_object, GAsyncResult *res, gpointer user_data)
+{
+	GError *error = NULL;
+	GDBusConnection *conn = NULL;
+	GVariant *dbus_result;
+
+	struct tapi_resp_data *evt_cb_data = user_data;
+	TelSimSapResultCode_t result = TAPI_SIM_SAP_RESULT_CODE_OK;
+
+	dbg("Func Entrance");
+
+	conn = G_DBUS_CONNECTION (source_object);
+	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
+	CHECK_ERROR(error);
+
+	g_variant_get(dbus_result, "(i)", &result);
+
+	if (evt_cb_data->cb_fn) {
+		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
 	}
 
-	memcpy(rsp.apdu_resp, binary_pdu, rsp.apdu_resp_len);
-
-	RESP_CALLBACK_CALL(rsp_cb_data, result, &rsp);
-	g_free(pdu);
-	g_free(binary_pdu);
+	g_free(evt_cb_data);
+	g_variant_unref(dbus_result);
 }
 
-EXPORT_API TelReturn tapi_sap_req_transfer_apdu(TelHandle *handle,
-			TelSapApdu *apdu, TapiResponseCb callback,
-			void *user_data)
+EXPORT_API int tel_req_sap_transport_protocol(TapiHandle *handle, TelSimSapProtocol_t protocol, tapi_response_cb callback, void *user_data)
 {
-	TapiRespCbData *rsp_cb_data;
-	char *encoded_apdu;
+	struct tapi_resp_data *evt_cb_data = NULL;
+	GVariant *param = NULL;
 
-	dbg("Entry");
+	dbg("Func Entrance w/ protocol[%d]", protocol);
 
-	g_return_val_if_fail(handle != NULL && apdu != NULL &&
-			apdu->apdu_len < TEL_SAP_APDU_LEN_MAX &&
-			callback != NULL, TEL_RETURN_INVALID_PARAMETER);
+	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
-	encoded_apdu = g_base64_encode(apdu->apdu, apdu->apdu_len);
-	telephony_sap_call_req_transfer_apdu(handle->sap_proxy,
-			encoded_apdu, NULL,
-			on_response_sap_req_transfer_apdu, rsp_cb_data);
+	param = g_variant_new("(i)", protocol);
+	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE, handle->path,
+			DBUS_TELEPHONY_SAP_INTERFACE, "SetProtocol", param, NULL, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT,
+			handle->ca, on_response_sap_transport_protocol, evt_cb_data);
 
-	g_free(encoded_apdu);
-	return TEL_RETURN_SUCCESS;
+	return TAPI_API_SUCCESS;
 }
 
-static void on_response_sap_req_transport_protocol(GObject *source_object,
-			GAsyncResult *res, gpointer user_data)
+static void on_response_sap_power_operation(GObject *source_object, GAsyncResult *res, gpointer user_data)
 {
-	TapiRespCbData *rsp_cb_data = user_data;
-	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
-	TelSapResult result = TEL_SAP_RESULT_FAILURE_NO_REASON;
 	GError *error = NULL;
+	GDBusConnection *conn = NULL;
+	GVariant *dbus_result;
 
-	dbg("Entry");
+	struct tapi_resp_data *evt_cb_data = user_data;
+	TelSimSapResultCode_t result = TAPI_SIM_SAP_RESULT_CODE_OK;
 
-	telephony_sap_call_req_transport_protocol_finish(handle->sap_proxy,
-			(int *)&result, res, &error);
+	dbg("Func Entrance");
 
-	CHECK_DEINIT(error, rsp_cb_data, result);
+	conn = G_DBUS_CONNECTION (source_object);
+	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
+	CHECK_ERROR(error);
 
-	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+	g_variant_get(dbus_result, "(i)", &result);
+
+	if (evt_cb_data->cb_fn) {
+		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
+	}
+
+	g_free(evt_cb_data);
+	g_variant_unref(dbus_result);
 }
 
-EXPORT_API TelReturn tapi_sap_req_transport_protocol(TelHandle *handle,
-			TelSimSapProtocol protocol,
-			TapiResponseCb callback, void *user_data)
+EXPORT_API int tel_req_sap_power_operation(TapiHandle *handle, TelSimSapPowerMode_t power_mode, tapi_response_cb callback, void *user_data)
 {
-	TapiRespCbData *rsp_cb_data;
+	struct tapi_resp_data *evt_cb_data = NULL;
+	GVariant *param = NULL;
+	gint mode = 0;
+	dbg("Func Entrance w/ power_mode[%d]", power_mode);
 
-	dbg("Entry");
+	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	g_return_val_if_fail(handle != NULL &&
-			protocol <= TEL_SIM_SAP_PROTOCOL_T1 && callback != NULL,
-			TEL_RETURN_INVALID_PARAMETER);
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
-	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+	switch (power_mode) {
+		case TAPI_SIM_SAP_POWER_SIM_ON_REQ:
+			mode = 0;
+			break;
+		case TAPI_SIM_SAP_POWER_SIM_OFF_REQ:
+			mode =1;
+			break;
+		case TAPI_SIM_SAP_RESET_SIM_REQ:
+			mode = 2;
+			break;
+		default:
+			dbg("not handed value[%d]", power_mode);
+			break;
+	}
 
-	telephony_sap_call_req_transport_protocol(handle->sap_proxy, protocol,
-			NULL, on_response_sap_req_transport_protocol, rsp_cb_data);
+	param = g_variant_new("(i)", mode);
+	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE, handle->path,
+			DBUS_TELEPHONY_SAP_INTERFACE, "SetPower", param, NULL, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT,
+			handle->ca, on_response_sap_power_operation, evt_cb_data);
 
-	return TEL_RETURN_SUCCESS;
+	return TAPI_API_SUCCESS;
 }
 
-static void on_response_sap_req_power_operation(GObject *source_object,
-			GAsyncResult *res, gpointer user_data)
+static void on_response_sap_cardreader_status(GObject *source_object, GAsyncResult *res, gpointer user_data)
 {
-	TapiRespCbData *rsp_cb_data = user_data;
-	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
-	TelSapResult result = TEL_SAP_RESULT_FAILURE_NO_REASON;
 	GError *error = NULL;
+	GDBusConnection *conn = NULL;
+	GVariant *dbus_result;
 
-	dbg("Entry");
+	struct tapi_resp_data *evt_cb_data = user_data;
+	TelSimSapResultCode_t result = TAPI_SIM_SAP_RESULT_CODE_OK;
+	TelSimSapCardStatus_t reader_status = TAPI_SIM_SAP_CARD_STATUS_UNKNOWN;
 
-	telephony_sap_call_req_power_operation_finish(handle->sap_proxy,
-			(int *)&result, res, &error);
+	dbg("Func Entrance");
 
-	CHECK_DEINIT(error, rsp_cb_data, result);
+	conn = G_DBUS_CONNECTION (source_object);
+	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
+	CHECK_ERROR(error);
 
-	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+	g_variant_get(dbus_result, "(ii)", &result, &reader_status);
+
+	if (evt_cb_data->cb_fn) {
+		evt_cb_data->cb_fn(evt_cb_data->handle, result, (void*)&reader_status, evt_cb_data->user_data);
+	}
+
+	g_free(evt_cb_data);
+	g_variant_unref(dbus_result);
 }
 
-EXPORT_API TelReturn tapi_sap_req_power_operation(TelHandle *handle,
-			TelSapPowerMode mode,
-			TapiResponseCb callback, void *user_data)
+EXPORT_API int tel_req_sap_cardreader_status(TapiHandle *handle, tapi_response_cb callback, void *user_data)
 {
-	TapiRespCbData *rsp_cb_data;
+	struct tapi_resp_data *evt_cb_data = NULL;
 
-	dbg("Entry");
+	dbg("Func Entrance ");
 
-	g_return_val_if_fail(handle != NULL && mode <= TEL_SAP_SIM_RESET_REQ &&
-			callback != NULL,
-			TEL_RETURN_INVALID_PARAMETER);
+	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
-	telephony_sap_call_req_power_operation(handle->sap_proxy, mode,
-			NULL, on_response_sap_req_power_operation, rsp_cb_data);
+	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE, handle->path,
+			DBUS_TELEPHONY_SAP_INTERFACE, "GetCardReaderStatus", NULL, NULL, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT,
+			handle->ca, on_response_sap_cardreader_status, evt_cb_data);
 
-	return TEL_RETURN_SUCCESS;
-}
-
-static void on_response_sap_get_card_reader_status(GObject *source_object,
-			GAsyncResult *res, gpointer user_data)
-{
-	TapiRespCbData *rsp_cb_data = user_data;
-	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
-	TelSapResult result = TEL_SAP_RESULT_FAILURE_NO_REASON;
-	int status;
-	GError *error = NULL;
-
-	dbg("Entry");
-
-	telephony_sap_call_get_card_reader_status_finish(handle->sap_proxy,
-			(int *)&result, (int *)&status, res, &error);
-
-	CHECK_DEINIT(error, rsp_cb_data, result);
-
-	RESP_CALLBACK_CALL(rsp_cb_data, result, &status);
-}
-
-EXPORT_API TelReturn tapi_sap_get_cardreader_status(TelHandle *handle,
-			TapiResponseCb callback, void *user_data)
-{
-	TapiRespCbData *rsp_cb_data;
-
-	dbg("Entry");
-
-	g_return_val_if_fail(handle != NULL && callback != NULL,
-			TEL_RETURN_INVALID_PARAMETER);
-
-	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
-
-	telephony_sap_call_get_card_reader_status(handle->sap_proxy, NULL,
-			on_response_sap_get_card_reader_status, rsp_cb_data);
-
-	return TEL_RETURN_SUCCESS;
+	return TAPI_API_SUCCESS;
 }

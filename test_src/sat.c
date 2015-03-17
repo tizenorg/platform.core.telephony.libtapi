@@ -1,8 +1,9 @@
 /*
- * libtapi
+ * libslp-tapi
  *
- * Copyright (c) 2013 Samsung Electronics Co. Ltd. All rights reserved.
- * Copyright (c) 2013 Intel Corporation. All rights reserved.
+ * Copyright (c) 2014 Samsung Electronics Co., Ltd. All rights reserved.
+ *
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,22 +24,20 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <glib.h>
-#include <glib-object.h>
 
-#include <tapi.h>
-#include <tapi_sat.h>
-#include <tapi_events.h>
+#include <tapi_common.h>
+#include <ITapiSat.h>
+#include <TapiUtility.h>
 
 #include "menu.h"
 #include "sat.h"
 
-TelSatSetupMenuInfo main_menu;
+TelSatSetupMenuInfo_t main_menu;
 
-/* Event Callback */
-static void on_noti_sat_setup_menu(TelHandle *handle, const char *noti_id, void *data, void *user_data)
+static void on_noti_setup_menu(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
-	int index;
-	TelSatSetupMenuInfo *setup_menu = NULL;
+	int local_index;
+	TelSatSetupMenuInfo_t *setup_menu = NULL;
 
 	msg("noti id (%s)", noti_id);
 
@@ -47,21 +46,21 @@ static void on_noti_sat_setup_menu(TelHandle *handle, const char *noti_id, void 
 		return;
 	}
 
-	setup_menu = (TelSatSetupMenuInfo *)data;
-	msg("command id (%d)", setup_menu->command_id);
-	msg("menu present (%d)", setup_menu->is_main_menu_present);
-	msg("menu title (%s)", setup_menu->sat_main_title);
-	msg("item cnt (%d)", setup_menu->sat_main_menu_item_count);
-	for(index=0;index < setup_menu->sat_main_menu_item_count; index++){
-		msg("item id(%d) (%s)", setup_menu->sat_main_menu_item[index].item_id, setup_menu->sat_main_menu_item[index].item_string);
+	setup_menu = (TelSatSetupMenuInfo_t *)data;
+	msg("command id (%d)", setup_menu->commandId);
+	msg("menu present (%d)", setup_menu->bIsMainMenuPresent);
+	msg("menu title (%s)", setup_menu->satMainTitle);
+	msg("item cnt (%d)", setup_menu->satMainMenuNum);
+	for(local_index=0;local_index < setup_menu->satMainMenuNum; local_index++){
+		msg("item id(%d) (%s)", setup_menu->satMainMenuItem[local_index].itemId, setup_menu->satMainMenuItem[local_index].itemString);
 	}
-	msg("menu help info (%d)", setup_menu->is_sat_main_menu_help_info);
-	msg("menu updated (%d)", setup_menu->is_updated_sat_main_menu);
+	msg("menu help info (%d)", setup_menu->bIsSatMainMenuHelpInfo);
+	msg("menu updated (%d)", setup_menu->bIsUpdatedSatMainMenu);
 }
 
-static void on_noti_sat_display_text(TelHandle *handle, const char *noti_id, void *data, void *user_data)
+static void on_noti_display_text(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
-	TelSatDisplayTextInd *display_text = NULL;
+	TelSatDisplayTextInd_t *display_text = NULL;
 
 	msg("noti id (%s)", noti_id);
 
@@ -70,20 +69,20 @@ static void on_noti_sat_display_text(TelHandle *handle, const char *noti_id, voi
 		return;
 	}
 
-	display_text = (TelSatDisplayTextInd *)data;
+	display_text = (TelSatDisplayTextInd_t *)data;
 
-	msg("command id (%d)", display_text->command_id);
+	msg("command id (%d)", display_text->commandId);
 	msg("display text (%s)", display_text->text.string);
-	msg("string len(%d)", display_text->text.string_len);
+	msg("string len(%d)", display_text->text.stringLen);
 	msg("duration (%d)", display_text->duration);
-	msg("high priority (%d)", display_text->is_priority_high);
-	msg("user response required(%d)", display_text->is_user_resp_required);
+	msg("high priority (%d)", display_text->bIsPriorityHigh);
+	msg("user response required(%d)", display_text->bIsUserRespRequired);
 }
 
-static void on_noti_sat_select_item(TelHandle *handle, const char *noti_id, void *data, void *user_data)
+static void on_noti_select_item(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
-	int index;
-	TelSatSelectItemInd *select_item = NULL;
+	int local_index;
+	TelSatSelectItemInd_t *select_item = NULL;
 
 	msg("noti id (%s)", noti_id);
 
@@ -92,22 +91,21 @@ static void on_noti_sat_select_item(TelHandle *handle, const char *noti_id, void
 		return;
 	}
 
-	select_item = (TelSatSelectItemInd *)data;
+	select_item = (TelSatSelectItemInd_t *)data;
 
-	msg("command id (%d)", select_item->command_id);
-	msg("help info(%d)", select_item->is_help_info_available);
+	msg("command id (%d)", select_item->commandId);
+	msg("help info(%d)", select_item->bIsHelpInfoAvailable);
 	msg("selected item string(%s)", select_item->text.string);
-	msg("string len(%d)", select_item->text.string_len);
-	msg("default item index(%d)", select_item->default_item_index);
-	msg("item count(%d)", select_item->menu_item_count);
-	for(index=0;index < select_item->menu_item_count; index++){
-		msg("item index(%d) id(%d) len(%d) str(%s)", index,
-			select_item->menu_item[index].item_id, select_item->menu_item[index].text_len, select_item->menu_item[index].text);
+	msg("string len(%d)", select_item->text.stringLen);
+	msg("default item local_index(%d)", select_item->defaultItemIndex);
+	msg("item count(%d)", select_item->menuItemCount);
+	for(local_index=0;local_index < select_item->menuItemCount; local_index++){
+		msg("item local_index(%d) id(%d) len(%d) str(%s)", local_index,
+			select_item->menuItem[local_index].itemId, select_item->menuItem[local_index].textLen, select_item->menuItem[local_index].text);
 	}
 }
 
-/* Requests and Responses */
-static void on_sat_select_menu(TelHandle *handle, int result, void *data, void *user_data)
+static void on_resp_select_menu(TapiHandle *handle, int result, void *data, void *user_data)
 {
 	msg("");
 	msg("select menu item result(%d)", result);
@@ -115,13 +113,15 @@ static void on_sat_select_menu(TelHandle *handle, int result, void *data, void *
 
 static int run_sat_get_main_menu_info(MManager *mm, struct menu_data *menu)
 {
-	TelHandle *handle = menu_manager_ref_user_data(mm);
-	TelReturn result;
+	TapiHandle *handle = menu_manager_ref_user_data(mm);
+	int result;
 
-	msg("call tapi_sat_get_main_menu_info()");
+	msg("call get main menu info()");
 
-	result = tapi_sat_get_main_menu_info(handle, &main_menu);
-	CHECK_RT(result);
+	result = tel_get_sat_main_menu_info(handle, &main_menu);
+	if (result != TAPI_API_SUCCESS) {
+		msg("failed. (result = %d)", result);
+	}
 
 	msg("success to get main menu");
 	return 0;
@@ -129,15 +129,15 @@ static int run_sat_get_main_menu_info(MManager *mm, struct menu_data *menu)
 
 static int run_sat_select_menu(MManager *mm, struct menu_data *menu)
 {
-	TelHandle *handle = menu_manager_ref_user_data(mm);
-	TelSatMenuSelectionReqInfo selected_menu;
-	int index=0, item_id;
-	TelReturn result;
+	TapiHandle *handle = menu_manager_ref_user_data(mm);
+	TelSatMenuSelectionReqInfo_t selected_menu;
+	int result, local_index=0;
+	int item_id;
 
-	msg("call tapi_sat_select_menu()");
+	msg("call select menu()");
 
-	for(index=0;index < main_menu.sat_main_menu_item_count; index++){
-		msg("item id(%d) (%s)", main_menu.sat_main_menu_item[index].item_id, main_menu.sat_main_menu_item[index].item_string);
+	for(local_index=0;local_index < main_menu.satMainMenuNum; local_index++){
+		msg("item id(%d) (%s)", main_menu.satMainMenuItem[local_index].itemId, main_menu.satMainMenuItem[local_index].itemString);
 	}
 	msg("select item >>> ");
 	if (scanf("%d", &item_id) < 0) {
@@ -145,35 +145,61 @@ static int run_sat_select_menu(MManager *mm, struct menu_data *menu)
 		return 0;
 	}
 
-	selected_menu.is_help_requested = 0;
-	selected_menu.item_identifier = item_id;
+	selected_menu.bIsHelpRequested = 0;
+	selected_menu.itemIdentifier = item_id;
 
-	msg("selected item id (%d)", selected_menu.item_identifier);
-	result = tapi_sat_select_menu(handle, &selected_menu, on_sat_select_menu, NULL);
-	CHECK_RT(result);
+	msg("selected item id (%d)", selected_menu.itemIdentifier);
+	result = tel_select_sat_menu(handle, &selected_menu, on_resp_select_menu, NULL);
+	if (result != TAPI_API_SUCCESS) {
+		msg("failed. (result = %d)", result);
+	}
 
 	return 0;
 }
 
-/* SAT Menu */
-struct menu_data menu_sat[] = {
+struct menu_data menu_sat_common[] = {
 	{ "1", "GET Main Menu Info", NULL, run_sat_get_main_menu_info, NULL},
 	{ "2", "SELECT Main Menu", NULL, run_sat_select_menu, NULL},
+/*	{ "2a", "SET PLMN Selection mode (Automatic)", menu_net_set_plmn_mode_automatic, NULL, NULL},
+	{ "2s", "SET PLMN Selection mode (Manual)", menu_net_set_plmn_mode_manual, NULL, NULL},
+	{ "2g", "GET PLMN Selection mode", menu_net_get_plmn_mode, NULL, NULL},
+	{ "3s", "SET Service Domain", menu_net_set_service_domain, NULL, NULL},
+	{ "3g", "GET Service Domain", menu_net_get_service_domain, NULL, NULL},
+	{ "4s", "SET Band", menu_net_set_band, NULL, NULL},
+	{ "4g", "GET Band", menu_net_get_band, NULL, NULL},
+	{ "5s", "SET Preferred PLMN", menu_net_set_preferred_plmn, NULL, NULL},
+	{ "5g", "GET Preferred PLMN", menu_net_get_preferred_plmn, NULL, NULL},
+	{ "6", "SET Cancel manual search", menu_net_set_cancel_manual_search, NULL, NULL},
+	{ "7", "GET Serving network", menu_net_get_serving_network, NULL, NULL},*/
 	{ NULL, NULL, },
 };
 
-/* Register Events */
-void register_sat_event(TelHandle *handle)
-{
-	TelReturn ret;
+struct menu_data menu_sat[] = {
+		{"1", "3GPP(WCDMA/GSM/LTE)" , menu_sat_common, NULL, NULL},
+		{"2", "3GPP2(CDMA)" , menu_sat_common, NULL, NULL},
+		{ NULL, NULL, },
+};
 
-	ret = tapi_register_event_id(handle, TEL_NOTI_SAT_SETUP_MENU, on_noti_sat_setup_menu, NULL);
-	if (ret != TEL_RETURN_SUCCESS)
-		msg("TAPI_NOTI_SAT_SETUP_MENU - event register failed [%d]", ret);
-	ret = tapi_register_event_id(handle, TEL_NOTI_SAT_DISPLAY_TEXT, on_noti_sat_display_text, NULL);
-	if (ret != TEL_RETURN_SUCCESS)
-		msg("TAPI_NOTI_SAT_DISPLAY_TEXT - event register failed [%d]", ret);
-	ret = tapi_register_event_id(handle, TEL_NOTI_SAT_SELECT_ITEM, on_noti_sat_select_item, NULL);
-	if (ret != TEL_RETURN_SUCCESS)
-		msg("TAPI_NOTI_SAT_SELECT_ITEM - event register failed [%d]", ret);
+void register_sat_event(TapiHandle *handle)
+{
+	int ret;
+
+	/* SAT */
+	ret = tel_register_noti_event(handle, TAPI_NOTI_SAT_SETUP_MENU, on_noti_setup_menu, NULL);
+	if (ret != TAPI_API_SUCCESS) {
+		msg("event register failed(%d)", ret);
+	}
+
+	ret = tel_register_noti_event(handle, TAPI_NOTI_SAT_DISPLAY_TEXT, on_noti_display_text, NULL);
+	if (ret != TAPI_API_SUCCESS) {
+		msg("event register failed(%d)", ret);
+	}
+
+	ret = tel_register_noti_event(handle, TAPI_NOTI_SAT_SELECT_ITEM, on_noti_select_item, NULL);
+	if (ret != TAPI_API_SUCCESS) {
+		msg("event register failed(%d)", ret);
+	}
+
+	/*	ret = tel_register_noti_event(handle, TAPI_NOTI_SAT_GET_INKEY, on_noti_get_inkey, NULL);
+	ret = tel_register_noti_event(handle, TAPI_NOTI_SAT_GET_INPUT, on_noti_get_input, NULL);*/
 }

@@ -9,14 +9,14 @@ SET(tapitest
 	sim.c
 	sms.c
 	sms_util.c
+	sms_util_cdma.c
 	phonebook.c
 	modem.c
 	ss.c
 	call.c
-	gps.c
 )
 
 ADD_EXECUTABLE(tapitest ${tapitest})
-TARGET_LINK_LIBRARIES(tapitest ${pkgs_LDFLAGS} "-L${CMAKE_BINARY_DIR} -ltapi-3.0")
+TARGET_LINK_LIBRARIES(tapitest ${pkgs_LDFLAGS} "-L${CMAKE_BINARY_DIR} -lSLP-tapi")
 INSTALL(TARGETS tapitest RUNTIME DESTINATION bin/)
-ADD_DEPENDENCIES(tapitest tapi-3.0)
+ADD_DEPENDENCIES(tapitest SLP-tapi)

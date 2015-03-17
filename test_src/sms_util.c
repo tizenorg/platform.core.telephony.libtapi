@@ -1,8 +1,9 @@
 /*
- * libtapi
+ * libslp-tapi
  *
- * Copyright (c) 2013 Samsung Electronics Co. Ltd. All rights reserved.
- * Copyright (c) 2013 Intel Corporation. All rights reserved.
+ * Copyright (c) 2014 Samsung Electronics Co., Ltd. All rights reserved.
+ *
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +22,21 @@
 #include <stdio.h>
 #include <string.h>
 #include "sms_util.h"
+#include "menu.h"
 
-/* Utilites */
+void  reverse(char* x, int len)
+{
+	int i, j = len - 1;
 
-static char *__AcItoa(int n, char* str, int b)
+	for (i = 0; i < j; i++)
+	{
+		int t = x[i];
+		x[i] = x[j];
+		x[j--] = t;
+	}
+}
+
+char*  AcItoa(int n, char* str, int b)
 {
 	int i = 0;
 
@@ -32,394 +44,95 @@ static char *__AcItoa(int n, char* str, int b)
 		str[i++] = "0123456789ABCDEF"[n%b];
 
 	while ((n /= b) > 0);
+	reverse(str, i);
 	str[i] = '\0';
-	g_strreverse(str);
 
 	return str;
 }
 
-void sms_util_decode_dcs(SmsCodingScheme *coding_scheme, unsigned char dcs)
+int  AcToupper(int ch)
 {
-	memset(coding_scheme, 0, sizeof(SmsCodingScheme));
-
-	/* bits 7..4 = 00xx : general data coding indication */
-	if ( dcs < 0x40 ) {
-		coding_scheme->coding_group_type = SMS_CODGRP_SM_GENERAL_DCS;
-
-		/* bit 5 = 1 : indicates the text is compressed */
-		if ( dcs & 0x20 )
-			coding_scheme->compressed = TRUE;
-
-		/* bit 4 = 1 : indicates that bits  1 to 0 have a message class meaning */
-		if ( dcs & 0x10 ) {
-			coding_scheme->bmsg_class_set = TRUE;
-
-			switch ( dcs & 0x03 )  { /* bits 1 to 0 : message class */
-			case 0x00:
-				coding_scheme->class_type = SMS_CLASS_0;
-				break;
-			case 0x01:
-				coding_scheme->class_type = SMS_CLASS_1;
-				break;
-			case 0x02:
-				coding_scheme->class_type = SMS_CLASS_2;
-				break;
-			case 0x03:
-				coding_scheme->class_type = SMS_CLASS_3;
-			}
-		}
-		else /* bit 4 = 0 : indicates that bits 1 to 0 are reserved and have no message class meaning */
-			coding_scheme->class_type = SMS_CLASS_NONE;
-
-		switch ( dcs & 0x0C ) { /* bits 4 to 3 : character set */
-		case 0x00:
-			coding_scheme->alphabet_type = SMS_ALPHABET_DEFAULT;
-			break;
-		case 0x04:
-			coding_scheme->alphabet_type = SMS_ALPHABET_8BIT;
-			break;
-		case 0x08:
-			coding_scheme->alphabet_type = SMS_ALPHABET_UCS2;
-			break;
-		case 0x0C:
-			coding_scheme->alphabet_type = SMS_ALPHABET_MAX;
-		}
-	} else if ( dcs >= 0x40 && dcs < 0x80 ) {
-		/* bits 7..4 = 01xx : message marked for automatic deletion group. bits 5..0
-		are coded exactly the same as group 00xx */
-
-		coding_scheme->coding_group_type = SMS_CODGRP_SM_AUTO_DELETION;
-
-		/* bit 5 = 1 : indicates the text is compressed */
-		if ( dcs & 0x20 )
-			coding_scheme->compressed = TRUE;
-
-		/* bit 4 = 1 : indicates that bits  1 to 0 have a message class meaning */
-		if ( dcs & 0x10 ) {
-			coding_scheme->bmsg_class_set = TRUE;
-
-			switch ( dcs & 0x03 ) { /* bits 1 to 0 : message class */
-			case 0x00:
-				coding_scheme->class_type = SMS_CLASS_0;
-				break;
-			case 0x01:
-				coding_scheme->class_type = SMS_CLASS_1;
-				break;
-			case 0x02:
-				coding_scheme->class_type = SMS_CLASS_2;
-				break;
-			case 0x03:
-				coding_scheme->class_type = SMS_CLASS_3;
-			}
-		}
-		else /* bit 4 = 0 : indicates that bits 1 to 0 are reserved and have no message class meaning */
-			coding_scheme->class_type = SMS_CLASS_NONE;
-
-		switch ( dcs & 0x0C ) { /* bits 4 to 3 : character set */
-		case 0x00:
-			coding_scheme->alphabet_type = SMS_ALPHABET_DEFAULT;
-			break;
-		case 0x04:
-			coding_scheme->alphabet_type = SMS_ALPHABET_8BIT;
-			break;
-		case 0x08:
-			coding_scheme->alphabet_type = SMS_ALPHABET_UCS2;
-			break;
-		case 0x0C:
-			coding_scheme->alphabet_type = SMS_ALPHABET_MAX;
-		}
-	}
-	/* bits 7..4 = 1000 ~ 1011 : reserved */
-	/* bits 7..4 = 1100 : message waiting indication group, discard message */
-	else if ( dcs == 0xC0 ) {
-		coding_scheme->coding_group_type = SMS_CODGRP_SM_WAITING_DISCARD;
-	}
-	else if ( dcs < 0xE0 ) {
-		coding_scheme->coding_group_type = SMS_CODGRP_SM_WAITING_STORE;
-
-		if ( dcs & 0x08 )
-			coding_scheme->bmsg_ind_active = TRUE;
-
-		switch ( dcs & 0x03 ) {
-		case 0x00:
-			coding_scheme->waiting_type = SMS_WAITING_VOICE_MSG;
-			break;
-		case 0x01:
-			coding_scheme->waiting_type = SMS_WAITING_FAX_MSG;
-			break;
-		case 0x02:
-			coding_scheme->waiting_type = SMS_WAITING_EMAIL_MSG;
-			break;
-		case 0x03:
-			coding_scheme->waiting_type = SMS_WAITING_OTHER_MSG;
-		}
-	}
-	else if ( dcs < 0xF0 ) {
-		coding_scheme->coding_group_type = SMS_CODGRP_SM_WAITING_STORE_UCS2;
-
-		if ( dcs & 0x08 )
-			coding_scheme->bmsg_ind_active = TRUE;
-
-		switch ( dcs & 0x03 ) {
-		case 0x00:
-			coding_scheme->waiting_type = SMS_WAITING_VOICE_MSG;
-			break;
-		case 0x01:
-			coding_scheme->waiting_type = SMS_WAITING_FAX_MSG;
-			break;
-		case 0x02:
-			coding_scheme->waiting_type = SMS_WAITING_EMAIL_MSG;
-			break;
-		case 0x03:
-			coding_scheme->waiting_type = SMS_WAITING_OTHER_MSG;
-		}
-	}
-	else {
-		coding_scheme->coding_group_type = SMS_CODGRP_SM_CLASS_CODING;
-
-		if ( dcs & 0x04 )
-			coding_scheme->alphabet_type = SMS_ALPHABET_8BIT;
-
-		switch ( dcs & 0x03 ) {
-			case 0x00:
-				coding_scheme->class_type = SMS_CLASS_0;
-				break;
-			case 0x01:
-				coding_scheme->class_type = SMS_CLASS_1;
-				break;
-			case 0x02:
-				coding_scheme->class_type = SMS_CLASS_2;
-				break;
-			case 0x03:
-				coding_scheme->class_type = SMS_CLASS_3;
-		}
-	}
+	return (('a' <= (ch) && (ch) <= 'z')? ((ch) - ('a'-'A')) : (ch));
 }
 
-void sms_util_convert_bcd_2_digit( char* digits, char* bcd, int digit_len )
-{
-	int i, bcd_len;
-	char c[2];
-	unsigned char higher, lower;
-
-	if ( bcd == NULL || digits == NULL ) {
-		msg( " sms_util_convert_bcd_2_digit: bcd == NULL || digits == NULL. return.\n " );
-		return;
-	}
-
-	if ( digit_len == 0 ) {
-		//printf("__SmsConvertBCD2Digit: digit_len == 0. return.\n" );
-		digits[0] = 0x00;
-		return;
-	}
-
-	bcd_len = (digit_len + 1) / 2;
-
-	memset( digits, 0, bcd_len * 2 );
-
-	for ( i = 0; i < bcd_len; i++ ) {
-		lower = bcd[i] & 0x0F; // get low nibble
-
-		if ( lower == 0x0A )
-			lower = '*';
-		else if ( lower == 0x0B )
-			lower = '#';
-		else if ( lower == 0x0C )
-			lower = 'p'; //DTMF Control digits seperator
-		else if ( lower == 0x0F )
-			lower = 0;
-		else {
-			__AcItoa( lower, c, 16 );
-			lower = g_ascii_toupper(c[0]);
-		}
-
-		higher = ( bcd[i] >> 4 ) & 0x0F; // get high nibble
-
-		if ( higher == 0x0A )
-			higher = '*'; // =0x2A
-		else if ( higher == 0x0B )
-			higher = '#'; // =0x23
-		else if ( higher == 0x0C )
-			higher = 'p'; // =0x70, DTMF Control digits seperator
-		else if ( higher == 0x0F ) { // if higher semi-octet is 0x0F, filled bits.
-			//higher = 0;
-			sprintf(digits + strlen(digits), "%c", lower);
-			digits[/*digit_len-1*/bcd_len*2-1] = '\0';
-
-			//printf("__SmsConvertBCD2Digit: digits [%s].\n", digits	);
-
-			return;
-		}
-		else {
-			__AcItoa(higher, c, 16);
-			higher = g_ascii_toupper(c[0]);
-		}
-
-		//sprintf(digits, "%s%c%c", digits, lower, higher);
-		sprintf(digits + strlen(digits), "%c%c", lower, higher);
-	}
-
-	digits[digit_len] = '\0';
-
-	//printf("__SmsConvertBCD2Digit: digits [%s].\n", digits	);
-}
-
-char *sms_util_unpack_gsm_code(char *sz_data, const char *in, int in_len )
+char* SmsUtilUnpackGSMCode(char* szData, const char* pIn, int in_len )
 {
 	int i;
 	int pos = 0;
 	int shift = 0;
 
-	for ( i = 0; i < in_len; i++, pos++ ) {
-		sz_data[i] = ( in[pos] << shift ) & 0x7F;
+	/* If the number of fill bits != 0, then it would cause an additional shift */
+	/*
+	if ( shift != 0 )
+		pos = pos + 1;
 
-		if ( pos != 0 ) {
+	if ( shift ==7 )
+		shift = 0;
+	*/
+
+	for ( i = 0; i < in_len; i++, pos++ )
+	{
+		szData[i] = ( pIn[pos] << shift ) & 0x7F;
+
+		if ( pos != 0 )
+		{
 			/* except the first byte, a character contains some bits
 			** from the previous byte.
 			*/
-			sz_data[i] |= in[pos-1] >> (8-shift);
+			szData[i] |= pIn[pos-1] >> (8-shift);
 		}
+
 		shift ++;
 
-		if ( shift == 7 ) {
+		if ( shift == 7 )
+		{
 			shift = 0;
 
 			/* a possible extra complete character is available */
 			i++;
-			sz_data[i] = in[pos] >> 1;
+			szData[i] = pIn[pos] >> 1;
 
-			if( sz_data[i] == 0 ) {
+			if( szData[i] == 0 )
+			{
 				/* this is the end of the input, quit */
 				break;
 			}
 		}
 	}
-	return sz_data;
+
+	return szData;
 }
 
-int sms_util_decode_addr_field(char *dialling_num, char* addr_field, int *result_ton, int *result_npi)
-{
-	int index = 0;
-	int ton, npi;
-	int dial_num_len = 0;
-
-	ton = ( addr_field[index+1] & 0x70 ) >> 4;
-	npi = addr_field[index+1] & 0x0F;
-
-	if ( ton != SMS_TON_ALPHA_NUMERIC ) {
-		dial_num_len = addr_field[index++];
-	} else {
-		dial_num_len = ( ( ( addr_field[index++] + 1 ) / 2 ) * 8 ) / 7;
-	}
-
-	if ( dial_num_len > SMS_ADDRESS_LEN_MAX ) {
-		dial_num_len = SMS_ADDRESS_LEN_MAX;
-	}
-
-	msg(" dial_num_len = %d\n", dial_num_len );
-
-	index++; /* ignore Type of Address field */
-
-	if (ton != SMS_TON_ALPHA_NUMERIC ) {
-		sms_util_convert_bcd_2_digit( dialling_num, (char*) &addr_field[index], dial_num_len );
-	} else {
-		sms_util_unpack_gsm_code( dialling_num, &addr_field[index], dial_num_len );
-	}
-
-	msg(  "sms_util_decode_addr_field: dialling_num [%s].\n", (char*) dialling_num  );
-
-	*result_ton=ton;
-	*result_npi=npi;
-
-	msg("ton %d npi %d\n", ton, npi);
-
-	return dial_num_len;
-}
-
-TmDateTime *sms_util_decode_time_stamp(char *time_stamp, TmDateTime *tm_date_time )
-{
-	char buf[3];
-
-	if ( time_stamp == NULL )
-		return NULL;
-
-	sms_util_convert_bcd_2_digit( buf, (char*) &time_stamp[0], 2 );
-	tm_date_time->year = atoi( buf ) + 2000;
-	if ( ( tm_date_time->year >= 1900 + MAX_YEAR )/* && ( tm_date_time->year < 2000 + BASE_YEAR )*/ )
-		tm_date_time->year -= 100;
-	sms_util_convert_bcd_2_digit( buf, (char*) &time_stamp[1], 2 );
-	tm_date_time->month = atoi( buf );
-	sms_util_convert_bcd_2_digit( buf, (char*) &time_stamp[2], 2 );
-	tm_date_time->day = atoi( buf );
-	sms_util_convert_bcd_2_digit( buf, (char*) &time_stamp[3], 2 );
-	tm_date_time->hour = atoi( buf );
-	sms_util_convert_bcd_2_digit( buf, (char*) &time_stamp[4], 2 );
-	tm_date_time->minute = atoi( buf );
-	sms_util_convert_bcd_2_digit( buf, (char*) &time_stamp[5], 2 );
-	tm_date_time->second = atoi( buf );
-
-	if ( ( tm_date_time->year < 1900 + BASE_YEAR ) || ( tm_date_time->year > 1900 + MAX_YEAR ) )
-		tm_date_time->year = 1900 + BASE_YEAR;
-
-	return tm_date_time;
-}
-
-void sms_util_convert_digit_2_bcd( char *bcd, char *digits, int digit_len )
-{
-	int i, j, digit;
-	unsigned char higher, lower;
-
-	if ( bcd == NULL || digits == NULL )
-		return;
-
-	// 0123456789 -> 1032547698
-	for ( i = 0, j = 0; i < digit_len; i = i + 2, j++ )
-	{
-		if ( digits[i] == '*' )
-			digit = 0x0A;
-		else if ( digits[i] == '#' )
-			digit = 0x0B;
-		else if (g_ascii_toupper(digits[i]) == 'P' )
-			digit = 0x0C;
-		else
-			digit = (int) ( digits[i] - '0' );
-
-		lower = digit & 0x0F;
-
-		if ( digit_len != i + 1 ) {
-			if ( digits[i+1] == '*' )
-				digit = 0x0A;
-			else if ( digits[i+1] == '#' )
-				digit = 0x0B;
-			else if (g_ascii_toupper(digits[i+1]) == 'P' )
-				digit = 0x0C;
-			else
-				digit = (int) ( digits[i+1] - '0' );
-
-			higher = digit & 0x0F;
-		} else {
-			higher = 0xFF;
-		}
-
-		bcd[j] = ( higher << 4 ) | lower;
-	}
-}
-
-int sms_util_pack_gsm_code( unsigned char *out, const char *data, int in_len )
+int SmsUtilPackGSMCode( unsigned char *pOut, const char* szData, int in_len )
 {
 	int i;
 	int pos;
 	int shift = 0;
+	//shift = fill_bits;
 
-	for( pos = 0, i = 0; i < in_len; pos++, i++ ) {
+	//  memset( out, 0, out_len_max );
+
+	/* pack the ASCII characters
+	*/
+	/*
+	if ( shift == 7 )
+		shift = 0;
+	*/
+
+	for( pos = 0, i = 0; /*pos < out_len_max &&*/ i < in_len; pos++, i++ )
+	{
 		/* pack the low bits */
-		out[pos] = data[i] >> shift;
+		pOut[pos] = szData[i] >> shift;
 
-		if ( i + 1 < in_len ) {
+		if ( i + 1 < in_len )
+		{
 			/* pack the high bits using the low bits of the next character */
-			out[pos] |= data[i+1] << ( 7 - shift );
+			pOut[pos] |= szData[i+1] << ( 7 - shift );
+
 			shift++;
-			if( shift == 7 ) {
+
+			if( shift == 7 )
+			{
 				shift = 0;
 				i++;
 			}
@@ -430,138 +143,955 @@ int sms_util_pack_gsm_code( unsigned char *out, const char *data, int in_len )
 	return pos;
 }
 
-int sms_util_encode_addr_field(unsigned char *addr_field, char* dialling_num,
-	int dial_num_len, int ton, int npi)
-{
-	int index = 0;
 
-	if ( dialling_num == NULL || addr_field == NULL )
+void SmsUtilConvertBCD2Digit( char* pDigits, char* pBCD, int digitLen )
+{
+	int		i, bcdLen;
+	char	c[2];
+	unsigned char	higher, lower;
+
+	if ( pBCD == NULL || pDigits == NULL )
+	{
+		printf("__SmsConvertBCD2Digit: pBCD == NULL || pDigits == NULL. return.\n"  );
+		return;
+	}
+
+	if ( digitLen == 0 )
+	{
+		//printf("__SmsConvertBCD2Digit: digitLen == 0. return.\n" );
+
+		pDigits[0] = 0x00;
+
+		return;
+	}
+
+	if ( digitLen % 2 )
+		bcdLen = digitLen / 2 + 1;
+	else
+		bcdLen = digitLen / 2;
+
+	memset( pDigits, 0, bcdLen * 2 );
+
+	for ( i = 0; i < bcdLen; i++ )
+	{
+		lower = pBCD[i] & 0x0F;					// get low nibble
+
+		if ( lower == 0x0A )
+			lower = '*';
+		else if ( lower == 0x0B )
+			lower = '#';
+		else if ( lower == 0x0C )
+			lower = 'p';			//DTMF Control pDigits seperator
+		else if ( lower == 0x0F )
+			lower = 0;
+		else
+		{
+			AcItoa( lower, c, 16 );
+			lower = (char) AcToupper(c[0]);
+		}
+
+		higher = ( pBCD[i] >> 4 ) & 0x0F;			// get high nibble
+
+		if ( higher == 0x0A )
+			higher = '*';		// =0x2A
+		else if ( higher == 0x0B )
+			higher = '#';		// =0x23
+		else if ( higher == 0x0C )
+			higher = 'p';		// =0x70, DTMF Control pDigits seperator
+		else if ( higher == 0x0F ) // if higher semi-octet is 0x0F, filled bits.
+		{
+			//higher = 0;
+			sprintf(pDigits + strlen(pDigits), "%c", lower);
+			pDigits[/*digitLen-1*/bcdLen*2-1] = '\0';
+
+			//printf("__SmsConvertBCD2Digit: pDigits [%s].\n", pDigits  );
+
+			return;
+		}
+		else
+		{
+			AcItoa(higher, c, 16);
+			higher = (char) AcToupper(c[0]);
+		}
+
+		//sprintf(pDigits, "%s%c%c", pDigits, lower, higher);
+		sprintf(pDigits + strlen(pDigits), "%c%c", lower, higher);
+	}
+
+	pDigits[digitLen] = '\0';
+
+	//printf("__SmsConvertBCD2Digit: pDigits [%s].\n", pDigits  );
+}
+
+
+void SmsUtilConvertDigit2BCD( char* pBCD, char* pDigits, int digitLen )
+{
+	int	i, j, digit;
+
+	unsigned char	higher, lower;
+
+	if ( pBCD == NULL || pDigits == NULL )
+		return;
+
+	// 0123456789 -> 1032547698
+	for ( i = 0, j = 0; i < digitLen; i = i + 2, j++ )
+	{
+		if ( pDigits[i] == '*' )
+			digit = 0x0A;
+		else if ( pDigits[i] == '#' )
+			digit = 0x0B;
+		else if ( AcToupper( pDigits[i] ) == 'P' )
+			digit = 0x0C;
+		else
+			digit = (int) ( pDigits[i] - '0' );
+
+		lower = digit & 0x0F;
+
+		if ( digitLen != i + 1 )
+		{
+			if ( pDigits[i+1] == '*' )
+				digit = 0x0A;
+			else if ( pDigits[i+1] == '#' )
+				digit = 0x0B;
+			else if ( AcToupper( pDigits[i+1] ) == 'P' )
+				digit = 0x0C;
+			else
+				digit = (int) ( pDigits[i+1] - '0' );
+
+			higher = digit & 0x0F;
+		}
+		else
+		{
+			higher = 0xFF;
+		}
+
+		pBCD[j] = ( higher << 4 ) | lower;
+	}
+}
+
+
+TmDateTime* SmsUtilDecodeTimeStamp(char * pTimeStamp, TmDateTime *tmDateTime )
+{
+	//TmDateTime tmDateTime;
+	char szBuf[3];
+	//TS_UINT32	time;
+
+	if ( pTimeStamp == NULL )
+		return NULL;
+
+	SmsUtilConvertBCD2Digit( szBuf, (char*) &pTimeStamp[0], 2 );
+	tmDateTime->year = atoi( szBuf ) + 2000;
+	if ( ( tmDateTime->year >= 1900 + MAX_YEAR )/* && ( tmDateTime->year < 2000 + BASE_YEAR )*/ )
+		tmDateTime->year -= 100;
+	SmsUtilConvertBCD2Digit( szBuf, (char*) &pTimeStamp[1], 2 );
+	tmDateTime->month = atoi( szBuf );
+	SmsUtilConvertBCD2Digit( szBuf, (char*) &pTimeStamp[2], 2 );
+	tmDateTime->day = atoi( szBuf );
+	SmsUtilConvertBCD2Digit( szBuf, (char*) &pTimeStamp[3], 2 );
+	tmDateTime->hour = atoi( szBuf );
+	SmsUtilConvertBCD2Digit( szBuf, (char*) &pTimeStamp[4], 2 );
+	tmDateTime->minute = atoi( szBuf );
+	SmsUtilConvertBCD2Digit( szBuf, (char*) &pTimeStamp[5], 2 );
+	tmDateTime->second = atoi( szBuf );
+
+	if ( ( tmDateTime->year < 1900 + BASE_YEAR ) || ( tmDateTime->year > 1900 + MAX_YEAR ) )
+		tmDateTime->year = 1900 + BASE_YEAR;
+
+	/*
+	time = TmDateTimeToSeconds( &tmDateTime );
+	if ( time > MAX_SECONDS )
+		time = MAX_SECONDS;
+
+	*/
+
+	return tmDateTime;
+}
+
+unsigned char* SmsUtilEncodeTimeStamp( TmDateTime* tmDateTime, unsigned char* pTimeStamp )
+{
+	//TmDateTime tmDateTime;
+	char szBuf[3];
+	int	year;
+
+	if ( pTimeStamp == NULL )
+		return NULL;
+
+	memset( (void*) pTimeStamp, 0x00, sizeof ( unsigned char ) * 7 );
+
+	//TmSecondsToDateTime( timeStamp, &tmDateTime );
+
+	year = tmDateTime->year - 2000;
+	if ( year < 0 )
+		year += 100;
+	sprintf( szBuf, "%02d", year );
+	SmsUtilConvertDigit2BCD( (char*) &pTimeStamp[0], szBuf, 2 );
+	sprintf( szBuf, "%02d", tmDateTime->month );
+	SmsUtilConvertDigit2BCD( (char*) &pTimeStamp[1], szBuf, 2 );
+	sprintf( szBuf, "%02d", tmDateTime->day );
+	SmsUtilConvertDigit2BCD( (char*) &pTimeStamp[2], szBuf, 2 );
+	sprintf( szBuf, "%02d", tmDateTime->hour );
+	SmsUtilConvertDigit2BCD( (char*) &pTimeStamp[3], szBuf, 2 );
+	sprintf( szBuf, "%02d", tmDateTime->minute );
+	SmsUtilConvertDigit2BCD( (char*) &pTimeStamp[4], szBuf, 2 );
+	sprintf( szBuf, "%02d", tmDateTime->second );
+	SmsUtilConvertDigit2BCD( (char*) &pTimeStamp[5], szBuf, 2 );
+
+
+	/*	ignore Time zone (assume it is using 0x00 as default)
+	timeZone = TmGetTimeZoneOffset() /15;
+	if ( timeZone < 0 )
+		absTimeZone = -timeZone;
+	else
+		absTimeZone = timeZone;
+	*/
+
+	sprintf( szBuf, "%02d", 0);
+	SmsUtilConvertDigit2BCD( (char*) &pTimeStamp[6], szBuf, 2 );
+
+	//if ( timeZone < 0 )
+	//	pTimeStamp[6] |= 0x80;
+
+	return pTimeStamp;
+}
+
+
+
+int  SmsUtilDecodeAddrField(char *diallingNum, char* pAddrField, int *result_ton, int *result_npi )
+{
+	int local_index = 0;
+	int  ton,npi;
+	int DialNumLen=0;
+
+	ton = ( pAddrField[local_index+1] & 0x70 ) >> 4;
+	npi = pAddrField[local_index+1] & 0x0F;
+
+	if ( ton != SMS_TON_ALPHA_NUMERIC )
+	{
+		// Origination/Destination address �ʵ忡���� length�� ���� address length
+		// origination/destination address �ʵ��� ��� length�� 0 �� ���� number type/plan �ʵ�� 0xFF ���� ���´�.
+		DialNumLen = pAddrField[local_index++];
+	}
+	else
+	{
+		DialNumLen = ( ( ( pAddrField[local_index++] + 1 ) / 2 ) * 8 ) / 7;
+	}
+
+
+
+
+	// SIM_SMSP_ADDRESS_LEN ���� address length �� ũ�� SIM_SMSP_ADDRESS_LEN ��ŭ�� ��ȯ�� �Ѵ�.
+
+	if ( DialNumLen > SMS_ADDRESS_LEN_MAX )
+	{
+		DialNumLen = SMS_ADDRESS_LEN_MAX;
+	}
+
+	printf(" DialNumLen = %d\n", DialNumLen  );
+
+	local_index++; /* ignore Type of Address field */
+
+	if (ton != SMS_TON_ALPHA_NUMERIC )
+	{
+		SmsUtilConvertBCD2Digit( diallingNum, (char*) &pAddrField[local_index],DialNumLen );
+	}
+	else
+	{
+		SmsUtilUnpackGSMCode( diallingNum, &pAddrField[local_index],DialNumLen );
+	}
+
+	printf(  "__SmsDecodeAddrField: diallingNum [%s].\n", (char*) diallingNum  );
+
+	*result_ton=ton;
+	*result_npi=npi;
+
+	printf("ton %d npi %d\n",ton,npi);
+
+	return DialNumLen;
+
+
+}
+
+int  SmsUtilEncodeAddrField(unsigned char* pAddrField, char* diallingNum, int DialNumLen, int ton, int npi )
+{
+	int local_index = 0;
+
+	if ( diallingNum == NULL || pAddrField == NULL )
 		return -1;
 
-	if ( dialling_num[0] == '+' ) {
-		dialling_num++;
-		dial_num_len--;
+	if ( diallingNum[0] == '+' )
+	{
+		diallingNum++;
+		DialNumLen--;
 		ton = SMS_TON_INTERNATIONAL;
 	}
 
-	if ( ton != SMS_TON_ALPHA_NUMERIC ) {
-		addr_field[index++] = (unsigned char)dial_num_len;
-	} else {
-		addr_field[index] = (unsigned char) ( ( ( dial_num_len * 7 + 7 ) / 8 ) * 2 );
-		if ( ( ( dial_num_len * 7 ) % 8 ) <= 4 )
-			addr_field[index]--;
+	if ( ton != SMS_TON_ALPHA_NUMERIC )
+	{
+		// Origination/Destination address �ʵ忡���� length�� ���� address length
+		pAddrField[local_index++] = (unsigned char)DialNumLen;
+		//printf(" addr len packet: %d\n", pAddrField[local_index]);
+	}
+	else
+	{
+		pAddrField[local_index] = (unsigned char) ( ( ( DialNumLen * 7 + 7 ) / 8 ) * 2 );
 
-		msg(" addr len packet: %d out of SMS_TON_ALPAHA\n", addr_field[index]);
-		index++;
+		// ������ ����Ʈ���� ���� 4��Ʈ�� ������ ������ length �ʵ尪�� -1�� �Ѵ�.
+		if ( ( ( DialNumLen * 7 ) % 8 ) <= 4 )
+			pAddrField[local_index]--;
+
+	        printf(" addr len packet: %d out of SMS_TON_ALPAHA\n", pAddrField[local_index]);
+
+		local_index++;
 	}
 
-	SET_TON_NPI(addr_field[index], ton, npi);
+	SET_TON_NPI( pAddrField[local_index], ton, npi );
 
-	index++;
+	local_index++; // SET_TON_NPI �� MACRO �̹Ƿ� ���ο��� ������Ű�� ����
 
-	if ( ton != SMS_TON_ALPHA_NUMERIC ) {
-		sms_util_convert_digit_2_bcd( (char*) &addr_field[index], (char*) dialling_num, dial_num_len );
-		index += (dial_num_len + 1) / 2;
-	} else {
-		index += sms_util_pack_gsm_code( &addr_field[index], dialling_num, (int) dial_num_len );
+	if ( ton != SMS_TON_ALPHA_NUMERIC )
+	{
+		SmsUtilConvertDigit2BCD( (char*) &pAddrField[local_index], (char*) diallingNum, DialNumLen );
+
+		if ( DialNumLen % 2 )
+			local_index += DialNumLen / 2 + 1;
+		else
+			local_index += DialNumLen / 2;
+	}
+	else
+	{
+		local_index += SmsUtilPackGSMCode( &pAddrField[local_index], diallingNum, (int) DialNumLen );
 	}
 
-	return index;
+	return local_index;
+}
+int SmsUtilDecodeScAddrField( SmsAddressInfo_t* pSmsAddrField, unsigned char* pAddrField )
+{
+	int local_index = 0;
+	int length = 0;
+
+	printf("SmsUtilDecodeScAddrField\n");
+
+	if ( pSmsAddrField == NULL || pAddrField == NULL )
+	{
+		printf( "SmsUtilDecodeScAddrField: pSimAddrField or pAddrField is NULL.\n"  );
+
+		return 0;
+	}
+
+	// Service Center address �ʵ忡���� length�� �ڿ� ������ byte�� ��
+	// -> ���� address ���̴� TON/API ����Ʈ�� �����ϰ� ������ ����Ʈ�� 2�� or 2�� - 1(���� ���̰� Ȧ���ΰ��)
+	length = pAddrField[local_index];
+	// ������ ���� �޽����� ��쿡�� service center address�� ���� ���� �ִ�.
+	// �� ��쿡 length �� 0 �̸� number type, plan �� ��� ���
+	// length �� 1 �̸� type, plan �� �ִ� ���
+	if ( length > 1 )
+	{
+		pSmsAddrField->DialNumLen = ( pAddrField[local_index++] - 1 ) * 2; // -1�� TON/API �ʵ�
+
+		// SMS_SMSP_ADDRESS_LEN ���� address length �� ũ�� SMS_SMSP_ADDRESS_LEN ��ŭ�� ��ȯ�� �Ѵ�.
+		if ( pSmsAddrField->DialNumLen > SMS_ADDRESS_LEN_MAX )
+		{
+			pSmsAddrField->DialNumLen = SMS_ADDRESS_LEN_MAX;
+		}
+
+		pSmsAddrField->Ton = ( pAddrField[local_index] & 0x70 ) >> 4;
+		pSmsAddrField->Npi = pAddrField[local_index] & 0x0F;
+
+		local_index++; /* ignore Type of Address field */
+
+		SmsUtilConvertBCD2Digit( (char*) pSmsAddrField->DialNumLen, (char*) &pAddrField[local_index], pSmsAddrField->DialNumLen );
+
+		printf( "SmsUtilDecodeScAddrField: diallingNum [%s].\n", (char*) pSmsAddrField->DialNumLen  );
+
+		printf( "length=%d , ton %d, npi =%d\n",pSmsAddrField->DialNumLen, pSmsAddrField->Ton,pSmsAddrField->Npi );
+	}
+
+	return ++length;
 }
 
-void sms_util_encode_dcs( unsigned char *result_dcs, SmsCodingScheme *coding_scheme )
+ int  SmsUtilEncodeScAddrField( unsigned char* pAddrField, SmsAddressInfo_t * pSmsAddrField )
+{
+	int local_index = 0;
+
+	if ( pSmsAddrField == NULL || pAddrField == NULL )
+		return -1;
+
+	// Service Center address �ʵ忡���� length�� �ڿ� ������ byte�� ��
+	// -> ���� address ���̴� TON/API ����Ʈ�� �����ϰ� ������ ����Ʈ�� 2�� or 2�� - 1(���� ���̰� Ȧ���ΰ��)
+	if ( pSmsAddrField->DialNumLen % 2 )
+	{
+		pAddrField[local_index++] = pSmsAddrField->DialNumLen / 2 + 1 + 1; // +1 �� TON/NPI �ʵ�, Ȧ������ ���� ������ ���߱� ���� �ѹ� �� +1
+	}
+	else
+	{
+		pAddrField[local_index++] = pSmsAddrField->DialNumLen / 2 + 1; // +1 �� TON/NPI �ʵ�
+	}
+
+	SET_TON_NPI( pAddrField[local_index], pSmsAddrField->Ton, pSmsAddrField->Npi );
+
+	local_index++; // SET_TON_NPI �� MACRO �̹Ƿ� ���ο��� ������Ű�� ���׹߻�
+
+	SmsUtilConvertDigit2BCD( (char*) &pAddrField[local_index], (char*) pSmsAddrField->DialNumLen, pSmsAddrField->DialNumLen );
+
+	if ( pSmsAddrField->DialNumLen % 2 )
+		local_index += pSmsAddrField->DialNumLen / 2 + 1;
+	else
+		local_index += pSmsAddrField->DialNumLen / 2;
+
+	return local_index;
+}
+
+void SmsUtilDecodeDCS( Sms_coding_scheme* pCodingScheme,   unsigned char dcs )
+{
+	assert( pCodingScheme != NULL );
+
+	memset( pCodingScheme, 0, sizeof ( Sms_coding_scheme ) );
+
+	if ( dcs < 0x40 ) // bits 7..4 = 00xx : general data coding indication
+	{
+		pCodingScheme->coding_group_type = SMS_CODGRP_SM_GENERAL_DCS;
+
+		if ( dcs & 0x20 ) // bit 5 = 1 : indicates the text is compressed
+			pCodingScheme->bCompressed = TRUE;
+
+		if ( dcs & 0x10 ) // bit 4 = 1 : indicates that bits  1 to 0 have a message class meaning
+		{
+			pCodingScheme->bmsg_class_set = TRUE;
+
+			switch ( dcs & 0x03 ) // bits 1 to 0 : message class
+			{
+				case 0x00:
+					pCodingScheme->class_type = SMS_CLASS_0;
+					break;
+				case 0x01:
+					pCodingScheme->class_type = SMS_CLASS_1;
+					break;
+				case 0x02:
+					pCodingScheme->class_type = SMS_CLASS_2;
+					break;
+				case 0x03:
+					pCodingScheme->class_type = SMS_CLASS_3;
+					break;
+				default :
+					/*Do Nothing*/
+					msg("Default case executed. Invalid option.");
+					break;
+			}
+		}
+		else // bit 4 = 0 : indicates that bits 1 to 0 are reserved and have no message class meaning
+			pCodingScheme->class_type = SMS_CLASS_NONE;
+
+		switch ( dcs & 0x0C ) // bits 4 to 3 : character set
+		{
+			case 0x00:
+				pCodingScheme->alphabet_type = SMS_ALPHABET_DEFAULT;
+				break;
+			case 0x04:
+				pCodingScheme->alphabet_type = SMS_ALPHABET_8BIT;
+				break;
+			case 0x08:
+				pCodingScheme->alphabet_type = SMS_ALPHABET_UCS2;
+				break;
+			case 0x0C:
+				pCodingScheme->alphabet_type = SMS_ALPHABET_MAX;
+				break;
+			default :
+				/*Do Nothing*/
+				msg("Default case executed. Invalid option.");
+				break;
+		}
+	}
+	else if ( dcs >= 0x40 && dcs < 0x80 ) // bits 7..4 = 01xx : message marked for automatic deletion group. bits 5..0 are coded exactly the same as group 00xx
+	{
+		pCodingScheme->coding_group_type = SMS_CODGRP_SM_AUTO_DELETION;
+
+		if ( dcs & 0x20 ) // bit 5 = 1 : indicates the text is compressed
+			pCodingScheme->bCompressed = TRUE;
+
+		if ( dcs & 0x10 ) // bit 4 = 1 : indicates that bits  1 to 0 have a message class meaning
+		{
+			pCodingScheme->bmsg_class_set = TRUE;
+
+			switch ( dcs & 0x03 ) // bits 1 to 0 : message class
+			{
+				case 0x00:
+					pCodingScheme->class_type = SMS_CLASS_0;
+					break;
+				case 0x01:
+					pCodingScheme->class_type = SMS_CLASS_1;
+					break;
+				case 0x02:
+					pCodingScheme->class_type = SMS_CLASS_2;
+					break;
+				case 0x03:
+					pCodingScheme->class_type = SMS_CLASS_3;
+					break;
+				default :
+					/*Do Nothing*/
+					msg("Default case executed. Invalid option.");
+					break;
+			}
+		}
+		else // bit 4 = 0 : indicates that bits 1 to 0 are reserved and have no message class meaning
+			pCodingScheme->class_type = SMS_CLASS_NONE;
+
+		switch ( dcs & 0x0C ) // bits 4 to 3 : character set
+		{
+			case 0x00:
+				pCodingScheme->alphabet_type = SMS_ALPHABET_DEFAULT;
+				break;
+			case 0x04:
+				pCodingScheme->alphabet_type = SMS_ALPHABET_8BIT;
+				break;
+			case 0x08:
+				pCodingScheme->alphabet_type = SMS_ALPHABET_UCS2;
+				break;
+			case 0x0C:
+				pCodingScheme->alphabet_type = SMS_ALPHABET_MAX;
+				break;
+			default :
+				/*Do Nothing*/
+				msg("Default case executed. Invalid option.");
+				break;
+		}
+	}
+	// bits 7..4 = 1000 ~ 1011 : reserved
+	else if ( dcs == 0xC0 ) // bits 7..4 = 1100 : message waiting indication group, discard message
+	{
+		pCodingScheme->coding_group_type = SMS_CODGRP_SM_WAITING_DISCARD;
+	}
+	else if ( dcs < 0xE0 )
+	{
+		pCodingScheme->coding_group_type = SMS_CODGRP_SM_WAITING_STORE;
+
+		if ( dcs & 0x08 )
+			pCodingScheme->bmsg_ind_active = TRUE;
+
+		switch ( dcs & 0x03 )
+		{
+			case 0x00:
+				pCodingScheme->waiting_type = SMS_WAITING_VOICE_MSG;
+				break;
+			case 0x01:
+				pCodingScheme->waiting_type = SMS_WAITING_FAX_MSG;
+				break;
+			case 0x02:
+				pCodingScheme->waiting_type = SMS_WAITING_EMAIL_MSG;
+				break;
+			case 0x03:
+				pCodingScheme->waiting_type = SMS_WAITING_OTHER_MSG;
+				break;
+			default :
+				/*Do Nothing*/
+				msg("Default case executed. Invalid option.");
+				break;
+		}
+	}
+	else if ( dcs < 0xF0 )
+	{
+		pCodingScheme->coding_group_type = SMS_CODGRP_SM_WAITING_STORE_UCS2;
+
+		if ( dcs & 0x08 )
+			pCodingScheme->bmsg_ind_active = TRUE;
+
+		switch ( dcs & 0x03 )
+		{
+			case 0x00:
+				pCodingScheme->waiting_type = SMS_WAITING_VOICE_MSG;
+				break;
+			case 0x01:
+				pCodingScheme->waiting_type = SMS_WAITING_FAX_MSG;
+				break;
+			case 0x02:
+				pCodingScheme->waiting_type = SMS_WAITING_EMAIL_MSG;
+				break;
+			case 0x03:
+				pCodingScheme->waiting_type = SMS_WAITING_OTHER_MSG;
+				break;
+			default :
+				/*Do Nothing*/
+				msg("Default case executed. Invalid option.");
+				break;
+		}
+	}
+	else
+	{
+		pCodingScheme->coding_group_type = SMS_CODGRP_SM_CLASS_CODING;
+
+		if ( dcs & 0x04 )
+			pCodingScheme->alphabet_type = SMS_ALPHABET_8BIT;
+
+		switch ( dcs & 0x03 )
+		{
+			case 0x00:
+				pCodingScheme->class_type = SMS_CLASS_0;
+				break;
+			case 0x01:
+				pCodingScheme->class_type = SMS_CLASS_1;
+				break;
+			case 0x02:
+				pCodingScheme->class_type = SMS_CLASS_2;
+				break;
+			case 0x03:
+				pCodingScheme->class_type = SMS_CLASS_3;
+				break;
+			default :
+				/*Do Nothing*/
+				msg("Default case executed. Invalid option.");
+				break;
+		}
+	}
+}
+
+void SmsUtilEncodeDCS( unsigned char* pDCS, Sms_coding_scheme* pCodingScheme )
 {
 	unsigned char dcs = 0x00;
 
-	if( coding_scheme->coding_group_type == SMS_CODGRP_SM_GENERAL_DCS ) { // bit 7..4 is 00xx
-		if ( coding_scheme->compressed )
-			dcs |= 0x20; // bit 5 is 1
-		if ( coding_scheme->bmsg_class_set ) {
-			dcs |= 0x10; // bit 4 is 1
-			if( coding_scheme->class_type== SMS_CLASS_0 )
-				dcs |= 0x00;
-			else if ( coding_scheme->class_type == SMS_CLASS_1 )
-				dcs |= 0x01;
-			else if ( coding_scheme->class_type == SMS_CLASS_2 )
-				dcs |= 0x02;
-			else if ( coding_scheme->class_type == SMS_CLASS_3 )
-				dcs |= 0x03;
-		}
+	printf("SmsUtilEncodeDCS Start\n");
 
-		switch ( coding_scheme->alphabet_type ) {
-		case SMS_ALPHABET_DEFAULT: // bit 3..2 is 00
-			dcs |= 0x00;
-			break;
-		case SMS_ALPHABET_8BIT: // bit 3..2 is 01
-			dcs |= 0x04;
-			break;
-		case SMS_ALPHABET_UCS2: // bit 3..2 is 10
-			dcs |= 0x08;
-			break;
-		default: // bit 3..2 is 11
-			dcs |= 0x0C;
-		}
-	} else if ( coding_scheme->coding_group_type == SMS_CODGRP_SM_WAITING_DISCARD ) { // bit 7..4 is 1100
+	assert( pCodingScheme != NULL );
+
+	if( pCodingScheme->coding_group_type == SMS_CODGRP_SM_GENERAL_DCS ) // bit 7..4 is 00xx
+	{
+		if ( pCodingScheme->bCompressed )
+				dcs |= 0x20; // bit 5 is 1
+
+			if ( pCodingScheme->bmsg_class_set )
+			{
+				dcs |= 0x10; // bit 4 is 1
+
+				if( pCodingScheme->class_type== SMS_CLASS_0 )
+					dcs |= 0x00;
+
+				else if ( pCodingScheme->class_type == SMS_CLASS_1 )
+					dcs |= 0x01;
+
+				else if ( pCodingScheme->class_type == SMS_CLASS_2 )
+					dcs |= 0x02;
+
+				else if ( pCodingScheme->class_type == SMS_CLASS_3 )
+					dcs |= 0x03;
+			}
+
+			switch ( pCodingScheme->alphabet_type )
+			{
+				case SMS_ALPHABET_DEFAULT: // bit 3..2 is 00
+				{
+					dcs |= 0x00;
+					break;
+				}
+				case SMS_ALPHABET_8BIT: // bit 3..2 is 01
+				{
+					dcs |= 0x04;
+					break;
+				}
+				case SMS_ALPHABET_UCS2: // bit 3..2 is 10
+				{
+					dcs |= 0x08;
+					break;
+				}
+				default: // bit 3..2 is 11
+				{
+					dcs |= 0x0C;
+					break;
+				}
+			}
+	}
+	else if ( pCodingScheme->coding_group_type == SMS_CODGRP_SM_WAITING_DISCARD ) // bit 7..4 is 1100
+	{
 		dcs |= 0xC0;
-	} else if ( coding_scheme->coding_group_type == SMS_CODGRP_SM_WAITING_STORE ) { // bit 7..4 is 1101
+	}
+	else if ( pCodingScheme->coding_group_type == SMS_CODGRP_SM_WAITING_STORE ) // bit 7..4 is 1101
+	{
 		dcs |= 0xD0;
-		if ( coding_scheme->bmsg_ind_active ) // bit 3..2 is 10
+
+		if ( pCodingScheme->bmsg_ind_active ) // bit 3..2 is 10
 			dcs |= 0x08;
-		else if( coding_scheme->waiting_type == SMS_WAITING_VOICE_MSG)
+
+		else if( pCodingScheme->waiting_type == SMS_WAITING_VOICE_MSG)
 			dcs |= 0x00;
-		else if( coding_scheme->waiting_type == SMS_WAITING_FAX_MSG)
+
+		else if( pCodingScheme->waiting_type == SMS_WAITING_FAX_MSG)
 			dcs |= 0x01;
-		else if( coding_scheme->waiting_type == SMS_WAITING_EMAIL_MSG) // bit 1..0 is 10
+
+		else if( pCodingScheme->waiting_type == SMS_WAITING_EMAIL_MSG)	// bit 1..0 is 10
 			dcs |= 0x02;
-		else if( coding_scheme->waiting_type == SMS_WAITING_OTHER_MSG) // bit 1..0 is 11
+
+		else if( pCodingScheme->waiting_type == SMS_WAITING_OTHER_MSG)	// bit 1..0 is 11
 			dcs |= 0x03;
-	} else if ( coding_scheme->coding_group_type == SMS_CODGRP_SM_WAITING_STORE_UCS2 ) { // bit 7..4 is 1110
+
+	}
+	else if ( pCodingScheme->coding_group_type == SMS_CODGRP_SM_WAITING_STORE_UCS2 ) // bit 7..4 is 1110
+	{
 		dcs |= 0xE0;
-		if ( coding_scheme->bmsg_ind_active ) // bit 3..2 is 10
+
+		if ( pCodingScheme->bmsg_ind_active ) // bit 3..2 is 10
 			dcs |= 0x08;
-		if( coding_scheme->waiting_type == SMS_WAITING_VOICE_MSG ) // bit 1..0 is 00
+
+		if( pCodingScheme->waiting_type == SMS_WAITING_VOICE_MSG ) // bit 1..0 is 00
 			dcs |= 0x00;
-		else if( coding_scheme->waiting_type == SMS_WAITING_FAX_MSG )
+
+		else if( pCodingScheme->waiting_type == SMS_WAITING_FAX_MSG )
 			dcs |= 0x01;
-		else if( coding_scheme->waiting_type == SMS_WAITING_EMAIL_MSG )
+
+		else if( pCodingScheme->waiting_type == SMS_WAITING_EMAIL_MSG )
 			dcs |= 0x02;
-		else if( coding_scheme->waiting_type == SMS_WAITING_OTHER_MSG )
-			dcs |= 0x03;
-	} else if ( coding_scheme->coding_group_type == SMS_CODGRP_SM_CLASS_CODING ) { // bit 7..4 is 1111
-		dcs |= 0xF0;
-		if( coding_scheme->alphabet_type == SMS_ALPHABET_DEFAULT ) // bit 2 is 0
-			dcs |= 0x00;
-		else if( coding_scheme->alphabet_type == SMS_ALPHABET_8BIT ) // bit 2 is 1
-			dcs |= 0x04;
-		if( coding_scheme->class_type == SMS_CLASS_0) // bit 1..0 is 00
-			dcs |= 0x00;
-		else if( coding_scheme->class_type == SMS_CLASS_1) // bit 1..0 is 01
-			dcs |= 0x01;
-		else if( coding_scheme->class_type == SMS_CLASS_2) // bit 1..0 is 10
-			dcs |= 0x02;
-		else if( coding_scheme->class_type == SMS_CLASS_3) // bit 1..0 is 11
+
+		else if( pCodingScheme->waiting_type == SMS_WAITING_OTHER_MSG )
 			dcs |= 0x03;
 	}
-	memcpy( result_dcs, &dcs, sizeof ( unsigned char ) );
+	else if ( pCodingScheme->coding_group_type == SMS_CODGRP_SM_CLASS_CODING )	// bit 7..4 is 1111
+	{
+		dcs |= 0xF0;
+
+		if( pCodingScheme->alphabet_type == SMS_ALPHABET_DEFAULT )	// bit 2 is 0
+			dcs |= 0x00;
+		else if( pCodingScheme->alphabet_type == SMS_ALPHABET_8BIT ) // bit 2 is 1
+			dcs |= 0x04;
+
+		if( pCodingScheme->class_type == SMS_CLASS_0) // bit 1..0 is 00
+			;
+
+		else if( pCodingScheme->class_type == SMS_CLASS_1) // bit 1..0 is 01
+			dcs |= 0x01;
+
+		else if( pCodingScheme->class_type == SMS_CLASS_2) // bit 1..0 is 10
+			dcs |= 0x02;
+
+		else if( pCodingScheme->class_type == SMS_CLASS_3) // bit 1..0 is 11
+			dcs |= 0x03;
+	}
+
+	memcpy( pDCS, &dcs, sizeof ( unsigned char ) );
+
+	printf("SmsUtilEncodeDCS End\n");
 }
 
-unsigned char sms_util_encode_validity( unsigned char *validity, SmsVp *vp )
+unsigned char SmsUtilEncodeValidity( unsigned char* pValidity, Sms_vp* pVP )
 {
 	unsigned char pos = 0;
 
-	switch( vp->vp_type ) {
-	case SMS_VP_NOT_USED:
-	case SMS_VP_ENHANCED:
-		break;
-	case SMS_VP_RELATIVE:
-		validity[pos] = (unsigned char) vp->vp_value;
-		pos ++;
-		break;
-	case SMS_VP_ABSOLUTE:
-		//TO DO
-		//SmsUtilEncodeTimeStamp( validity, vp->vpValue );
-		pos += 7;
+	switch( pVP->vp_type )
+	{
+		case SMS_VP_NOT_USED:
+			break;
+
+		case SMS_VP_RELATIVE:
+			pValidity[pos] = (unsigned char) pVP->vpValue;
+			pos ++;
+			break;
+
+		case SMS_VP_ABSOLUTE:
+			//TO DO
+			//SmsUtilEncodeTimeStamp( pValidity, pVP->vpValue );
+			pos += 7;
+			break;
+
+		case SMS_VP_ENHANCED:
+			break;
+
+		default :
+			/*Do Nothing*/
+			msg("Default Case executed. Invalid Option.");
+			break;
 	}
+
 	return pos;
 }
 
+void __util_hex_dump(const char *pad, int size, const void *data)
+{
+	char buf[255] = {0, };
+	char hex[4] = {0, };
+	int i = 0;
+	unsigned char *p = NULL;
+
+	if (0 >= size) {
+		msg("%sno data", pad);
+		return;
+	}
+
+	p = (unsigned char *)data;
+
+	g_snprintf(buf, 255, "%s%04X: ", pad, 0);
+	for (i = 0; i<size; i++) {
+		g_snprintf(hex, 4, "%02X ", p[i]);
+		memcpy(buf+strlen(buf), hex, 4);
+
+		if ((i + 1) % 8 == 0) {
+			if ((i + 1) % 16 == 0) {
+				msg("%s", buf);
+				memset(buf, 0, 255);
+				snprintf(buf, 255, "%s%04X: ", pad, i + 1);
+			}
+			else {
+				strcat(buf, "  ");
+			}
+		}
+	}
+
+	msg("%s", buf);
+}
+
+unsigned char __sms_hexchar_to_int(char ch)
+{
+	msg("Entered with character [%c]", ch);
+
+	if (ch >= '0' && ch <= '9')
+		return (ch - '0');
+	else if (ch >= 'A' && ch <= 'F')
+		return (ch - 'A' + 10);
+	else if (ch >= 'a' && ch <= 'f')
+		return (ch - 'a' + 10);
+	else {
+		msg("Invalid Charater");
+		return -1;
+	}
+}
+gboolean __sms_asciistring_to_hex(const char *ascii_string,
+					unsigned char *hex_string,
+					int ascii_len)
+{
+	int i;
+	if (ascii_string == NULL || hex_string == NULL) {
+		msg("Empty strings");
+		return FALSE;
+	}
+	msg("Convert ASCII String to Hex");
+
+	/* Make sure ASCII len is even */
+	if (ascii_len % 2 == 0) {
+		for (i = 0; i < ascii_len;  i += 2) {
+			hex_string[i / 2] =
+				(char)(((__sms_hexchar_to_int(ascii_string[i]) << 4) |
+				    __sms_hexchar_to_int(ascii_string[i+1])));
+					msg("[%02x]", hex_string[i / 2]);
+
+		}
+	} else {		/* Odd ASCII len */
+		for (i = 0; i < ascii_len; i += 2) {
+			if (i == ascii_len - 1) {
+				hex_string[i/2 ] =
+				    (char)((__sms_hexchar_to_int(ascii_string[i]) << 4) | 0x0F);
+						msg("[%02x]", hex_string[i/2]);
+			} else {
+				hex_string[i/2] =
+				    (char)(((__sms_hexchar_to_int(ascii_string[i]) << 4) |
+					    __sms_hexchar_to_int(ascii_string[i+1])));
+						msg("[%02x]", hex_string[i/2 ]);
+			}
+		}
+	}
+	return TRUE;
+}
+
+/*Bit Array Copy for Cdma Encoding*/
+#define PREPARE_FIRST_COPY()                                      \
+    do {                                                          \
+    if (src_len >= (CHAR_BIT - dst_offset_modulo)) {              \
+        *dst     &= reverse_mask[dst_offset_modulo];              \
+        src_len -= CHAR_BIT - dst_offset_modulo;                  \
+    } else {                                                      \
+        *dst     &= reverse_mask[dst_offset_modulo]               \
+              | reverse_mask_xor[dst_offset_modulo + src_len + 1];\
+         c       &= reverse_mask[dst_offset_modulo + src_len    ];\
+        src_len = 0;                                              \
+    } } while (0)
+
+void bitarray_copy(const unsigned char *src_org, int src_offset, int src_len,  unsigned char *dst_org, unsigned int dst_offset)
+{
+    //static const unsigned char mask[] =
+        //{ 0x55, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, 0xff };
+    static const unsigned char reverse_mask[] =
+        { 0x55, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff };
+    static const unsigned char reverse_mask_xor[] =
+        { 0xff, 0x7f, 0x3f, 0x1f, 0x0f, 0x07, 0x03, 0x01, 0x00 };
+
+    if (src_len) {
+        const unsigned char *src;
+              unsigned char *dst;
+        int                  src_offset_modulo,
+                             dst_offset_modulo;
+
+        src = src_org + (src_offset / CHAR_BIT);
+        dst = dst_org + (dst_offset / CHAR_BIT);
+
+        src_offset_modulo = src_offset % CHAR_BIT;
+        dst_offset_modulo = dst_offset % CHAR_BIT;
+
+        if (src_offset_modulo == dst_offset_modulo) {
+            int              byte_len;
+            int              src_len_modulo;
+            if (src_offset_modulo) {
+                unsigned char   c;
+
+                c = reverse_mask_xor[dst_offset_modulo]     & *src++;
+
+                PREPARE_FIRST_COPY();
+                *dst++ |= c;
+            }
+
+            byte_len = src_len / CHAR_BIT;
+            src_len_modulo = src_len % CHAR_BIT;
+
+            if (byte_len) {
+                memcpy(dst, src, byte_len);
+                src += byte_len;
+                dst += byte_len;
+            }
+            if (src_len_modulo) {
+                *dst     &= reverse_mask_xor[src_len_modulo];
+                *dst |= reverse_mask[src_len_modulo]     & *src;
+            }
+        } else {
+            int             bit_diff_ls,
+                            bit_diff_rs;
+            int             byte_len;
+            int             src_len_modulo;
+            unsigned char   c;
+            /*
+             * Begin: Line things up on destination.
+             */
+            if (src_offset_modulo > dst_offset_modulo) {
+                bit_diff_ls = src_offset_modulo - dst_offset_modulo;
+                bit_diff_rs = CHAR_BIT - bit_diff_ls;
+
+                c = *src++ << bit_diff_ls;
+                c |= *src >> bit_diff_rs;
+                c     &= reverse_mask_xor[dst_offset_modulo];
+            } else {
+                bit_diff_rs = dst_offset_modulo - src_offset_modulo;
+                bit_diff_ls = CHAR_BIT - bit_diff_rs;
+
+                c = *src >> bit_diff_rs     &
+                    reverse_mask_xor[dst_offset_modulo];
+            }
+            PREPARE_FIRST_COPY();
+            *dst++ |= c;
+
+            /*
+             * Middle: copy with only shifting the source.
+             */
+            byte_len = src_len / CHAR_BIT;
+
+            while (--byte_len >= 0) {
+                c = *src++ << bit_diff_ls;
+                c |= *src >> bit_diff_rs;
+                *dst++ = c;
+            }
+
+            /*
+             * End: copy the remaing bits;
+             */
+            src_len_modulo = src_len % CHAR_BIT;
+            if (src_len_modulo) {
+                c = *src++ << bit_diff_ls;
+                c |= *src >> bit_diff_rs;
+                c     &= reverse_mask[src_len_modulo];
+
+                *dst     &= reverse_mask_xor[src_len_modulo];
+                *dst |= c;
+            }
+        }
+    }
+}

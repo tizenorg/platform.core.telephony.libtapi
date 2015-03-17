@@ -1,0 +1,11 @@
+prefix=@PREFIX@
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: TAPI Library
+Description: Telephony DBUS Client
+Requires: glib-2.0 gobject-2.0
+Version: 0.1
+Libs: -L${libdir} -lSLP-tapi
+Cflags: -I${includedir}/telephony-client
