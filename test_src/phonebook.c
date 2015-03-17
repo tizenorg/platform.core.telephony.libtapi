@@ -1,9 +1,9 @@
 /*
- * libtapi
- * Telephony test application
+ * libslp-tapi
  *
- * Copyright (c) 2013 Samsung Electronics Co. Ltd. All rights reserved.
- * Copyright (c) 2013 Intel Corporation. All rights reserved.
+ * Copyright (c) 2014 Samsung Electronics Co., Ltd. All rights reserved.
+ *
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,395 +24,432 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <glib.h>
-#include <glib-object.h>
 
-#include <tapi.h>
-#include <tapi_events.h>
-#include <tapi_phonebook.h>
+#include <tapi_common.h>
+#include <ITapiPhonebook.h>
+#include <TapiUtility.h>
 
 #include "menu.h"
 #include "sim.h"
 #include "phonebook.h"
 
-#define CHECK_PB_RESULT(x) \
+#define CHECK_RT(x) \
 { \
-	if (x >= TEL_PB_RESULT_SUCCESS && x <= TEL_PB_RESULT_ACCESS_RESTRICTED) { \
-		msg("result[%d][%s]", x, dbg_pb_result[x]); \
-	} else { \
-		msg("Api failed with result: [%d]", x); \
-	} \
-	if (x != TEL_PB_RESULT_SUCCESS) \
-		return; \
+    if((x) != 0) { \
+		msg("api call failed with[%d]",x); \
+		return 0; \
+	}\
 }
 
-#define MSG_PB_TYPE(x) \
-{ \
-	if (x <= TEL_PB_USIM) { \
-		msg("pb_type[%d][%s]", x, dbg_pb_type_name[x]); \
-	} else { \
-		msg("pb_type[%d]", x); \
-	} \
-}
-
-static char *dbg_pb_type_name[] = { "TEL_PB_FDN", "TEL_PB_ADN", "TEL_PB_SDN",
-		"TEL_PB_USIM", };
-
-static char *dbg_pb_result[] = {"TEL_PB_RESULT_SUCCESS", "TEL_PB_RESULT_FAILURE",
-	"TEL_PB_RESULT_INVALID_PARAMETER", "TEL_PB_RESULT_MEMORY_FAILURE",
-	"TEL_PB_RESULT_OPERATION_NOT_SUPPORTED", "TEL_PB_RESULT_UNKNOWN_FAILURE",
-	"TEL_PB_RESULT_INVALID_INDEX", "TEL_PB_RESULT_NOT_INITIALIZED",
-	"TEL_PB_RESULT_PIN2_REQUIRED", "TEL_PB_RESULT_PUK2_REQUIRED",
-	"TEL_PB_RESULT_ACCESS_RESTRICTED", };
+static const char* dbg_pb_type_name[] = { "TAPI_SIM_PB_FDN", "TAPI_SIM_PB_ADN", "TAPI_SIM_PB_SDN",
+		"TAPI_SIM_PB_3GSIM", "TAPI_SIM_PB_AAS", "TAPI_SIM_PB_GAS", };
+static const char* dbg_pb_adf_field_name[] = { "NO VALUE 0", "TAPI_PB_3G_NAME", "TAPI_PB_3G_NUMBER",
+		"TAPI_PB_3G_ANR1", "TAPI_PB_3G_ANR2", "TAPI_PB_3G_ANR3", "TAPI_PB_3G_EMAIL1",
+		"TAPI_PB_3G_EMAIL2", "TAPI_PB_3G_EMAIL3", "TAPI_PB_3G_EMAIL4", "TAPI_PB_3G_SNE",
+		"TAPI_PB_3G_GRP", "TAPI_PB_3G_PBC" };
+static const char* dbg_pb_ton_name[] = { "TAPI_SIM_TON_UNKNOWN", "TAPI_SIM_TON_INTERNATIONAL",
+		"TAPI_SIM_TON_NATIONAL", "TAPI_SIM_TON_NETWORK_SPECIFIC", "TAPI_SIM_TON_DEDICATED_ACCESS",
+		"TAPI_SIM_TON_ALPHA_NUMERIC", "TAPI_SIM_TON_ABBREVIATED_NUMBER",
+		"TAPI_SIM_TON_RESERVED_FOR_EXT", };
+static const char* dbg_pb_dcs_name[] = { "TAPI_SIM_TEXT_ENC_ASCII", "TAPI_SIM_TEXT_ENC_GSM7BIT",
+		"TAPI_SIM_TEXT_ENC_UCS2", "TAPI_SIM_TEXT_ENC_HEX", };
 
 static char data_pb_type[MENU_DATA_SIZE + 1] = {};
 static char data_pb_index[MENU_DATA_SIZE + 1] = {};
 static char data_pb_name[MENU_DATA_SIZE + 1] = {};
+static char data_pb_dcs[MENU_DATA_SIZE + 1] = {};
 static char data_pb_number[MENU_DATA_SIZE + 1] = {};
-static char data_pb_sne[MENU_DATA_SIZE + 1] = {};
-static char data_pb_group_name[MENU_DATA_SIZE + 1] = {};
-static char data_pb_anr_count[MENU_DATA_SIZE + 1] = "0";
-static char data_pb_anr1_num[MENU_DATA_SIZE + 1] = {};
-static char data_pb_anr1_desc[MENU_DATA_SIZE + 1] = {};
-static char data_pb_anr1_aas[MENU_DATA_SIZE + 1] = {};
-static char data_pb_anr2_num[MENU_DATA_SIZE + 1] = {};
-static char data_pb_anr2_desc[MENU_DATA_SIZE + 1] = {};
-static char data_pb_anr2_aas[MENU_DATA_SIZE + 1] = {};
-static char data_pb_anr3_num[MENU_DATA_SIZE + 1] = {};
-static char data_pb_anr3_desc[MENU_DATA_SIZE + 1] = {};
-static char data_pb_anr3_aas[MENU_DATA_SIZE + 1] = {};
-static char data_pb_email_count[MENU_DATA_SIZE + 1] = "0";
+static char data_pb_ton[MENU_DATA_SIZE + 1] = {};
+static char data_pb_anr1[MENU_DATA_SIZE + 1] = {};
+static char data_pb_anr1_ton[MENU_DATA_SIZE + 1] = {};
+static char data_pb_anr2[MENU_DATA_SIZE + 1] = {};
+static char data_pb_anr2_ton[MENU_DATA_SIZE + 1] = {};
+static char data_pb_anr3[MENU_DATA_SIZE + 1] = {};
+static char data_pb_anr3_ton[MENU_DATA_SIZE + 1] = {};
 static char data_pb_email1[MENU_DATA_SIZE + 1] = {};
 static char data_pb_email2[MENU_DATA_SIZE + 1] = {};
 static char data_pb_email3[MENU_DATA_SIZE + 1] = {};
 static char data_pb_email4[MENU_DATA_SIZE + 1] = {};
-static char data_pb_hidden[MENU_DATA_SIZE + 1] = "0";
+static char data_pb_group_index[MENU_DATA_SIZE + 1] = {};
+static char data_pb_pb_control[MENU_DATA_SIZE + 1] = {};
 
-static void on_noti_pb_status(TelHandle *handle, const char *event_id, void *data, void *user_data)
+
+static void on_noti_pb_status(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
-	gboolean *status = data;
-	msgb("event(%s) received !!", TEL_NOTI_PB_STATUS);
-	if (!status) {
-		msg("Phonebook status notification data is null");
+	TelSimPbStatus_t *status = data;
+	msgb("event(%s) receive !!", TAPI_NOTI_PB_STATUS);
+	if (!status)
 		return;
-	}
-	msg("pb_status[%s]", (*status == TRUE) ? "PB INIT DONE" : "PB INIT NOT DONE");
+
+	msg("init[%d] fdn[%d] adn[%d] sdn[%d] usim[%d] aas[%d] gas[%d]",
+		status->init_completed,
+		status->pb_list.b_fdn,
+		status->pb_list.b_adn,
+		status->pb_list.b_sdn,
+		status->pb_list.b_3g,
+		status->pb_list.b_aas,
+		status->pb_list.b_gas);
 }
 
 static int run_pb_get_sim_pb_init_info(MManager *mm, struct menu_data *menu)
 {
-	TelHandle *handle = menu_manager_ref_user_data(mm);
-	TelReturn rt = 0;
-	gboolean init_completed = 0;
-	TelPbList list;
+	TapiHandle *handle = menu_manager_ref_user_data(mm);
+	int rt = 0;
+	int o_status = 0;
+	TelSimPbList_t list;
 
-	msg("call tapi_pb_get_sim_pb_init_info()");
+	msg("run_pb_get_sim_pb_init_info service!");
+	memset(&list, 0, sizeof(TelSimPbList_t));
 
-	memset(&list, 0, sizeof(TelPbList));
-
-	rt = tapi_pb_get_sim_pb_init_info(handle, &init_completed, &list);
+	rt = tel_get_sim_pb_init_info(handle, &o_status, &list);
 	CHECK_RT(rt);
 
-	msg("status[%d]", init_completed);
-	msg("fdn[%d]", list.fdn);
-	msg("adn[%d]", list.adn);
-	msg("sdn[%d]", list.sdn);
-	msg("3g usim[%d]", list.usim);
-
+	msg("status[%d]", o_status);
+	msg("fdn[%d]", list.b_fdn);
+	msg("adn[%d]", list.b_adn);
+	msg("sdn[%d]", list.b_sdn);
+	msg("3g usim[%d]", list.b_3g);
+	msg("aas[%d]", list.b_aas);
+	msg("gas[%d]", list.b_gas);
 	return 0;
 }
 
-static void on_pb_get_sim_pb_info(TelHandle *handle, int result, void *data, void *user_data)
+static void on_pb_get_sim_pb_count(TapiHandle *handle, int result, void *data, void *user_data)
 {
-	TelPbInfo *pb_info = data;
+	TelSimPbAccessResult_t access_rt = result;
+	TelSimPbStorageInfo_t *ps = data;
 
-	msg("tapi_pb_get_sim_pb_info() response received");
-	CHECK_PB_RESULT(result);
-
-	if (!pb_info) {
-		msg("sim pb info response data is null");
-		return;
-	}
-
-	MSG_PB_TYPE(pb_info->pb_type);
-	if (pb_info->pb_type > TEL_PB_USIM) {
-		msg("Invalid pb type [%d]", pb_info->pb_type);
-		return;
-	}
-
-	if (pb_info->pb_type == TEL_PB_USIM) {
-		msg("max_count[%d]", pb_info->info_u.usim.max_count);
-		msg("used_count[%d]", pb_info->info_u.usim.used_count);
-		msg("max_text_len[%d]", pb_info->info_u.usim.max_text_len);
-		msg("max_anr_count[%d]", pb_info->info_u.usim.max_anr_count);
-		msg("max_anr_len[%d]", pb_info->info_u.usim.max_anr_len);
-		msg("max_email_count[%d]", pb_info->info_u.usim.max_email_count);
-		msg("max_email_len[%d]", pb_info->info_u.usim.max_email_len);
-		msg("max_sne_len[%d]", pb_info->info_u.usim.max_sne_len);
-		msg("max_gas_len[%d]", pb_info->info_u.usim.max_gas_len);
-		msg("max_aas_len[%d]", pb_info->info_u.usim.max_aas_len);
-	} else {
-		msg("max_count[%d]", pb_info->info_u.sim.max_count);
-		msg("used_count[%d]", pb_info->info_u.sim.used_count);
-		msg("max_num_len[%d]", pb_info->info_u.sim.max_num_len);
-		msg("max_text_len[%d]", pb_info->info_u.sim.max_text_len);
+	msg("on_pb_get_sim_pb_count received");
+	msg("access_rt[%d]", access_rt);
+	if (access_rt == TAPI_SIM_PB_SUCCESS) {
+		if (ps->StorageFileType <= TAPI_SIM_PB_GAS) {
+			msg("StorageFileType[%d][%s]",	ps->StorageFileType, dbg_pb_type_name[ps->StorageFileType]);
+		} else {
+			msg("StorageFileType[%d]", ps->StorageFileType);
+		}
+		msg("TotalRecordCount[%d]", ps->TotalRecordCount);
+		msg("UsedRecordCount[%d]", ps->UsedRecordCount);
 	}
 }
 
-static int run_pb_get_sim_pb_info(MManager *mm, struct menu_data *menu)
+static int run_pb_get_sim_pb_count(MManager *mm, struct menu_data *menu)
 {
-	TelHandle *handle = menu_manager_ref_user_data(mm);
-	TelPbType pb_type = atoi(data_pb_type);
-	TelReturn rt = 0;
+	TapiHandle *handle = menu_manager_ref_user_data(mm);
+	TelSimPbType_t pb_type = TAPI_SIM_PB_UNKNOWNN;
+	int rt = 0;
 
-	msg("call tapi_pb_get_sim_pb_info()");
-
-	MSG_PB_TYPE(pb_type);
-
-	rt = tapi_pb_get_sim_pb_info(handle, pb_type, on_pb_get_sim_pb_info, NULL);
+	pb_type = data_pb_type[0] - '0';
+	msg("request pb [%d]", pb_type);
+	rt = tel_get_sim_pb_count(handle, pb_type, on_pb_get_sim_pb_count, NULL);
 	CHECK_RT(rt);
-
 	return 0;
 }
 
-static void on_pb_read_sim_pb_record(TelHandle *handle, int result, void *data, void *user_data)
+static void on_pb_get_sim_pb_meta_info(TapiHandle *handle, int result, void *data, void *user_data)
 {
-	TelPbReadRecord *pb_rec = data;
-	unsigned char i;
+	TelSimPbAccessResult_t access_rt = result;
+	TelSimPbEntryInfo_t *pe = data;
 
-	msg("tapi_pb_read_sim_pb_record() response received");
-	CHECK_PB_RESULT(result);
-
-	if (!pb_rec) {
-		msg("pb read record response data is null");
-		return;
+	msg("on_pb_get_sim_pb_meta_info received");
+	msg("access_rt[%d]", access_rt);
+	if (access_rt == TAPI_SIM_PB_SUCCESS) {
+		if (pe->StorageFileType <= TAPI_SIM_PB_GAS) {
+			msg("StorageFileType[%d][%s]",	pe->StorageFileType, dbg_pb_type_name[pe->StorageFileType]);
+		} else {
+			msg("StorageFileType[%d]", pe->StorageFileType);
+		}
+		msg("PbIndexMin[%d]",pe->PbIndexMin);
+		msg("PbIndexMax[%d]",pe->PbIndexMax);
+		msg("PbNumLenMax[%d]",pe->PbNumLenMax);
+		msg("PbTextLenMax[%d]",pe->PbTextLenMax);
+		msg("PbUsedCount[%d]",pe->PbUsedCount);
 	}
 
-	MSG_PB_TYPE(pb_rec->pb_type);
-	if (pb_rec->pb_type > TEL_PB_USIM) {
-		msg("Invalid pb type [%d]", pb_rec->pb_type);
-		return;
+}
+
+static int run_pb_get_sim_pb_meta_info(MManager *mm, struct menu_data *menu)
+{
+	TapiHandle *handle = menu_manager_ref_user_data(mm);
+	TelSimPbType_t pb_type = TAPI_SIM_PB_UNKNOWNN;
+	int rt = 0;
+
+	pb_type = data_pb_type[0] - '0';
+	msg("request pb [%d]", pb_type);
+	rt = tel_get_sim_pb_meta_info(handle, pb_type, on_pb_get_sim_pb_meta_info, NULL);
+	CHECK_RT(rt);
+	return 0;
+}
+
+static void on_pb_get_sim_pb_usim_meta_info(TapiHandle *handle, int result, void *data, void *user_data)
+{
+	TelSimPbAccessResult_t access_rt = result;
+	TelSimPbCapabilityInfo_t *capa = data;
+	int i = 0;
+
+	msg("on_pb_get_sim_pb_3g_meta_info received");
+	msg("access_rt[%d]", access_rt);
+	if (access_rt == TAPI_SIM_PB_SUCCESS) {
+		for (i = 0; i < capa->FileTypeCount; i++) {
+			if(capa->FileTypeInfo[i].field_type <=TAPI_PB_3G_PBC ) {
+				msg("capa->FileTypeInfo[%d].field_type[%d][%s]", i, capa->FileTypeInfo[i].field_type, dbg_pb_adf_field_name[capa->FileTypeInfo[i].field_type]);
+			} else {
+				msg("capa->FileTypeInfo[%d].field_type[%d]", i, capa->FileTypeInfo[i].field_type);
+			}
+			msg("capa->FileTypeInfo[%d].index_max[%d]", i, capa->FileTypeInfo[i].index_max);
+			msg("capa->FileTypeInfo[%d].text_max[%d]", i, capa->FileTypeInfo[i].text_max);
+			msg("capa->FileTypeInfo[%d].used_count[%d]", i, capa->FileTypeInfo[i].used_count);
+		}
 	}
+}
 
-	msg("index[%d]", pb_rec->index);
-	msg("next_index[%d]", pb_rec->next_index);
+static int run_pb_get_sim_pb_usim_meta_info(MManager *mm, struct menu_data *menu)
+{
+	TapiHandle *handle = menu_manager_ref_user_data(mm);
+	int rt = 0;
 
-	if (pb_rec->pb_type != TEL_PB_USIM) {
-		msg("name[%s]", pb_rec->rec_u.sim.name);
-		msg("number[%s]", pb_rec->rec_u.sim.number);
-		return;
+	msg("call 3g meta info");
+	rt = tel_get_sim_pb_usim_meta_info(handle, on_pb_get_sim_pb_usim_meta_info, NULL);
+	CHECK_RT(rt);
+	return 0;
+}
+
+static void on_pb_read_sim_pb_record(TapiHandle *handle, int result, void *data, void *user_data)
+{
+	TelSimPbAccessResult_t access_rt = result;
+	TelSimPbRecord_t *pr = data;
+
+	msg("on_pb_read_sim_pb_record received");
+	msg("access_rt[%d]", access_rt);
+	if(access_rt == TAPI_SIM_PB_SUCCESS) {
+		if( pr->phonebook_type <= TAPI_SIM_PB_GAS){
+			msg("phonebook_type[%d][%s]", pr->phonebook_type, dbg_pb_type_name[pr->phonebook_type]);
+		} else {
+			msg("phonebook_type[%d]", pr->phonebook_type);
+		}
+		msg("index[%d]", pr->index);
+		msg("next_index[%d]", pr->next_index);
+		msg("name[%s]", pr->name);
+		if(pr->dcs <= TAPI_SIM_TEXT_ENC_HEX) {
+			msg("dcs[%d][%s]", pr->dcs, dbg_pb_dcs_name[pr->dcs]);
+		} else {
+			msg("dcs[%d]", pr->dcs);
+		}
+		msg("number[%s]", pr->number);
+
+		if(pr->ton <= TAPI_SIM_TON_RESERVED_FOR_EXT) {
+			msg("ton[%d][%s]", pr->ton, dbg_pb_ton_name[pr->ton]);
+		} else {
+			msg("ton[%d]", pr->ton);
+		}
+
+		if (pr->phonebook_type == TAPI_SIM_PB_3GSIM) {
+			msg("anr1[%s]", pr->anr1);
+			if(pr->anr1_ton <= TAPI_SIM_TON_RESERVED_FOR_EXT) {
+				msg("anr1_ton[%d][%s]", pr->anr1_ton, dbg_pb_ton_name[pr->anr1_ton]);
+			} else {
+				msg("anr1_ton[%d]", pr->anr1_ton);
+			}
+			msg("anr2[%s]", pr->anr2);
+			if(pr->anr2_ton <= TAPI_SIM_TON_RESERVED_FOR_EXT) {
+				msg("anr2_ton[%d][%s]", pr->anr2_ton, dbg_pb_ton_name[pr->anr2_ton]);
+			} else {
+				msg("anr2_ton[%d]", pr->anr2_ton);
+			}
+			msg("anr3[%s]", pr->anr3);
+			if(pr->anr3_ton <= TAPI_SIM_TON_RESERVED_FOR_EXT) {
+				msg("anr3_ton[%d][%s]", pr->anr3_ton, dbg_pb_ton_name[pr->anr3_ton]);
+			} else {
+				msg("anr3_ton[%d]", pr->anr3_ton);
+			}
+			msg("email1[%s]", pr->email1);
+			msg("email2[%s]", pr->email2);
+			msg("email3[%s]", pr->email3);
+			msg("email4[%s]", pr->email4);
+			msg("group_index[%d]", pr->group_index);
+			msg("pb_control[%d]", pr->pb_control);
+		}
 	}
-
-	msg("name[%s]", pb_rec->rec_u.usim.name);
-	msg("number[%s]", pb_rec->rec_u.usim.number);
-	msg("sne[%s]", pb_rec->rec_u.usim.sne);
-	msg("grp_name[%s]", pb_rec->rec_u.usim.grp_name);
-
-	msg("anr_count[%d]", pb_rec->rec_u.usim.anr_count);
-	for(i = 0; i < pb_rec->rec_u.usim.anr_count; i++)
-		msg("[%d]anr_num[%s] anr_desc[%d] anr_aas[%s]", i, pb_rec->rec_u.usim.anr[i].number,
-			pb_rec->rec_u.usim.anr[i].description, pb_rec->rec_u.usim.anr[i].aas);
-
-	msg("email_count[%d]", pb_rec->rec_u.usim.email_count);
-	for(i = 0; i < pb_rec->rec_u.usim.email_count; i++)
-		msg("email[%d][%s]", i, pb_rec->rec_u.usim.email[i]);
-	msg("hidden[%d]", pb_rec->rec_u.usim.hidden);
 }
 
 static int run_pb_read_sim_pb_record(MManager *mm, struct menu_data *menu)
 {
-	TelHandle *handle = menu_manager_ref_user_data(mm);
-	TelPbRecordInfo record;
-	TelReturn rt = 0;
+	TapiHandle *handle = menu_manager_ref_user_data(mm);
+	TelSimPbType_t pb_type = TAPI_SIM_PB_UNKNOWNN;
+	int rt = 0;
+	int local_index = 0;
 
-	msg("call tapi_pb_read_sim_pb_record()");
+	pb_type = atoi(data_pb_type);
+	local_index = atoi(data_pb_index);
 
-	memset(&record, 0, sizeof(TelPbRecordInfo));
-
-	record.pb_type = atoi(data_pb_type);
-	record.index = atoi(data_pb_index);
-
-	MSG_PB_TYPE(record.pb_type);
-	msg("pb_index[%d]", record.index);
-
-	rt = tapi_pb_read_sim_pb_record(handle, &record, on_pb_read_sim_pb_record, NULL);
+	msg("request pb [%d], local_index[%d]", pb_type, local_index);
+	rt = tel_read_sim_pb_record(handle, pb_type, local_index, on_pb_read_sim_pb_record, NULL);
 	CHECK_RT(rt);
-
 	return 0;
 }
 
-static void on_pb_update_sim_pb_record(TelHandle *handle, int result, void *data, void *user_data)
+static void on_pb_update_sim_pb_record(TapiHandle *handle, int result, void *data, void *user_data)
 {
-	msg("tapi_pb_update_sim_pb_record() response received");
-	CHECK_PB_RESULT(result);
+	TelSimPbAccessResult_t access_rt = result;
+
+	msg("on_pb_update_sim_pb_record received");
+	msg("access_rt[%d]", access_rt);
 }
 
 static int run_pb_update_sim_pb_record(MManager *mm, struct menu_data *menu)
 {
-	TelHandle *handle = menu_manager_ref_user_data(mm);
-	TelPbUpdateRecord record;
-	TelReturn rt = 0;
+	TapiHandle *handle = menu_manager_ref_user_data(mm);
+	int rt = 0;
+	TelSimPbRecord_t pb;
 
-	msg("call tapi_pb_update_sim_pb_record()");
+	memset(&pb, 0, sizeof(TelSimPbRecord_t));
 
-	memset(&record, 0, sizeof(TelPbUpdateRecord));
+	pb.phonebook_type = atoi(data_pb_type);
+	pb.index = atoi(data_pb_index);
+	snprintf((char*)pb.name, strlen(data_pb_name)+1, "%s", data_pb_name);
+	pb.dcs = atoi(data_pb_dcs);
+	snprintf((char*)pb.number, strlen(data_pb_number)+1, "%s", data_pb_number);
+	pb.ton = atoi(data_pb_ton);
 
-	record.pb_type = atoi(data_pb_type);
-	record.index = atoi(data_pb_index);
-
-	MSG_PB_TYPE(record.pb_type);
-	if (record.pb_type > TEL_PB_USIM) {
-		msg("Invalid pb type [%d]", record.pb_type);
-		return 0;
+	if (pb.phonebook_type == TAPI_SIM_PB_3GSIM) {
+		snprintf((char*)pb.anr1, strlen(data_pb_anr1) + 1, "%s", data_pb_anr1);
+		pb.anr1_ton = data_pb_anr1_ton[0] - '0';
+		snprintf((char*)pb.anr2, strlen(data_pb_anr2) + 1, "%s", data_pb_anr2);
+		pb.anr2_ton = data_pb_anr2_ton[0] - '0';
+		snprintf((char*)pb.anr3, strlen(data_pb_anr3) + 1, "%s", data_pb_anr3);
+		pb.anr3_ton = data_pb_anr3_ton[0] - '0';
+		snprintf((char*)pb.email1, strlen(data_pb_email1) + 1, "%s", data_pb_email1);
+		snprintf((char*)pb.email2, strlen(data_pb_email2) + 1, "%s", data_pb_email2);
+		snprintf((char*)pb.email3, strlen(data_pb_email3) + 1, "%s", data_pb_email3);
+		snprintf((char*)pb.email4, strlen(data_pb_email4) + 1, "%s", data_pb_email4);
+		pb.group_index = data_pb_group_index[0] - '0';
+		pb.pb_control = data_pb_pb_control[0] - '0';
 	}
 
-	msg("pb_index[%d]", record.index);
-
-	if (record.pb_type == TEL_PB_USIM) {
-		g_strlcpy(record.rec_u.usim.name, data_pb_name, TEL_PB_TEXT_MAX_LEN+1);
-		g_strlcpy(record.rec_u.usim.number, data_pb_number, TEL_PB_NUMBER_MAX_LEN+1);
-		g_strlcpy(record.rec_u.usim.sne, data_pb_sne, TEL_PB_TEXT_MAX_LEN+1);
-		g_strlcpy(record.rec_u.usim.grp_name, data_pb_group_name, TEL_PB_TEXT_MAX_LEN+1);
-
-		record.rec_u.usim.anr_count = data_pb_anr_count[0] - '0';
-		switch (record.rec_u.usim.anr_count) {
-		case 3:
-			g_strlcpy(record.rec_u.usim.anr[2].number, data_pb_anr3_num, TEL_PB_NUMBER_MAX_LEN+1);
-			record.rec_u.usim.anr[2].description = data_pb_anr3_desc[0] - '0';
-			g_strlcpy(record.rec_u.usim.anr[2].aas, data_pb_anr3_aas, TEL_PB_TEXT_MAX_LEN+1);
-		case 2:	/* FALL THROUGH */
-			g_strlcpy(record.rec_u.usim.anr[1].number, data_pb_anr2_num, TEL_PB_NUMBER_MAX_LEN+1);
-			record.rec_u.usim.anr[1].description = data_pb_anr1_desc[0] - '0';
-			g_strlcpy(record.rec_u.usim.anr[1].aas, data_pb_anr2_aas, TEL_PB_TEXT_MAX_LEN+1);
-		case 1:	/* FALL THROUGH */
-			g_strlcpy(record.rec_u.usim.anr[0].number, data_pb_anr1_num, TEL_PB_NUMBER_MAX_LEN+1);
-			record.rec_u.usim.anr[0].description= data_pb_anr1_desc[0] - '0';
-			g_strlcpy(record.rec_u.usim.anr[0].aas, data_pb_anr1_aas, TEL_PB_TEXT_MAX_LEN+1);
-		default:
-		break;
-		}
-
-		record.rec_u.usim.email_count = data_pb_email_count[0] - '0';
-		switch (record.rec_u.usim.email_count) {
-		case 4:
-			g_strlcpy((char*)&record.rec_u.usim.email[3], data_pb_email4, TEL_PB_TEXT_MAX_LEN+1);
-		case 3:
-			g_strlcpy((char*)&record.rec_u.usim.email[2], data_pb_email3, TEL_PB_TEXT_MAX_LEN+1);
-		case 2:
-			g_strlcpy((char*)&record.rec_u.usim.email[1], data_pb_email2, TEL_PB_TEXT_MAX_LEN+1);
-		case 1:
-			g_strlcpy((char*)&record.rec_u.usim.email[0], data_pb_email1, TEL_PB_TEXT_MAX_LEN+1);
-		default:
-		break;
-		}
-
-		record.rec_u.usim.hidden = data_pb_hidden[0] - '0';
-	}
-	else {
-		g_strlcpy(record.rec_u.sim.name, data_pb_name, TEL_PB_TEXT_MAX_LEN+1);
-		g_strlcpy(record.rec_u.sim.number, data_pb_number, TEL_PB_NUMBER_MAX_LEN+1);
+	if( pb.phonebook_type <= TAPI_SIM_PB_GAS){
+		msg("phonebook_type[%d][%s]", pb.phonebook_type, dbg_pb_type_name[pb.phonebook_type]);
+	} else {
+		msg("phonebook_type[%d]", pb.phonebook_type);
 	}
 
-	rt = tapi_pb_update_sim_pb_record(handle, &record, on_pb_update_sim_pb_record, NULL);
+	rt = tel_update_sim_pb_record(handle, &pb, on_pb_update_sim_pb_record, NULL);
 	CHECK_RT(rt);
-
 	return 0;
 }
 
-static void on_pb_delete_sim_pb_record(TelHandle *handle, int result, void *data, void *user_data)
+static void on_pb_delete_sim_pb_record(TapiHandle *handle, int result, void *data, void *user_data)
 {
-	msg("tapi_pb_delete_sim_pb_record() response received");
-	CHECK_PB_RESULT(result);
+	TelSimPbAccessResult_t access_rt = result;
+
+	msg("on_pb_delete_sim_pb_record received");
+	msg("access_rt[%d]", access_rt);
 }
 
 static int run_pb_delete_sim_pb_record(MManager *mm, struct menu_data *menu)
 {
-	TelHandle *handle = menu_manager_ref_user_data(mm);
-	TelPbRecordInfo record;
-	TelReturn rt = 0;
+	TapiHandle *handle = menu_manager_ref_user_data(mm);
+	TelSimPbType_t pb_type = TAPI_SIM_PB_UNKNOWNN;
+	int rt = 0;
+	int local_index = 0;
 
-	msg("call tapi_pb_delete_sim_pb_record()");
+	pb_type = atoi(data_pb_type);
+	local_index = atoi(data_pb_index);
 
-	memset(&record, 0, sizeof(TelPbRecordInfo));
-
-	record.pb_type = atoi(data_pb_type);
-	record.index = atoi(data_pb_index);
-
-	MSG_PB_TYPE(record.pb_type);
-	msg("pb_index[%d]", record.index);
-
-	rt = tapi_pb_delete_sim_pb_record(handle, &record, on_pb_delete_sim_pb_record, NULL);
+	msg("request pb [%d], local_index[%d]", pb_type, local_index);
+	rt = tel_delete_sim_pb_record(handle, pb_type, local_index, on_pb_delete_sim_pb_record, NULL);
 	CHECK_RT(rt);
-
 	return 0;
 }
 
 static struct menu_data menu_pb_get_sim_pb_init_info[] = {
-	{ "1", "run", NULL, run_pb_get_sim_pb_init_info, NULL },
-	{ NULL, NULL, },
+		{ "1", "run", NULL, run_pb_get_sim_pb_init_info, NULL },
+		{ NULL, NULL, },
 };
 
-static struct menu_data menu_pb_get_sim_pb_info[] = {
-	{ "1", "type- 0:fdn, 1:adn, 2:sdn, 3:usim", NULL, NULL, data_pb_type },
-	{ "2", "run", NULL, run_pb_get_sim_pb_info,	NULL },
-	{ NULL, NULL, },
+/*static struct menu_data menu_pb_select_sim_pb[] = {
+		{ "1", "type- 0:fdn, 1:adn, 2:sdn, 3:usim, 4:aas, 5:gas", NULL, NULL, data_pb_type},
+		{ "2", "run", NULL, run_pb_select_sim_pb, NULL },
+		{ NULL, NULL, },
+};*/
+
+static struct menu_data menu_pb_get_sim_pb_count[] = {
+		{ "1", "type- 0:fdn, 1:adn, 2:sdn, 3:usim, 4:aas, 5:gas", NULL, NULL, data_pb_type },
+		{ "2", "run", NULL, run_pb_get_sim_pb_count, NULL },
+		{ NULL, NULL, },
+};
+
+static struct menu_data menu_pb_get_sim_pb_meta_info[] = {
+		{ "1", "type- 0:fdn, 1:adn, 2:sdn, 3:usim, 4:aas, 5:gas", NULL, NULL, data_pb_type },
+		{ "2", "run", NULL, run_pb_get_sim_pb_meta_info,	NULL },
+		{ NULL, NULL, },
+};
+
+static struct menu_data menu_pb_get_sim_pb_usim_meta_info[] = {
+		{ "1", "run", NULL, run_pb_get_sim_pb_usim_meta_info, NULL },
+		{ NULL, NULL, },
 };
 
 static struct menu_data menu_pb_read_sim_pb_record[] = {
-	{ "1", "type- 0:fdn, 1:adn, 2:sdn, 3:usim", NULL, NULL, data_pb_type },
-	{ "2", "index", NULL, NULL, data_pb_index },
-	{ "3", "run", NULL, run_pb_read_sim_pb_record,	NULL },
-	{ NULL, NULL, },
+		{ "1", "type- 0:fdn, 1:adn, 2:sdn, 3:usim, 4:aas, 5:gas", NULL, NULL, data_pb_type },
+		{ "2", "index", NULL, NULL, data_pb_index },
+		{ "3", "run", NULL, run_pb_read_sim_pb_record,	NULL },
+		{ NULL, NULL, },
 };
 
 static struct menu_data menu_pb_update_sim_pb_record[] = {
-	{ "1", "type- 0:fdn, 1:adn, 2:sdn, 3:usim", NULL, NULL, data_pb_type },
-	{ "2", "index", NULL, NULL, data_pb_index },
-	{ "3", "name", NULL, NULL, data_pb_name },
-	{ "4", "number", NULL, NULL, data_pb_number },
-	{ "5", "sne", NULL, NULL, data_pb_sne },
-	{ "6", "group_name", NULL, NULL, data_pb_group_name },
-	{ "7", "anr_count", NULL, NULL, data_pb_anr_count },
-	{ "8", "anr1_num", NULL, NULL, data_pb_anr1_num },
-	{ "9", "anr1_desc", NULL, NULL, data_pb_anr1_desc },
-	{ "10", "anr1_aas", NULL, NULL, data_pb_anr1_aas },
-	{ "11", "anr2_num", NULL, NULL, data_pb_anr2_num },
-	{ "12", "anr2_desc", NULL, NULL, data_pb_anr2_desc },
-	{ "13", "anr2_aas", NULL, NULL, data_pb_anr2_aas },
-	{ "14", "anr3_num", NULL, NULL, data_pb_anr3_num },
-	{ "15", "anr3_desc", NULL, NULL, data_pb_anr3_desc },
-	{ "16", "anr3_aas", NULL, NULL, data_pb_anr3_aas },
-	{ "17", "email_count", NULL, NULL, data_pb_email_count },
-	{ "18", "email1", NULL, NULL, data_pb_email1 },
-	{ "19", "email2", NULL, NULL, data_pb_email2 },
-	{ "20", "email3", NULL, NULL, data_pb_email3 },
-	{ "21", "email4", NULL, NULL, data_pb_email4 },
-	{ "22", "hidden", NULL, NULL, data_pb_hidden },
-	{ "23", "run", NULL, run_pb_update_sim_pb_record, NULL },
-	{ NULL, NULL, },
+		{ "1", "type- 0:fdn, 1:adn, 2:sdn, 3:usim, 4:aas, 5:gas", NULL, NULL, data_pb_type },
+		{ "2", "index", NULL, NULL, data_pb_index },
+		{ "3", "name", NULL, NULL, data_pb_name },
+		{ "4", "dcs", NULL, NULL, data_pb_dcs },
+		{ "5", "number", NULL, NULL, data_pb_number },
+		{ "6", "ton", NULL, NULL, data_pb_ton },
+		{ "7", "anr1", NULL, NULL, data_pb_anr1 },
+		{ "8", "anr1_ton", NULL, NULL, data_pb_anr1_ton },
+		{ "9", "anr2", NULL, NULL, data_pb_anr2 },
+		{ "10", "anr2_ton", NULL, NULL, data_pb_anr2_ton },
+		{ "11", "anr3", NULL, NULL, data_pb_anr3 },
+		{ "12", "anr3_ton", NULL, NULL, data_pb_anr3_ton },
+		{ "13", "email1", NULL, NULL, data_pb_email1 },
+		{ "14", "email2", NULL, NULL, data_pb_email2 },
+		{ "15", "email3", NULL, NULL, data_pb_email3 },
+		{ "16", "email4", NULL, NULL, data_pb_email4 },
+		{ "17", "group_index", NULL, NULL, data_pb_group_index },
+		{ "18", "pb_control", NULL, NULL, data_pb_pb_control },
+		{ "19", "run", NULL, run_pb_update_sim_pb_record, NULL },
+		{ NULL, NULL, },
 };
 
 static struct menu_data menu_pb_delete_sim_pb_record[] = {
-	{ "1", "type- 0:fdn, 1:adn, 2:sdn, 3:usim", NULL, NULL, data_pb_type },
-	{ "2", "index", NULL, NULL, data_pb_index },
-	{ "3", "run", NULL, run_pb_delete_sim_pb_record, NULL },
-	{ NULL, NULL, },
+		{ "1", "type- 0:fdn, 1:adn, 2:sdn, 3:usim, 4:aas, 5:gas", NULL, NULL, data_pb_type },
+		{ "2", "index", NULL, NULL, data_pb_index },
+		{ "3", "run", NULL, run_pb_delete_sim_pb_record, NULL },
+		{ NULL, NULL, },
+};
+
+struct menu_data menu_phonebook_common[] = {
+		{ "1", "phonebook init info", menu_pb_get_sim_pb_init_info, NULL,	NULL },
+		{ "2", "get pb count",	menu_pb_get_sim_pb_count, NULL, NULL },
+		{ "3", "get pb meta info", menu_pb_get_sim_pb_meta_info, NULL, NULL },
+		{ "4", "get usim pb meta info", menu_pb_get_sim_pb_usim_meta_info, NULL, NULL },
+		{ "5", "read record", menu_pb_read_sim_pb_record, NULL, NULL },
+		{ "6", "add/update record", menu_pb_update_sim_pb_record, NULL, NULL },
+		{ "7", "delete record", menu_pb_delete_sim_pb_record, NULL, NULL },
+		{ NULL, NULL, },
 };
 
 struct menu_data menu_phonebook[] = {
-	{ "1", "phonebook init info", menu_pb_get_sim_pb_init_info, NULL, NULL },
-	{ "2", "get pb info", menu_pb_get_sim_pb_info, NULL, NULL },
-	{ "3", "read record", menu_pb_read_sim_pb_record, NULL, NULL },
-	{ "4", "add/update record", menu_pb_update_sim_pb_record, NULL, NULL },
-	{ "5", "delete record", menu_pb_delete_sim_pb_record, NULL, NULL },
-	{ NULL, NULL, },
+		{"1", "3GPP(WCDMA/GSM/LTE)" , menu_phonebook_common, NULL, NULL},
+		{"2", "3GPP2(CDMA)" , menu_phonebook_common, NULL, NULL},
+		{ NULL, NULL, },
 };
 
-void register_phonebook_event(TelHandle *handle)
-{
-	TelReturn ret;
 
-	ret = tapi_register_event_id(handle, TEL_NOTI_PB_STATUS, on_noti_pb_status, NULL);
-	if (ret != TEL_RETURN_SUCCESS) {
-		msg("TEL_NOTI_PB_STATUS - event register failed(%d)", ret);
+void register_phonebook_event(TapiHandle *handle)
+{
+	int ret;
+
+	/* PHONEBOOK */
+	ret = tel_register_noti_event(handle, TAPI_NOTI_PB_STATUS, on_noti_pb_status, NULL);
+	if (ret != TAPI_API_SUCCESS) {
+		msg("event register failed(%d)", ret);
 	}
 }

@@ -1,8 +1,9 @@
 /*
- * libtapi
+ * libslp-tapi
  *
- * Copyright (c) 2013 Samsung Electronics Co. Ltd. All rights reserved.
- * Copyright (c) 2013 Intel Corporation. All rights reserved.
+ * Copyright (c) 2014 Samsung Electronics Co., Ltd. All rights reserved.
+ *
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,15 +20,6 @@
 
 #ifndef TAPI_SMS_CDMA_H
 #define TAPI_SMS_CDMA_H
-
-/*
-   typedef unsigned char	INT8;
-   typedef unsigned short	INT16;
-   typedef unsigned int	INT;
-   typedef unsigned long	INT32;
-
-   typedef unsigned char	BYTE;
-   */
 
 typedef int BOOL;
 
@@ -642,7 +634,7 @@ typedef struct{
 	unsigned char			data[255];
 } packed__ Message_t;
 
-void register_sms_event(TelHandle*handle);
+void register_sms_event(TapiHandle*handle);
 
 #endif //TAPI_SMS_CDMA_H
 // EOF

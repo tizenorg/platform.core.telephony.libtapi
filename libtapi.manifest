@@ -1,0 +1,8 @@
+<manifest>
+	<assign>
+		<filesystem path="/usr/bin/tapitest" exec_label="telephony_framework"/>
+	</assign>
+	<request>
+		<domain name="_"/>
+	</request>
+</manifest>

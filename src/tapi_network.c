@@ -1,8 +1,9 @@
 /*
- * libtapi
+ * libslp-tapi
  *
- * Copyright (c) 2013 Samsung Electronics Co. Ltd. All rights reserved.
- * Copyright (c) 2013 Intel Corporation. All rights reserved.
+ * Copyright (c) 2014 Samsung Electronics Co., Ltd. All rights reserved.
+ *
+ * Contact: Ja-young Gu <jygu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,871 +18,1258 @@
  * limitations under the License.
  */
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
+#include "tapi_common.h"
+#include "TapiUtility.h"
+#include "TelNetwork.h"
+
+#include "common.h"
 #include "tapi_log.h"
-#include "tapi_private.h"
+#include "ITapiNetwork.h"
 
-#include "tapi_network.h"
-
-static gboolean __tapi_check_plmn(char *plmn)
+static int _convert_systemtype_to_act(int type)
 {
-	if (plmn == NULL)
-		return FALSE;
+	switch (type) {
+		case TAPI_NETWORK_SYSTEM_GSM:
+			return 0x1;
 
-	if (strlen(plmn) < 5 || strlen(plmn) > 6)
+		case TAPI_NETWORK_SYSTEM_GPRS:
+			return 0x2;
+
+		case TAPI_NETWORK_SYSTEM_EGPRS:
+			return 0x3;
+
+		case TAPI_NETWORK_SYSTEM_PCS1900:
+			break;
+
+		case TAPI_NETWORK_SYSTEM_UMTS:
+			return 0x4;
+
+		case TAPI_NETWORK_SYSTEM_GSM_AND_UMTS:
+			return 0x5;
+
+		case TAPI_NETWORK_SYSTEM_IS95A:
+			return 0x11;
+
+		case TAPI_NETWORK_SYSTEM_IS95B:
+			return 0x12;
+
+		case TAPI_NETWORK_SYSTEM_CDMA_1X:
+			return 0x13;
+
+		case TAPI_NETWORK_SYSTEM_EVDO_REV_0:
+			return 0x14;
+
+		case TAPI_NETWORK_SYSTEM_1X_EVDO_REV_0_HYBRID:
+			return 0x15;
+
+		case TAPI_NETWORK_SYSTEM_EVDO_REV_A:
+			return 0x16;
+
+		case TAPI_NETWORK_SYSTEM_1X_EVDO_REV_A_HYBRID:
+			return 0x17;
+
+		case TAPI_NETWORK_SYSTEM_EVDO_REV_B:
+			return 0x18;
+
+		case TAPI_NETWORK_SYSTEM_1X_EVDO_REV_B_HYBRID:
+			return 0x19;
+
+		case TAPI_NETWORK_SYSTEM_EVDV:
+			return 0x1A;
+
+		case TAPI_NETWORK_SYSTEM_EHRPD:
+			return 0x1B;
+
+		case TAPI_NETWORK_SYSTEM_LTE:
+			return 0x21;
+
+		default:
+			break;
+	}
+
+	return 0xFF;
+}
+
+static int _convert_act_to_systemtype(int act)
+{
+	switch (act) {
+		case 0x1:
+			return TAPI_NETWORK_SYSTEM_GSM;
+
+		case 0x2:
+			return TAPI_NETWORK_SYSTEM_GPRS;
+
+		case 0x3:
+			return TAPI_NETWORK_SYSTEM_EGPRS;
+
+		case 0x4:
+			return TAPI_NETWORK_SYSTEM_UMTS;
+
+		case 0x5:
+			return TAPI_NETWORK_SYSTEM_GSM_AND_UMTS;
+
+		case 0x11:
+			return TAPI_NETWORK_SYSTEM_IS95A;
+
+		case 0x12:
+			return TAPI_NETWORK_SYSTEM_IS95B;
+
+		case 0x13:
+			return TAPI_NETWORK_SYSTEM_CDMA_1X;
+
+		case 0x14:
+			return TAPI_NETWORK_SYSTEM_EVDO_REV_0;
+
+		case 0x15:
+			return TAPI_NETWORK_SYSTEM_1X_EVDO_REV_0_HYBRID;
+
+		case 0x16:
+			return TAPI_NETWORK_SYSTEM_EVDO_REV_A;
+
+		case 0x17:
+			return TAPI_NETWORK_SYSTEM_1X_EVDO_REV_A_HYBRID;
+
+		case 0x18:
+			return TAPI_NETWORK_SYSTEM_EVDO_REV_B;
+
+		case 0x19:
+			return TAPI_NETWORK_SYSTEM_1X_EVDO_REV_B_HYBRID;
+
+		case 0x1A:
+			return TAPI_NETWORK_SYSTEM_EVDV;
+
+		case 0x1B:
+			return TAPI_NETWORK_SYSTEM_EHRPD;
+
+		case 0x21:
+			return TAPI_NETWORK_SYSTEM_LTE;
+
+		default:
+			break;
+	}
+
+	return TAPI_NETWORK_SYSTEM_NO_SRV;
+}
+
+static void on_signal_registration_status (TapiHandle *handle, GVariant *param,
+		char *noti_id, struct tapi_evt_cb *evt_cb_data)
+{
+	TelNetworkRegistrationStatus_t noti;
+
+	g_variant_get(param, "(iiib)", &noti.cs, &noti.ps, &noti.type, &noti.is_roaming);
+
+	CALLBACK_CALL(&noti);
+}
+
+static void on_signal_strength (TapiHandle *handle, GVariant *param,
+		char *noti_id, struct tapi_evt_cb *evt_cb_data)
+{
+	struct tel_noti_network_signal_strength noti;
+
+	g_variant_get(param, "(i)", &noti.dbm);
+
+	CALLBACK_CALL(&noti);
+}
+
+static void on_signal_cell_info (TapiHandle *handle, GVariant *param,
+		char *noti_id, struct tapi_evt_cb *evt_cb_data)
+{
+	struct tel_noti_network_cell_info noti;
+
+	memset(&noti, 0, sizeof(struct tel_noti_network_cell_info));
+	g_variant_get(param, "(ii)", &noti.lac, &noti.cell_id);
+
+	CALLBACK_CALL(&noti);
+}
+
+static void on_signal_change (TapiHandle *handle, GVariant *param,
+		char *noti_id, struct tapi_evt_cb *evt_cb_data)
+{
+	struct tel_noti_network_change noti;
+	char *plmn = NULL;
+	int act;
+	memset(&noti, 0, sizeof(struct tel_noti_network_change));
+
+	g_variant_get(param, "(is)", &act, &plmn);
+
+	noti.act = _convert_act_to_systemtype(act);
+
+	if (plmn) {
+		snprintf(noti.plmn, 7, "%s", plmn);
+		g_free(plmn);
+	}
+
+	CALLBACK_CALL(&noti);
+}
+
+static void on_signal_time_info (TapiHandle *handle, GVariant *param,
+		char *noti_id, struct tapi_evt_cb *evt_cb_data)
+{
+	struct tel_noti_network_time_info noti;
+	char *plmn = NULL;
+
+	memset(&noti, 0, sizeof(struct tel_noti_network_time_info));
+	g_variant_get(param, "(iiiiiiiiibs)", &noti.year, &noti.month, &noti.day,
+			&noti.hour, &noti.minute, &noti.second,
+			&noti.wday, &noti.gmtoff, &noti.dstoff, &noti.isdst,
+			&plmn);
+
+	if (plmn) {
+		snprintf(noti.plmn, 7, "%s", plmn);
+		g_free(plmn);
+	}
+
+	CALLBACK_CALL(&noti);
+}
+
+static void on_signal_identity (TapiHandle *handle, GVariant *param,
+		char *noti_id, struct tapi_evt_cb *evt_cb_data)
+{
+	struct tel_noti_network_identity noti;
+	char *plmn = NULL, *s_name = NULL, *f_name = NULL;
+
+	memset(&noti, 0, sizeof(struct tel_noti_network_identity));
+
+	g_variant_get(param, "(sss)", &plmn, &s_name, &f_name);
+
+	if (plmn) {
+		snprintf(noti.plmn, 7, "%s", plmn);
+		g_free(plmn);
+	}
+	if (s_name) {
+		snprintf(noti.short_name, 17, "%s", s_name);
+		g_free(s_name);
+	}
+	if (f_name) {
+		snprintf(noti.full_name, 33, "%s", f_name);
+		g_free(f_name);
+	}
+
+	CALLBACK_CALL(&noti);
+}
+
+static void on_emergency_callback_mode (TapiHandle *handle, GVariant *param,
+		char *noti_id, struct tapi_evt_cb *evt_cb_data)
+{
+	struct tel_noti_network_emergency_callback_mode noti;
+
+	memset(&noti, 0, sizeof(struct tel_noti_network_emergency_callback_mode));
+
+	g_variant_get(param, "(i)", &noti.mode);
+
+	CALLBACK_CALL(&noti);
+}
+
+static void on_signal_default_data_subscription (TapiHandle *handle, GVariant *param,
+		char *noti_id, struct tapi_evt_cb *evt_cb_data)
+{
+	struct tel_noti_network_default_data_subs noti;
+
+	memset(&noti, 0, sizeof(struct tel_noti_network_default_data_subs));
+
+	g_variant_get(param, "(i)", &noti.default_subs);
+
+	CALLBACK_CALL(&noti);
+}
+
+static void on_signal_default_subscription (TapiHandle *handle, GVariant *param,
+		char *noti_id, struct tapi_evt_cb *evt_cb_data)
+{
+	struct tel_noti_network_default_subs noti;
+
+	memset(&noti, 0, sizeof(struct tel_noti_network_default_subs));
+
+	g_variant_get(param, "(i)", &noti.default_subs);
+
+	CALLBACK_CALL(&noti);
+}
+
+static struct signal_map signals[] = {
+	{ "RegistrationStatus", on_signal_registration_status },
+	{ "SignalStrength", on_signal_strength },
+	{ "CellInfo", on_signal_cell_info },
+	{ "Change", on_signal_change },
+	{ "TimeInfo", on_signal_time_info },
+	{ "Identity", on_signal_identity },
+	{ "EmergencyCallbackMode", on_emergency_callback_mode },
+	{ "DefaultDataSubscription", on_signal_default_data_subscription },
+	{ "DefaultSubscription", on_signal_default_subscription },
+};
+
+void _process_network_event(const gchar *sig, GVariant *param,
+	TapiHandle *handle, char *noti_id, struct tapi_evt_cb *evt_cb_data)
+{
+	unsigned int i;
+	TAPI_RETURN_IF_FAIL(evt_cb_data);
+
+	for (i = 0; i < sizeof (signals) / sizeof (struct signal_map); i++) {
+		dbg("Received (%s)(%s) signal from telephony", handle->cp_name, sig);
+		if (!g_strcmp0 (sig, signals[i].signal_name)) {
+			signals[i].callback (handle, param, noti_id, evt_cb_data);
+			return;
+		}
+	}
+
+	dbg("not handled NETWORK noti[%s]",sig );
+}
+
+static gboolean _check_plmn(const char *plmn)
+{
+	unsigned int plmn_len = 0;
+
+	if (plmn == NULL) {
+		err("PLMN is NULL");
 		return FALSE;
+	}
+
+	plmn_len = strlen(plmn);
+	if (plmn_len < 5 || plmn_len > 6) {
+		err("PLMN length(%d) is invalid", plmn_len);
+		return FALSE;
+	}
 
 	return TRUE;
 }
 
-static gboolean __tapi_check_act(TelNetworkAct act)
+static gboolean _check_operation(TelNetworkPreferredPlmnOp_t operation)
 {
-	switch(act) {
-	case TEL_NETWORK_ACT_UNKNOWN:
-	case TEL_NETWORK_ACT_GSM:
-	case TEL_NETWORK_ACT_GPRS:
-	case TEL_NETWORK_ACT_EGPRS:
-	case TEL_NETWORK_ACT_UMTS:
-	case TEL_NETWORK_ACT_GSM_AND_UMTS:
-	case TEL_NETWORK_ACT_HSDPA:
-	case TEL_NETWORK_ACT_HSUPA:
-	case TEL_NETWORK_ACT_HSPA:
-	case TEL_NETWORK_ACT_LTE:
+	switch(operation) {
+	case TAPI_NETWORK_PREF_PLMN_ADD:
+	case TAPI_NETWORK_PREF_PLMN_EDIT:
+	case TAPI_NETWORK_PREF_PLMN_DELETE:
 		return TRUE;
+	default:
+		/*Do Nothing*/
+		err("Default Case executed. Unknown PLMN Op");
+		break;
 	}
-
+	err("operation %d is not supported", operation);
 	return FALSE;
 }
 
-static gboolean __tapi_check_network_mode(TelNetworkMode mode)
+static gboolean _check_network_mode(int mode)
+{
+	if (mode == TAPI_NETWORK_MODE_AUTO) {
+		return TRUE;
+	} else {
+		if (mode & TAPI_NETWORK_MODE_GSM) {
+			mode &= ~TAPI_NETWORK_MODE_GSM;
+		}
+		if (mode & TAPI_NETWORK_MODE_WCDMA) {
+			mode &= ~TAPI_NETWORK_MODE_WCDMA;
+		}
+		if (mode & TAPI_NETWORK_MODE_1XRTT) {
+			mode &= ~TAPI_NETWORK_MODE_1XRTT;
+		}
+		if (mode & TAPI_NETWORK_MODE_LTE) {
+			mode &= ~TAPI_NETWORK_MODE_LTE;
+		}
+		if (mode & TAPI_NETWORK_MODE_EVDO) {
+			mode &= ~TAPI_NETWORK_MODE_EVDO;
+		}
+		if (mode == 0)
+			return TRUE;
+	}
+	err("mode %d is not supported", mode);
+	return FALSE;
+}
+
+static gboolean _check_emergency_callback_mode(TelNetworkEmergencyCallbackMode_t mode)
 {
 	switch(mode) {
-	case TEL_NETWORK_MODE_AUTO:
-	case TEL_NETWORK_MODE_2G:
-	case TEL_NETWORK_MODE_3G:
-	case TEL_NETWORK_MODE_LTE:
+	case TAPI_NETWORK_EMERGENCY_CALLBACK_MODE_ENTER:
+	case TAPI_NETWORK_EMERGENCY_CALLBACK_MODE_EXIT:
 		return TRUE;
+	default:
+		/*Do Nothing*/
+		err("Default Case executed. Unknown Emergency callback mode");
+		break;
 	}
-
+	err("emergency callback mode %d is not supported", mode);
 	return FALSE;
 }
 
-void on_network_signal_emit_handler(TelephonyNetwork *network,
-	gchar *sender_name, gchar *signal_name,
-	GVariant *parameters, gpointer user_data)
+static gboolean _check_roaming_preference(TelNetworkPrefNetType_t roam_pref)
 {
-	TapiEvtCbData *evt_cb_data;
-	TelHandle *handle = user_data;
-	char *evt_id;
+	switch(roam_pref) {
+	case TAPI_NETWORK_PREF_NET_TYPE_HOME_ONLY:
+	case TAPI_NETWORK_PREF_NET_TYPE_AFFILIATED:
+	case TAPI_NETWORK_PREF_NET_TYPE_AUTOMATIC:
+	case TAPI_NETWORK_PREF_NET_TYPE_AUTOMATIC_A:
+	case TAPI_NETWORK_PREF_NET_TYPE_AUTOMATIC_B:
+	case TAPI_NETWORK_PREF_NET_TYPE_ROAM_DOMESTIC:
+	case TAPI_NETWORK_PREF_NET_TYPE_ROAM_INTERNATIONAL:
+	case TAPI_NETWORK_PREF_NET_TYPE_ROAM_DUAL:
+	case TAPI_NETWORK_PREF_NET_TYPE_BLANK:
+		return TRUE;
+	default:
+		/*Do Nothing*/
+		err("Default Case executed. Unknown roaming preference");
+		break;
+	}
+	err("roam_pref %d is not supported", roam_pref);
+	return FALSE;
+}
 
-	if (handle == NULL || signal_name == NULL)
-		return;
+static void on_response_search_network (GObject *source_object,
+		GAsyncResult *res, gpointer user_data)
+{
+	GError *error = NULL;
+	struct tapi_resp_data *evt_cb_data = user_data;
+	int result = -1;
+	int i;
 
-	evt_id = g_strdup_printf("%s:%s", TELEPHONY_NETWORK_INTERFACE,
-					signal_name);
+	TelNetworkPlmnList_t list;
 
-	/*
-	 * If an event callback is registered process
-	 * g-signal event
-	 */
-	evt_cb_data = g_hash_table_lookup(handle->evt_table, evt_id);
-	if (evt_cb_data == NULL) {
-		dbg("Application not registered on event %s",
-							evt_id);
-		g_free(evt_id);
+	GVariant *dbus_result = NULL;
+	GVariant *value = NULL;
+	GVariantIter *iter = NULL;
+	GVariantIter *iter_row = NULL;
+	const gchar *key = NULL;
+
+	memset (&list, 0, sizeof(TelNetworkPlmnList_t));
+
+	dbus_result = g_dbus_connection_call_finish (
+			G_DBUS_CONNECTION (source_object), res, &error);
+	CHECK_ERROR(error);
+
+	g_variant_get (dbus_result, "(aa{sv}i)", &iter, &result);
+
+	list.networks_count = g_variant_iter_n_children(iter);
+
+	i = 0;
+	while (g_variant_iter_next(iter, "a{sv}", &iter_row)) {
+		while (g_variant_iter_loop(iter_row, "{sv}", &key, &value)) {
+			if (!g_strcmp0(key, "plmn")) {
+				strncpy(list.network_list[i].plmn, g_variant_get_string(value, NULL), TAPI_NETWORK_PLMN_LEN_MAX);
+				list.network_list[i].plmn_id = atoi(g_variant_get_string(value, NULL));
+			}
+			if (!g_strcmp0(key, "act")) {
+				list.network_list[i].access_technology = _convert_act_to_systemtype(g_variant_get_int32(value));
+			}
+			if (!g_strcmp0(key, "type")) {
+				list.network_list[i].type_of_plmn = g_variant_get_int32(value);
+			}
+			if (!g_strcmp0(key, "name")) {
+				strncpy(list.network_list[i].network_name, g_variant_get_string(value, NULL), 40);
+			}
+		}
+		i++;
+		g_variant_iter_free(iter_row);
+	}
+	g_variant_iter_free(iter);
+
+	if (evt_cb_data->cb_fn) {
+		evt_cb_data->cb_fn(evt_cb_data->handle, result, &list, evt_cb_data->user_data);
+	}
+
+	g_free(evt_cb_data);
+	g_variant_unref(dbus_result);
+}
+
+static void on_response_get_network_selection_mode (GObject *source_object,
+		GAsyncResult *res, gpointer user_data)
+{
+	GError *error = NULL;
+	struct tapi_resp_data *evt_cb_data = user_data;
+	int result = -1;
+
+	GVariant *dbus_result;
+	int mode = 0;
+
+	dbus_result = g_dbus_connection_call_finish (
+			G_DBUS_CONNECTION (source_object), res, &error);
+	CHECK_ERROR(error);
+
+	g_variant_get (dbus_result, "(ii)", &mode, &result);
+
+	if (evt_cb_data->cb_fn) {
+		evt_cb_data->cb_fn(evt_cb_data->handle, result, &mode, evt_cb_data->user_data);
+	}
+
+	g_free(evt_cb_data);
+	g_variant_unref(dbus_result);
+}
+
+static void on_response_default_set (GObject *source_object, GAsyncResult *res,
+		gpointer user_data)
+{
+	GError *error = NULL;
+	struct tapi_resp_data *evt_cb_data = user_data;
+	int result = -1;
+
+	GVariant *dbus_result;
+
+	dbus_result = g_dbus_connection_call_finish (
+			G_DBUS_CONNECTION (source_object), res, &error);
+	CHECK_ERROR(error);
+
+	g_variant_get (dbus_result, "(i)", &result);
+
+	if (evt_cb_data->cb_fn) {
+		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
+	}
+
+	g_free(evt_cb_data);
+	g_variant_unref(dbus_result);
+}
+
+static void on_response_get_network_preferred_plmn (GObject *source_object,
+		GAsyncResult *res, gpointer user_data)
+{
+	GError *error = NULL;
+	struct tapi_resp_data *evt_cb_data = user_data;
+	int result = -1;
+	int i;
+
+	TelNetworkPreferredPlmnList_t list;
+
+	GVariant *dbus_result = NULL;
+	GVariant *value = NULL;
+	GVariantIter *iter = NULL;
+	GVariantIter *iter_row = NULL;
+	const gchar *key = NULL;
+
+	memset (&list, 0, sizeof(TelNetworkPreferredPlmnList_t));
+
+	dbus_result = g_dbus_connection_call_finish (
+			G_DBUS_CONNECTION (source_object), res, &error);
+	CHECK_ERROR(error);
+
+	g_variant_get (dbus_result, "(aa{sv}i)", &iter, &result);
+
+	list.NumOfPrefPlmns = g_variant_iter_n_children(iter);
+
+	if (list.NumOfPrefPlmns == 0) {
+		dbg("num_of_.. = 0");
+		if (evt_cb_data->cb_fn) {
+			evt_cb_data->cb_fn(evt_cb_data->handle, result, &list, evt_cb_data->user_data);
+		}
+
+		g_free(evt_cb_data);
 		return;
 	}
 
-	if (!g_strcmp0(signal_name, "RegistrationStatus")) {
-		TelNetworkRegStatusInfo reg_status;
+	i = 0;
+	while (g_variant_iter_next(iter, "a{sv}", &iter_row)) {
+		while (g_variant_iter_loop(iter_row, "{sv}", &key, &value)) {
+			if (!g_strcmp0(key, "plmn")) {
+				strncpy(list.PrefPlmnRecord[i].Plmn, g_variant_get_string(value, NULL), 6);
+			}
+			if (!g_strcmp0(key, "act")) {
+				list.PrefPlmnRecord[i].SystemType = _convert_act_to_systemtype(g_variant_get_int32(value));
+			}
+			if (!g_strcmp0(key, "index")) {
+				list.PrefPlmnRecord[i].Index = g_variant_get_int32(value);
+			}
+			if (!g_strcmp0(key, "name")) {
+				strncpy(list.PrefPlmnRecord[i].network_name, g_variant_get_string(value, NULL), 40);
+			}
+		}
+		i++;
+		g_variant_iter_free(iter_row);
+	}
+	g_variant_iter_free(iter);
 
-		g_variant_get(parameters, "(iii)", &reg_status.cs_status,
-					&reg_status.ps_status, &reg_status.act);
+	if (evt_cb_data->cb_fn) {
+		evt_cb_data->cb_fn(evt_cb_data->handle, result, &list, evt_cb_data->user_data);
+	}
 
-		dbg("%s cs_status(%d), ps_status(%d), act(%d)", signal_name,
-			reg_status.cs_status, reg_status.ps_status, reg_status.act);
-
-		EVT_CALLBACK_CALL(handle, evt_cb_data, evt_id, &reg_status);
-	} else if (!g_strcmp0(signal_name, "CellInfo")) {
-		TelNetworkCellInfo cell_info;
-
-		g_variant_get(parameters, "(uuu)", &cell_info.lac,
-					&cell_info.cell_id, &cell_info.rac);
-
-		dbg("%s lac(%d), cell_id(%d), rac(%d)", signal_name,
-			cell_info.lac, cell_info.cell_id, cell_info.rac);
-
-		EVT_CALLBACK_CALL(handle, evt_cb_data, evt_id, &cell_info);
-	} else if (!g_strcmp0(signal_name, "Identity")) {
-		TelNetworkIdentityInfo identity = {NULL, NULL, NULL};
-
-		g_variant_get(parameters, "(sss)", &identity.plmn,
-					&identity.short_name, &identity.long_name);
-
-		dbg("%s plmn(%s), short_name(%s), long_name(%s)", signal_name,
-			identity.plmn, identity.short_name, identity.long_name);
-
-		EVT_CALLBACK_CALL(handle, evt_cb_data, evt_id, &identity);
-		g_free(identity.plmn);
-		g_free(identity.short_name);
-		g_free(identity.long_name);
-	} else if (!g_strcmp0(signal_name, "Rssi")) {
-		unsigned int rssi;
-		g_variant_get(parameters, "(u)", &rssi);
-
-		dbg("%s rssi(%u)", signal_name, rssi);
-
-		EVT_CALLBACK_CALL(handle, evt_cb_data, evt_id, &rssi);
-	} else if (!g_strcmp0(signal_name, "TimeInfo")) {
-		TelNetworkNitzInfoNoti time_info = {0, 0, 0, 0, 0, 0, 0, FALSE, 0, NULL};
-
-		g_variant_get(parameters, "(uuuuuuibis)", &time_info.year, &time_info.month,
-			&time_info.day, &time_info.hour, &time_info.minute, &time_info.second,
-			&time_info.gmtoff, &time_info.isdst, &time_info.dstoff, &time_info.plmn);
-
-		dbg("%s year(%u), month(%u), day(%u), hour(%u), minute(%u), second(%u), \
-			gmtoff(%d), isdst(%s), dstoff(%d), plmn(%s)", signal_name,
-			time_info.year, time_info.month, time_info.day, time_info.hour,
-			time_info.minute, time_info.second, time_info.gmtoff,
-			time_info.isdst ? "TRUE":"FALSE", time_info.dstoff, time_info.plmn);
-
-		EVT_CALLBACK_CALL(handle, evt_cb_data, evt_id, &time_info);
-		g_free(time_info.plmn);
-	} else
-		err("Unhandled Signal: %s", signal_name);
-
-	g_free(evt_id);
+	g_free(evt_cb_data);
+	g_variant_unref(dbus_result);
 }
 
-EXPORT_API TelReturn tapi_network_get_registration_info(TelHandle *handle,
-	TelNetworkRegistrationInfo *reg_info)
+static void on_response_get_network_mode (GObject *source_object,
+		GAsyncResult *res, gpointer user_data)
 {
-	dbg("Entry");
-
-	g_return_val_if_fail(handle != NULL && reg_info != NULL,
-			TEL_RETURN_INVALID_PARAMETER);
-
-	reg_info->reg_status_info.cs_status =
-			telephony_network_get_cs_status(handle->network_proxy);
-
-	reg_info->reg_status_info.ps_status =
-			telephony_network_get_ps_status(handle->network_proxy);
-
-	reg_info->reg_status_info.act =
-			telephony_network_get_act(handle->network_proxy);
-
-	reg_info->cell_info.lac =
-			telephony_network_get_lac(handle->network_proxy);
-
-	reg_info->cell_info.cell_id =
-			telephony_network_get_cell_id(handle->network_proxy);
-
-	reg_info->cell_info.rac =
-			telephony_network_get_rac(handle->network_proxy);
-
-	return TEL_RETURN_SUCCESS;
-}
-
-static void on_response_network_get_identity_info(GObject *source_object,
-	GAsyncResult *res, gpointer user_data)
-{
-	TapiRespCbData *rsp_cb_data = user_data;
-	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
-	TelNetworkResult result = TEL_NETWORK_RESULT_FAILURE;
-	TelNetworkIdentityInfo id_info;
 	GError *error = NULL;
+	struct tapi_resp_data *evt_cb_data = user_data;
+	int result = -1;
 
-	dbg("Entry");
+	GVariant *dbus_result;
+	int mode = 0;
 
-	memset(&id_info, 0, sizeof(id_info));
-	telephony_network_call_get_identity_info_finish(handle->network_proxy,
-		(int *)&result, &id_info.plmn, &id_info.short_name,
-		&id_info.long_name, res, &error);
+	dbus_result = g_dbus_connection_call_finish (
+			G_DBUS_CONNECTION (source_object), res, &error);
+	CHECK_ERROR(error);
 
-	CHECK_DEINIT(error, rsp_cb_data, result);
+	g_variant_get (dbus_result, "(ii)", &mode, &result);
 
-	if (result != TEL_NETWORK_RESULT_SUCCESS) {
-		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+	if (evt_cb_data->cb_fn) {
+		evt_cb_data->cb_fn(evt_cb_data->handle, result, &mode, evt_cb_data->user_data);
+	}
+
+	g_free(evt_cb_data);
+	g_variant_unref(dbus_result);
+}
+
+static void on_response_get_network_serving (GObject *source_object,
+		GAsyncResult *res, gpointer user_data)
+{
+	GError *error = NULL;
+	struct tapi_resp_data *evt_cb_data = user_data;
+	int result = -1;
+
+	TelNetworkServing_t data;
+
+	GVariantIter *iter;
+	GVariant *value = NULL;
+	const gchar *key = NULL;
+	GVariant *dbus_result;
+	char *plmn;
+	int v0, v4, v5;
+	char v1, v2, v3, v6, v7;
+
+	memset (&data, 0, sizeof(TelNetworkServing_t));
+
+	dbus_result = g_dbus_connection_call_finish (
+			G_DBUS_CONNECTION (source_object), res, &error);
+	CHECK_ERROR(error);
+
+	g_variant_get (dbus_result, "(a{sv}i)", &iter, &result);
+
+	while (g_variant_iter_loop(iter, "{sv}", &key, &value)) {
+		if (!g_strcmp0(key, "serving")) {
+			g_variant_get(value, "(is)", &v0, &plmn);
+			data.act = _convert_act_to_systemtype(v0);
+			if (plmn) {
+				snprintf(data.plmn, 7, "%s", plmn);
+				g_free(plmn);
+			}
+		}
+		else if (!g_strcmp0(key, "g_serving")) {
+			g_variant_get(value, "(i)", &v0);
+			data.info.lac = v0;
+		}
+		else if (!g_strcmp0(key, "c_serving")) {
+			g_variant_get(value, "(iuuuiiuu)", &v0, &v1, &v2, &v3, &v4, &v5, &v6, &v7);
+			data.info.cdma_info.carrier = v0;
+			data.info.cdma_info.system_id = v1;
+			data.info.cdma_info.network_id = v2;
+			data.info.cdma_info.base_station_id = v3;
+			data.info.cdma_info.base_station_latitude = v4;
+			data.info.cdma_info.base_station_longitude = v5;
+			data.info.cdma_info.registration_zone = v6;
+			data.info.cdma_info.pilot_offset = v7;
+		}
+	}
+	g_variant_iter_free(iter);
+
+	if (evt_cb_data->cb_fn) {
+		evt_cb_data->cb_fn(evt_cb_data->handle, result, &data, evt_cb_data->user_data);
+	}
+
+	g_free(evt_cb_data);
+	g_variant_unref(dbus_result);
+}
+
+static void on_response_get_neighboring_cell_info (GObject *source_object,
+		GAsyncResult *res, gpointer user_data)
+{
+	GError *error = NULL;
+	struct tapi_resp_data *evt_cb_data = user_data;
+	int result = -1;
+	int geran_index = 0, umts_index = 0;
+
+	TelNetworkNeighboringCellInfo_t list;
+
+	GVariant *dbus_result = NULL;
+	GVariant *value = NULL;
+	GVariantIter *iter = NULL;
+	GVariantIter *iter_row = NULL;
+	const gchar *key = NULL;
+	gint v0, v1, v2, v3, v4, v5;
+
+	memset (&list, 0, sizeof(TelNetworkNeighboringCellInfo_t));
+
+	dbus_result = g_dbus_connection_call_finish (
+			G_DBUS_CONNECTION (source_object), res, &error);
+	CHECK_ERROR(error);
+
+	g_variant_get (dbus_result, "(aa{sv}i)", &iter, &result);
+
+	while (g_variant_iter_next(iter, "a{sv}", &iter_row)) {
+		while (g_variant_iter_loop(iter_row, "{sv}", &key, &value)) {
+			if (!g_strcmp0(key, "serving")) {
+				g_variant_get(value, "(iii)", &v0,&v1,&v2);
+				list.serving.act = _convert_act_to_systemtype(v0);
+				list.serving.mcc = v1;
+				list.serving.mnc = v2;
+			}
+			else if (!g_strcmp0(key, "g_serving")) {
+				g_variant_get(value, "(iiiii)", &v0,&v1,&v2,&v3,&v4);
+				list.serving.cell.geran.cell_id	= v0;
+				list.serving.cell.geran.lac		= v1;
+				list.serving.cell.geran.bcch	= v2;
+				list.serving.cell.geran.bsic	= v3;
+				list.serving.cell.geran.rxlev	= v4;
+			}
+			else if (!g_strcmp0(key, "u_serving")) {
+				g_variant_get(value, "(iiiii)", &v0,&v1,&v2,&v3,&v4);
+				list.serving.cell.umts.cell_id	= v0;
+				list.serving.cell.umts.lac		= v1;
+				list.serving.cell.umts.arfcn	= v2;
+				list.serving.cell.umts.psc		= v3;
+				list.serving.cell.umts.rscp		= v4;
+			}
+			else if (!g_strcmp0(key, "l_serving")) {
+				g_variant_get(value, "(iiiii)", &v0,&v1,&v2,&v3,&v4);
+				list.serving.cell.lte.cell_id	= v0;
+				list.serving.cell.lte.lac		= v1;
+				list.serving.cell.lte.earfcn	= v2;
+				list.serving.cell.lte.tac		= v3;
+				list.serving.cell.lte.rssi		= v4;
+			}
+			else if (!g_strcmp0(key, "c_serving")) {
+				g_variant_get(value, "(uuuuii)", &v0, &v1, &v2, &v3, &v4, &v5);
+				list.serving.cell.cdma.system_id = v0;
+				list.serving.cell.cdma.network_id = v1;
+				list.serving.cell.cdma.base_station_id = v2;
+				list.serving.cell.cdma.reference_pn = v3;
+				list.serving.cell.cdma.base_station_latitude = v4;
+				list.serving.cell.cdma.base_station_longitude = v5;
+			}
+			else if (!g_strcmp0(key, "geran")) {
+				g_variant_get(value, "(iiiii)", &v0,&v1,&v2,&v3,&v4);
+				list.geran_list[geran_index].cell_id	= v0;
+				list.geran_list[geran_index].lac		= v1;
+				list.geran_list[geran_index].bcch		= v2;
+				list.geran_list[geran_index].bsic		= v3;
+				list.geran_list[geran_index].rxlev		= v4;
+				geran_index++;
+			}
+			else if (!g_strcmp0(key, "umts")) {
+				g_variant_get(value, "(iiiii)", &v0,&v1,&v2,&v3,&v4);
+				list.umts_list[umts_index].cell_id	= v0;
+				list.umts_list[umts_index].lac		= v1;
+				list.umts_list[umts_index].arfcn	= v2;
+				list.umts_list[umts_index].psc		= v3;
+				list.umts_list[umts_index].rscp		= v4;
+				umts_index++;
+			}
+		}
+		g_variant_iter_free(iter_row);
+	}
+	g_variant_iter_free(iter);
+
+	list.geran_list_count = geran_index;
+	list.umts_list_count = umts_index;
+	dbg("act=%d, count(geran:%d, umts:%d)", list.serving.act, geran_index, umts_index);
+
+	if (evt_cb_data->cb_fn) {
+		evt_cb_data->cb_fn(evt_cb_data->handle, result, &list, evt_cb_data->user_data);
+	}
+
+	g_free(evt_cb_data);
+	g_variant_unref(dbus_result);
+}
+
+static void on_response_select_network (GObject *source_object, GAsyncResult *res,
+        gpointer user_data)
+{
+	GError *error = NULL;
+	struct tapi_resp_data *evt_cb_data = user_data;
+	int result = -1;
+	GVariant *dbus_result;
+
+	dbus_result = g_dbus_connection_call_finish (G_DBUS_CONNECTION (source_object), res, &error);
+	CHECK_ERROR(error);
+	g_variant_get (dbus_result, "(i)", &result);
+
+	/* Map result received from libtcore to TapiResult_t */
+	if (result == 0)
+		result = TAPI_API_SUCCESS;
+	else {
+		switch (result) {
+			case 0x50000001:
+				result = TAPI_API_NETWORK_PLMN_NOT_ALLOWED;
+				break;
+			case 0x50000002:
+				result = TAPI_API_NETWORK_ROAMING_NOT_ALLOWED;
+				break;
+			default:
+				/*Do Nothing*/
+				break;
+		}
+	}
+	if (evt_cb_data->cb_fn) {
+		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
+	}
+	g_free(evt_cb_data);
+	g_variant_unref(dbus_result);
+}
+
+static void on_response_get_network_roaming_preference (GObject *source_object,
+		GAsyncResult *res, gpointer user_data)
+{
+	GError *error = NULL;
+	struct tapi_resp_data *evt_cb_data = user_data;
+	int result = -1;
+
+	GVariant *dbus_result;
+	TelNetworkPrefNetType_t roam_pref;
+
+	dbus_result = g_dbus_connection_call_finish (
+			G_DBUS_CONNECTION (source_object), res, &error);
+	CHECK_ERROR(error);
+
+	g_variant_get (dbus_result, "(ii)", &roam_pref, &result);
+
+	if (evt_cb_data->cb_fn) {
+		evt_cb_data->cb_fn(evt_cb_data->handle, result, &roam_pref, evt_cb_data->user_data);
+	}
+
+	g_free(evt_cb_data);
+	g_variant_unref(dbus_result);
+}
+
+EXPORT_API int tel_search_network(TapiHandle *handle, tapi_response_cb callback, void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data = NULL;
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL && callback != NULL, TAPI_API_INVALID_PTR);
+
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	msg("[%s] network_search requested", handle->cp_name);
+
+	g_dbus_connection_call(handle->dbus_connection,
+			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_NETWORK_INTERFACE,
+			"Search", NULL, NULL,
+			G_DBUS_CALL_FLAGS_NONE, TAPI_UNRESTRICTED_TIMEOUT, handle->ca,
+			on_response_search_network, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+}
+
+EXPORT_API int tel_get_network_selection_mode(struct tapi_handle *handle, tapi_response_cb callback, void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data = NULL;
+
+	dbg("Func Entrance");
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL && callback != NULL, TAPI_API_INVALID_PTR);
+
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	g_dbus_connection_call(handle->dbus_connection,
+			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_NETWORK_INTERFACE,
+			"GetSelectionMode", NULL, NULL,
+			G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca,
+			on_response_get_network_selection_mode, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+}
+
+EXPORT_API int tel_select_network_automatic(struct tapi_handle *handle, tapi_response_cb callback, void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data = NULL;
+	GVariant *param;
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL, TAPI_API_INVALID_PTR);
+
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	param = g_variant_new("(isi)",
+			0, /* Automatic */
+			"",
+			0);
+
+	msg("[%s] automatic selection requested", handle->cp_name);
+
+	g_dbus_connection_call(handle->dbus_connection,
+			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_NETWORK_INTERFACE,
+			"SetSelectionMode", param, NULL,
+			G_DBUS_CALL_FLAGS_NONE, TAPI_UNRESTRICTED_TIMEOUT, handle->ca,
+			on_response_default_set, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+}
+
+EXPORT_API int tel_select_network_manual(struct tapi_handle *handle, const char *plmn, int type, tapi_response_cb callback, void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data = NULL;
+	GVariant *param;
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL && _check_plmn(plmn), TAPI_API_INVALID_PTR);
+
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	param = g_variant_new("(isi)",
+			1, /* Manual */
+			plmn,
+			_convert_systemtype_to_act(type));
+
+	msg("[%s] manual selection requested plmn:[%s] type:[%d]",handle->cp_name, plmn?plmn:"", type);
+
+	g_dbus_connection_call(handle->dbus_connection,
+			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_NETWORK_INTERFACE,
+			"SetSelectionMode", param, NULL,
+			G_DBUS_CALL_FLAGS_NONE, TAPI_UNRESTRICTED_TIMEOUT, handle->ca,
+			on_response_select_network, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+}
+
+EXPORT_API int tel_set_network_preferred_plmn(
+		TapiHandle *handle,
+		TelNetworkPreferredPlmnOp_t operation,
+		TelNetworkPreferredPlmnInfo_t *info,
+		tapi_response_cb callback,
+		void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data = NULL;
+	GVariant *param;
+	int act = 0;
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL && info != NULL &&
+							_check_operation(operation) &&
+							_check_plmn((const char *)&info->Plmn), TAPI_API_INVALID_PTR);
+
+	dbg("Func Entrance");
+
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	switch (info->SystemType) {
+		case TAPI_NETWORK_SYSTEM_GSM:
+			act = 1;
+			break;
+
+		case TAPI_NETWORK_SYSTEM_UMTS:
+			act = 4;
+			break;
+
+		case TAPI_NETWORK_SYSTEM_GPRS:
+			act = 2;
+			break;
+
+		case TAPI_NETWORK_SYSTEM_EGPRS:
+			act = 3;
+			break;
+
+		case TAPI_NETWORK_SYSTEM_GSM_AND_UMTS:
+			act = 4;
+			break;
+
+		default:
+			act = 4;
+			break;
+	}
+
+	param = g_variant_new("(iiis)",
+			operation,
+			info->Index,
+			act,
+			info->Plmn);
+
+	g_dbus_connection_call(handle->dbus_connection,
+			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_NETWORK_INTERFACE,
+			"SetPreferredPlmn", param, NULL,
+			G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca,
+			on_response_default_set, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+}
+
+EXPORT_API int tel_get_network_preferred_plmn(TapiHandle *handle, tapi_response_cb callback, void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data = NULL;
+
+	dbg("Func Entrance");
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL && callback != NULL, TAPI_API_INVALID_PTR);
+
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	g_dbus_connection_call(handle->dbus_connection,
+			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_NETWORK_INTERFACE,
+			"GetPreferredPlmn", NULL, NULL,
+			G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca,
+			on_response_get_network_preferred_plmn, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+}
+
+EXPORT_API int tel_set_network_mode(TapiHandle *handle, int mode, tapi_response_cb callback, void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data = NULL;
+	GVariant *param;
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL &&
+								_check_network_mode(mode), TAPI_API_INVALID_PTR);
+
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	param = g_variant_new("(i)",
+			mode);
+
+	msg("[%s] requested mode:[0x%x]", handle->cp_name, mode);
+
+	g_dbus_connection_call(handle->dbus_connection,
+			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_NETWORK_INTERFACE,
+			"SetMode", param, NULL,
+			G_DBUS_CALL_FLAGS_NONE, TAPI_UNRESTRICTED_TIMEOUT, handle->ca,
+			on_response_default_set, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+}
+
+EXPORT_API int tel_get_network_mode(TapiHandle *handle, tapi_response_cb callback, void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data = NULL;
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL && callback != NULL, TAPI_API_INVALID_PTR);
+
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	dbg("[%s] Func Entrance", handle->cp_name);
+
+	g_dbus_connection_call(handle->dbus_connection,
+			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_NETWORK_INTERFACE,
+			"GetMode", NULL, NULL,
+			G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca,
+			on_response_get_network_mode, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+}
+
+EXPORT_API int tel_cancel_network_manual_search(TapiHandle *handle, tapi_response_cb callback, void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data = NULL;
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL, TAPI_API_INVALID_PTR);
+
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	msg("[%s] network search cancel requested", handle->cp_name);
+
+	g_dbus_connection_call(handle->dbus_connection,
+			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_NETWORK_INTERFACE,
+			"SearchCancel", NULL, NULL,
+			G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca,
+			on_response_default_set, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+}
+
+EXPORT_API int tel_get_network_serving(TapiHandle *handle, tapi_response_cb callback, void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data = NULL;
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL && callback != NULL, TAPI_API_INVALID_PTR);
+
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	dbg("[%s] Func Entrance", handle->cp_name);
+
+	g_dbus_connection_call(handle->dbus_connection,
+			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_NETWORK_INTERFACE,
+			"GetServingNetwork", NULL, NULL,
+			G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca,
+			on_response_get_network_serving, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+}
+
+EXPORT_API int tel_get_network_neighboring_cell_info(TapiHandle *handle, tapi_response_cb callback, void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data = NULL;
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL && callback != NULL, TAPI_API_INVALID_PTR);
+
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	dbg("[%s] Func Entrance", handle->cp_name);
+
+	g_dbus_connection_call(handle->dbus_connection,
+			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_NETWORK_INTERFACE,
+			"GetNgbrCellInfo", NULL, NULL,
+			G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca,
+			on_response_get_neighboring_cell_info, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+}
+
+EXPORT_API int tel_set_network_default_data_subscription(TapiHandle *handle, tapi_response_cb callback, void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data = NULL;
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
+	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
+
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	msg("[%s] Func Entrance", handle->cp_name);
+
+	/* DBUS call */
+	g_dbus_connection_call(handle->dbus_connection,
+			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_NETWORK_INTERFACE,
+			"SetDefaultDataSubscription", NULL, NULL,
+			G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca,
+			on_response_default_set, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+}
+
+EXPORT_API int tel_set_network_emergency_callback_mode(TapiHandle *handle, TelNetworkEmergencyCallbackMode_t mode, tapi_response_cb callback, void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data = NULL;
+	GVariant *param;
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL &&
+								_check_emergency_callback_mode(mode), TAPI_API_INVALID_PTR);
+
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	param = g_variant_new("(i)", mode);
+
+	msg("[%s] emergency callback mode :[%d]", handle->cp_name, mode);
+
+	g_dbus_connection_call(handle->dbus_connection,
+			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_NETWORK_INTERFACE,
+			"SetEmergencyCallbackMode", param, NULL,
+			G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca,
+			on_response_default_set, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+}
+
+EXPORT_API int tel_set_network_roaming_preference(TapiHandle *handle, TelNetworkPrefNetType_t roam_pref, tapi_response_cb callback, void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data = NULL;
+	GVariant *param;
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL &&
+								_check_roaming_preference(roam_pref), TAPI_API_INVALID_PTR);
+
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	param = g_variant_new("(i)", roam_pref);
+
+	msg("[%s] roam_pref:[%d]", handle->cp_name, roam_pref);
+
+	g_dbus_connection_call(handle->dbus_connection,
+			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_NETWORK_INTERFACE,
+			"SetRoamingPreference", param, NULL,
+			G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca,
+			on_response_default_set, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+
+}
+
+EXPORT_API int tel_get_network_roaming_preference(TapiHandle *handle, tapi_response_cb callback, void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data = NULL;
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL && callback != NULL, TAPI_API_INVALID_PTR);
+
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	dbg("[%s] Func Entrance", handle->cp_name);
+
+	g_dbus_connection_call(handle->dbus_connection,
+			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_NETWORK_INTERFACE,
+			"GetRoamingPreference", NULL, NULL,
+			G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca,
+			on_response_get_network_roaming_preference, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+
+}
+
+EXPORT_API int tel_get_network_default_data_subscription(TapiHandle *handle, TelNetworkDefaultDataSubs_t *default_subscription)
+{
+	GError *gerr = NULL;
+	GVariant *sync_gv = NULL;
+	int subs = 0;
+	int result = 0;
+	TapiResult_t ret = TAPI_API_OPERATION_FAILED;
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
+	TAPI_RET_ERR_NUM_IF_FAIL(default_subscription, TAPI_API_INVALID_PTR);
+
+	sync_gv = g_dbus_connection_call_sync(handle->dbus_connection,
+			DBUS_TELEPHONY_SERVICE, handle->path, DBUS_TELEPHONY_NETWORK_INTERFACE,
+			"GetDefaultDataSubscription", NULL, NULL,
+			G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca,
+			&gerr);
+	if (sync_gv) {
+		g_variant_get(sync_gv, "(ii)", &subs, &result);
+
+		if (result == 0)
+			*default_subscription = subs;
+		else
+			*default_subscription = TAPI_NETWORK_DEFAULT_DATA_SUBS_UNKNOWN;
+
+		msg("'default' Data Subscription: [%d]", subs);
+
+		g_variant_unref(sync_gv);
+		ret = TAPI_API_SUCCESS;
 	} else {
-		RESP_CALLBACK_CALL(rsp_cb_data, result, &id_info);
+		err("Get Data Subscription failed: [%s]", gerr->message);
+		g_error_free(gerr);
 	}
 
-	g_free(id_info.plmn);
-	g_free(id_info.short_name);
-	g_free(id_info.long_name);
+	return ret;
 }
 
-EXPORT_API TelReturn tapi_network_get_identity_info(TelHandle *handle,
-	TapiResponseCb callback, void *user_data)
+EXPORT_API int tel_set_network_default_subscription(TapiHandle *handle, tapi_response_cb callback, void *user_data)
 {
-	TapiRespCbData *rsp_cb_data;
+	struct tapi_resp_data *evt_cb_data = NULL;
 
-	dbg("Entry");
+	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
+	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
-	g_return_val_if_fail(handle != NULL && callback != NULL,
-		TEL_RETURN_INVALID_PARAMETER);
+	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
-	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
+	dbg("[%s] Set 'default' Subscription (for CS)", handle->cp_name);
 
-	telephony_network_call_get_identity_info(handle->network_proxy,
-		NULL,
-		on_response_network_get_identity_info, rsp_cb_data);
+	/* DBUS call */
+	g_dbus_connection_call(handle->dbus_connection,
+			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_NETWORK_INTERFACE,
+			"SetDefaultSubscription", NULL, NULL,
+			G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca,
+			on_response_default_set, evt_cb_data);
 
-	return TEL_RETURN_SUCCESS;
+	return TAPI_API_SUCCESS;
 }
 
-static void on_response_network_search(GObject *source_object,
-	GAsyncResult *res, gpointer user_data)
+EXPORT_API int tel_get_network_default_subscription(TapiHandle *handle, TelNetworkDefaultSubs_t *default_subscription)
 {
-	TapiRespCbData *rsp_cb_data = user_data;
-	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
-
-	GVariant *nw_list;
-	TelNetworkPlmnList plmn_list;
-
-	TelNetworkResult result = TEL_NETWORK_RESULT_FAILURE;
-	GError *error = NULL;
-
-	dbg("Entry");
-
-	memset(&plmn_list, 0, sizeof(TelNetworkPlmnList));
-
-	/* Setting back Proxy default timeout to DEFAULT value */
-	g_dbus_proxy_set_default_timeout((GDBusProxy *)handle->network_proxy,
-		TAPI_DBUS_TIMEOUT_DEFAULT);
-
-
-	telephony_network_call_search_finish(handle->network_proxy,
-			(int *)&result, &plmn_list.count, &nw_list, res, &error);
-	CHECK_DEINIT(error, rsp_cb_data, result);
-
-	if (result != TEL_NETWORK_RESULT_SUCCESS) {
-		g_variant_unref(nw_list);
-
-		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
-		return;
-	}
-
-	if ((plmn_list.count != 0)
-			&& (g_variant_n_children(nw_list) == plmn_list.count)) {
-		GVariantIter *iter = NULL, *iter_row = NULL;
-		GVariant *key_value;
-		const gchar *key;
-		guint i = 0;
-
-		dbg("Network search list count: [%d]", plmn_list.count);
-		plmn_list.network_list =
-			g_malloc0(sizeof(TelNetworkInfo)*plmn_list.count);
-
-		g_variant_get(nw_list, "aa{sv}", &iter);
-		while (g_variant_iter_next(iter, "a{sv}", &iter_row)) {
-			while (g_variant_iter_loop(iter_row, "{sv}", &key, &key_value)) {
-				if (g_strcmp0(key, "plmn_status") == 0) {
-					plmn_list.network_list[i].plmn_status =
-						g_variant_get_int32(key_value);
-				}
-				else if (g_strcmp0(key, "act") == 0) {
-					plmn_list.network_list[i].act =
-						g_variant_get_int32(key_value);
-				}
-				else if (g_strcmp0(key, "network_identity") == 0) {
-					GVariantIter *iter2 = NULL;
-					GVariant *key_value2;
-					const gchar *key2;
-
-					g_variant_get(key_value, "a{sv}", &iter2);
-					while (g_variant_iter_loop(iter2, "{sv}", &key2, &key_value2)) {
-						if (g_strcmp0(key2, "plmn") == 0) {
-							plmn_list.network_list[i].network_identity.plmn =
-								(gchar *)g_variant_get_string(key_value2, NULL);
-						}
-						else if (g_strcmp0(key2, "short_name") == 0) {
-							plmn_list.network_list[i].network_identity.short_name =
-								(gchar *)g_variant_get_string(key_value2, NULL);
-						}
-						else if (g_strcmp0(key2, "long_name") == 0) {
-							plmn_list.network_list[i].network_identity.long_name =
-								(gchar *)g_variant_get_string(key_value2, NULL);
-						}
-					}
-					g_variant_iter_free(iter2);
-				}
-			}
-			i++;
-			g_variant_iter_free(iter_row);
-		}
-		g_variant_iter_free(iter);
-	}
-	else {
-		warn("Network search list count is NOT valid - Count: [%d]",
-			plmn_list.count);
-		plmn_list.count = 0;
-	}
-	g_variant_unref(nw_list);
-
-	RESP_CALLBACK_CALL(rsp_cb_data, result, &plmn_list);
-
-	/* Free resource */
-	g_free(plmn_list.network_list);
-}
-
-EXPORT_API TelReturn tapi_network_search(TelHandle *handle,
-	TapiResponseCb callback, void *user_data)
-{
-	TapiRespCbData *rsp_cb_data;
-
-	dbg("Entry");
-
-	g_return_val_if_fail(handle != NULL && callback != NULL,
-			TEL_RETURN_INVALID_PARAMETER);
-
-	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
-
-	/* Setting Proxy default timeout as 180 secs */
-	g_dbus_proxy_set_default_timeout((GDBusProxy *)handle->network_proxy,
-		TAPI_DBUS_TIMEOUT_MAX);
-
-	telephony_network_call_search(handle->network_proxy,
-		NULL,
-		on_response_network_search, rsp_cb_data);
-
-	return TEL_RETURN_SUCCESS;
-}
-
-static void on_response_network_cancel_search(GObject *source_object,
-	GAsyncResult *res, gpointer user_data)
-{
-	TapiRespCbData *rsp_cb_data = user_data;
-	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
-	TelNetworkResult result = TEL_NETWORK_RESULT_FAILURE;
-	GError *error = NULL;
-
-	dbg("Entry");
-
-	telephony_network_call_cancel_search_finish(handle->network_proxy,
-		(int *)&result, res, &error);
-
-	CHECK_DEINIT(error, rsp_cb_data, result);
-
-	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
-}
-
-EXPORT_API TelReturn tapi_network_cancel_search(TelHandle *handle,
-	TapiResponseCb callback, void *user_data)
-{
-	TapiRespCbData *rsp_cb_data;
-
-	dbg("Entry");
-
-	g_return_val_if_fail(handle != NULL && callback != NULL,
-			TEL_RETURN_INVALID_PARAMETER);
-
-	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
-
-	telephony_network_call_cancel_search(handle->network_proxy,
-		NULL,
-		on_response_network_cancel_search, rsp_cb_data);
-
-	return TEL_RETURN_SUCCESS;
-}
-
-static void on_response_network_select_automatic(GObject *source_object,
-	GAsyncResult *res, gpointer user_data)
-{
-	TapiRespCbData *rsp_cb_data = user_data;
-	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
-	TelNetworkResult result = TEL_NETWORK_RESULT_FAILURE;
-	GError *error = NULL;
-
-	dbg("Entry");
-
-	/* Setting back Proxy default timeout to DEFAULT value */
-	g_dbus_proxy_set_default_timeout((GDBusProxy *)handle->network_proxy,
-		TAPI_DBUS_TIMEOUT_DEFAULT);
-
-	telephony_network_call_select_automatic_finish(handle->network_proxy,
-		(int *)&result, res, &error);
-
-	CHECK_DEINIT(error, rsp_cb_data, result);
-
-	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
-}
-
-EXPORT_API TelReturn tapi_network_select_automatic(TelHandle *handle,
-	TapiResponseCb callback, void *user_data)
-{
-	TapiRespCbData *rsp_cb_data;
-
-	dbg("Entry");
-
-	g_return_val_if_fail(handle != NULL && callback != NULL,
-			TEL_RETURN_INVALID_PARAMETER);
-
-	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
-
-	/* Setting Proxy default timeout as 180 secs */
-	g_dbus_proxy_set_default_timeout((GDBusProxy *)handle->network_proxy,
-		TAPI_DBUS_TIMEOUT_MAX);
-
-	telephony_network_call_select_automatic(handle->network_proxy,
-		NULL,
-		on_response_network_select_automatic, rsp_cb_data);
-
-	return TEL_RETURN_SUCCESS;
-}
-
-static void on_response_network_select_manual(GObject *source_object,
-	GAsyncResult *res, gpointer user_data)
-{
-	TapiRespCbData *rsp_cb_data = user_data;
-	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
-	TelNetworkResult result = TEL_NETWORK_RESULT_FAILURE;
-	GError *error = NULL;
-
-	dbg("Entry");
-
-	/* Setting back Proxy default timeout to DEFAULT value */
-	g_dbus_proxy_set_default_timeout((GDBusProxy *)handle->network_proxy,
-		TAPI_DBUS_TIMEOUT_DEFAULT);
-
-	telephony_network_call_select_manual_finish(handle->network_proxy,
-		(int *)&result, res, &error);
-
-	CHECK_DEINIT(error, rsp_cb_data, result);
-
-	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
-}
-
-EXPORT_API TelReturn tapi_network_select_manual(TelHandle *handle,
-	const TelNetworkSelectManualInfo *select_info,
-	TapiResponseCb callback, void *user_data)
-{
-	TapiRespCbData *rsp_cb_data;
-
-	dbg("Entry");
-
-	g_return_val_if_fail(handle != NULL && select_info != NULL
-		&& __tapi_check_plmn(select_info->plmn)
-		&& __tapi_check_act(select_info->act) && callback != NULL,
-		TEL_RETURN_INVALID_PARAMETER);
-
-	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
-
-	/* Setting Proxy default timeout as 180 secs */
-	g_dbus_proxy_set_default_timeout((GDBusProxy *)handle->network_proxy,
-		TAPI_DBUS_TIMEOUT_MAX);
-
-	telephony_network_call_select_manual(handle->network_proxy,
-		select_info->plmn, select_info->act, NULL,
-		on_response_network_select_manual, rsp_cb_data);
-
-	return TEL_RETURN_SUCCESS;
-}
-
-static void on_response_network_get_selection_mode(GObject *source_object,
-	GAsyncResult *res, gpointer user_data)
-{
-	TapiRespCbData *rsp_cb_data = user_data;
-	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
-	TelNetworkResult result = TEL_NETWORK_RESULT_FAILURE;
-	TelNetworkSelectionMode mode;
-	GError *error = NULL;
-
-	dbg("Entry");
-
-	telephony_network_call_get_selection_mode_finish(handle->network_proxy,
-		(int *)&result, (int *)&mode, res, &error);
-
-	CHECK_DEINIT(error, rsp_cb_data, result);
-
-	if (result != TEL_NETWORK_RESULT_SUCCESS) {
-		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
+	GError *gerr = NULL;
+	GVariant *sync_gv = NULL;
+	int subs = 0;
+	int result = 0;
+	TapiResult_t ret = TAPI_API_OPERATION_FAILED;
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
+	TAPI_RET_ERR_NUM_IF_FAIL(default_subscription, TAPI_API_INVALID_PTR);
+
+	sync_gv = g_dbus_connection_call_sync(handle->dbus_connection,
+			DBUS_TELEPHONY_SERVICE, handle->path, DBUS_TELEPHONY_NETWORK_INTERFACE,
+			"GetDefaultSubscription", NULL, NULL,
+			G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca,
+			&gerr);
+	if (sync_gv) {
+		g_variant_get(sync_gv, "(ii)", &subs, &result);
+
+		if (result == 0)
+			*default_subscription = subs;
+		else
+			*default_subscription = TAPI_NETWORK_DEFAULT_SUBS_UNKNOWN;
+		dbg("'default' Subscription (for CS): [%d]", subs);
+
+		g_variant_unref(sync_gv);
+		ret = TAPI_API_SUCCESS;
 	} else {
-		RESP_CALLBACK_CALL(rsp_cb_data, result, &mode);
-	}
-}
-
-EXPORT_API TelReturn tapi_network_get_selection_mode(TelHandle *handle,
-	TapiResponseCb callback, void *user_data)
-{
-	TapiRespCbData *rsp_cb_data;
-
-	dbg("Entry");
-
-	g_return_val_if_fail(handle != NULL && callback != NULL,
-		TEL_RETURN_INVALID_PARAMETER);
-
-	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
-
-	telephony_network_call_get_selection_mode(handle->network_proxy,
-		NULL,
-		on_response_network_get_selection_mode, rsp_cb_data);
-
-	return TEL_RETURN_SUCCESS;
-}
-
-static void on_response_network_set_preferred_plmn(GObject *source_object,
-	GAsyncResult *res, gpointer user_data)
-{
-	TapiRespCbData *rsp_cb_data = user_data;
-	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
-	TelNetworkResult result = TEL_NETWORK_RESULT_FAILURE;
-	GError *error = NULL;
-
-	dbg("Entry");
-
-	telephony_network_call_set_preferred_plmn_finish(handle->network_proxy,
-		(int *)&result, res, &error);
-
-	CHECK_DEINIT(error, rsp_cb_data, result);
-
-	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
-}
-
-EXPORT_API TelReturn tapi_network_set_preferred_plmn(TelHandle *handle,
-	TelNetworkPreferredPlmnInfo *info,
-	TapiResponseCb callback, void *user_data)
-{
-	TapiRespCbData *rsp_cb_data;
-
-	dbg("Entry");
-
-	g_return_val_if_fail(handle != NULL && info != NULL
-		&& __tapi_check_plmn(info->plmn)
-		&& __tapi_check_act(info->act)
-		&& info->index > 0 && callback != NULL,
-		TEL_RETURN_INVALID_PARAMETER);
-
-	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
-
-	telephony_network_call_set_preferred_plmn(handle->network_proxy,
-		info->index, info->plmn, info->act, NULL,
-		on_response_network_set_preferred_plmn, rsp_cb_data);
-
-	return TEL_RETURN_SUCCESS;
-}
-
-static void on_response_network_get_preferred_plmn(GObject *source_object,
-	GAsyncResult *res, gpointer user_data)
-{
-	TapiRespCbData *rsp_cb_data = user_data;
-	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
-
-	GVariant *pref_plmn_list;
-	TelNetworkPreferredPlmnList plmn_list;
-
-	TelNetworkResult result = TEL_NETWORK_RESULT_FAILURE;
-	GError *error = NULL;
-
-	dbg("Entry");
-
-	memset(&plmn_list, 0, sizeof(TelNetworkPreferredPlmnList));
-
-	telephony_network_call_get_preferred_plmn_finish(handle->network_proxy,
-		(int *)&result, &plmn_list.count, &pref_plmn_list, res, &error);
-
-	CHECK_DEINIT(error, rsp_cb_data, result);
-
-	if (result != TEL_NETWORK_RESULT_SUCCESS) {
-		g_variant_unref(pref_plmn_list);
-		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
-		return;
+		err("Get 'default' Subscription (for CS) failed: [%s]", gerr->message);
+		g_error_free(gerr);
 	}
 
-	if ((plmn_list.count != 0)
-			&& (g_variant_n_children(pref_plmn_list) == plmn_list.count)) {
-		GVariantIter *iter = NULL, *iter_row = NULL;
-		GVariant *key_value;
-		const gchar *key;
-		guint i = 0;
-
-		dbg("Preferred PLMN list count: [%d]", plmn_list.count);
-		plmn_list.list =
-			g_malloc0(sizeof(TelNetworkPreferredPlmnInfo)*plmn_list.count);
-
-		g_variant_get(pref_plmn_list, "aa{sv}", &iter);
-		while (g_variant_iter_next(iter, "a{sv}", &iter_row)) {
-			while (g_variant_iter_loop(iter_row, "{sv}", &key, &key_value)) {
-				if (g_strcmp0(key, "index") == 0) {
-					plmn_list.list[i].index =
-						g_variant_get_uint32(key_value);
-				}
-				else if (g_strcmp0(key, "plmn") == 0) {
-					plmn_list.list[i].plmn =
-						(gchar *)g_variant_get_string(key_value, NULL);
-				}
-				else if (g_strcmp0(key, "act") == 0) {
-					plmn_list.list[i].act =
-						g_variant_get_int32(key_value);
-				}
-			}
-			i++;
-			g_variant_iter_free(iter_row);
-		}
-		g_variant_iter_free(iter);
-	}
-	else {
-		warn("Preferred PLMN list count is NOT valid - Count: [%d]",
-			plmn_list.count);
-		plmn_list.count = 0;
-	}
-	g_variant_unref(pref_plmn_list);
-
-	RESP_CALLBACK_CALL(rsp_cb_data, result, &plmn_list);
-
-	/* Free resource */
-	g_free(plmn_list.list);
-}
-
-EXPORT_API TelReturn tapi_network_get_preferred_plmn(TelHandle *handle,
-	TapiResponseCb callback, void *user_data)
-{
-	TapiRespCbData *rsp_cb_data;
-
-	dbg("Entry");
-
-	g_return_val_if_fail(handle != NULL && callback != NULL,
-		TEL_RETURN_INVALID_PARAMETER);
-
-	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
-
-	telephony_network_call_get_preferred_plmn(handle->network_proxy,
-		NULL,
-		on_response_network_get_preferred_plmn, rsp_cb_data);
-
-	return TEL_RETURN_SUCCESS;
-}
-
-static void on_response_network_set_mode(GObject *source_object,
-	GAsyncResult *res, gpointer user_data)
-{
-	TapiRespCbData *rsp_cb_data = user_data;
-	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
-	TelNetworkResult result = TEL_NETWORK_RESULT_FAILURE;
-	GError *error = NULL;
-
-	dbg("Entry");
-
-	telephony_network_call_set_mode_finish(handle->network_proxy,
-		(int *)&result, res, &error);
-
-	CHECK_DEINIT(error, rsp_cb_data, result);
-
-	RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
-}
-
-EXPORT_API TelReturn tapi_network_set_mode(TelHandle *handle,
-	TelNetworkMode mode, TapiResponseCb callback, void *user_data)
-{
-	TapiRespCbData *rsp_cb_data;
-
-	dbg("Entry");
-
-	g_return_val_if_fail(handle != NULL
-		&& __tapi_check_network_mode(mode)
-		&& callback != NULL,
-		TEL_RETURN_INVALID_PARAMETER);
-
-	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
-
-	telephony_network_call_set_mode(handle->network_proxy,
-		mode, NULL,
-		on_response_network_set_mode, rsp_cb_data);
-
-	return TEL_RETURN_SUCCESS;
-}
-
-static void on_response_network_get_mode(GObject *source_object,
-	GAsyncResult *res, gpointer user_data)
-{
-	TapiRespCbData *rsp_cb_data = user_data;
-	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
-	TelNetworkResult result = TEL_NETWORK_RESULT_FAILURE;
-	TelNetworkMode mode;
-	GError *error = NULL;
-
-	dbg("Entry");
-
-	telephony_network_call_get_mode_finish(handle->network_proxy,
-		(int *)&result, (int *)&mode, res, &error);
-
-	CHECK_DEINIT(error, rsp_cb_data, result);
-
-	if (result != TEL_NETWORK_RESULT_SUCCESS) {
-		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
-	} else {
-		RESP_CALLBACK_CALL(rsp_cb_data, result, &mode);
-	}
-}
-
-EXPORT_API TelReturn tapi_network_get_mode(TelHandle *handle,
-	TapiResponseCb callback, void *user_data)
-{
-	TapiRespCbData *rsp_cb_data;
-
-	dbg("Entry");
-
-	g_return_val_if_fail(handle != NULL && callback != NULL,
-			TEL_RETURN_INVALID_PARAMETER);
-
-	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
-
-	telephony_network_call_get_mode(handle->network_proxy,
-		NULL,
-		on_response_network_get_mode, rsp_cb_data);
-
-	return TEL_RETURN_SUCCESS;
-}
-
-static void on_response_network_get_neighboring_cell_info(GObject *source_object,
-	GAsyncResult *res, gpointer user_data)
-{
-	TapiRespCbData *rsp_cb_data = user_data;
-	TelHandle *handle = GET_TAPI_HANDLE(rsp_cb_data);
-
-	TelNetworkNeighbourCellInfo cell_info;
-	GVariant *gsm_var, *umts_var;
-
-
-	TelNetworkResult result = TEL_NETWORK_RESULT_FAILURE;
-	GError *error = NULL;
-
-	dbg("Entry");
-
-	memset(&cell_info, 0, sizeof(TelNetworkNeighbourCellInfo));
-
-	telephony_network_call_get_ngbr_cell_info_finish(handle->network_proxy,
-		(int *)&result, &cell_info.gsm_list_count, &gsm_var,
-		&cell_info.umts_list_count, &umts_var,
-		res, &error);
-
-	CHECK_DEINIT(error, rsp_cb_data, result);
-
-	if (result != TEL_NETWORK_RESULT_SUCCESS) {
-		g_variant_unref(gsm_var);
-		g_variant_unref(umts_var);
-
-		RESP_CALLBACK_CALL(rsp_cb_data, result, NULL);
-		return;
-	}
-
-	if ((cell_info.gsm_list_count != 0)
-			&& (g_variant_n_children(gsm_var) == cell_info.gsm_list_count)) {
-		GVariantIter *iter = NULL, *iter_row = NULL;
-		GVariant *key_value;
-		const gchar *key;
-		guint i = 0;
-
-		dbg("GSM Cell list count: [%d]", cell_info.gsm_list_count);
-		cell_info.gsm_list =
-			g_malloc0(sizeof(TelNetworkGsmNeighbourCellInfo));
-
-		g_variant_get(gsm_var, "aa{sv}", &iter);
-		while (g_variant_iter_next(iter, "a{sv}", &iter_row)) {
-			while (g_variant_iter_loop(iter_row, "{sv}", &key, &key_value)) {
-				if (g_strcmp0(key, "cell_id") == 0) {
-					cell_info.gsm_list->cell_id =
-						g_variant_get_int32(key_value);
-				}
-				else if (g_strcmp0(key, "lac") == 0) {
-					cell_info.gsm_list->lac =
-						g_variant_get_int32(key_value);
-				}
-				else if (g_strcmp0(key, "bcch") == 0) {
-					cell_info.gsm_list->bcch =
-						g_variant_get_int32(key_value);
-				}
-				else if (g_strcmp0(key, "bsic") == 0) {
-					cell_info.gsm_list->bsic =
-						g_variant_get_int32(key_value);
-				}
-				else if (g_strcmp0(key, "rxlev") == 0) {
-					cell_info.gsm_list->rxlev =
-						g_variant_get_int32(key_value);
-				}
-			}
-			i++;
-			g_variant_iter_free(iter_row);
-		}
-		g_variant_iter_free(iter);
-	}
-	else {
-		warn("GSM Cell list count is NOT valid - Count: [%d]",
-			cell_info.gsm_list_count);
-		cell_info.gsm_list_count = 0;
-	}
-	g_variant_unref(gsm_var);
-
-	if ((cell_info.umts_list_count != 0)
-			&& (g_variant_n_children(umts_var) == cell_info.umts_list_count)) {
-		GVariantIter *iter = NULL, *iter_row = NULL;
-		GVariant *key_value;
-		const gchar *key;
-		guint i = 0;
-
-		dbg("GSM Cell list count: [%d]", cell_info.umts_list_count);
-		cell_info.umts_list =
-			g_malloc0(sizeof(TelNetworkUmtsNeighbourCellInfo));
-
-		g_variant_get(umts_var, "aa{sv}", &iter);
-		while (g_variant_iter_next(iter, "a{sv}", &iter_row)) {
-			while (g_variant_iter_loop(iter_row, "{sv}", &key, &key_value)) {
-				if (g_strcmp0(key, "cell_id") == 0) {
-					cell_info.umts_list->cell_id =
-						g_variant_get_int32(key_value);
-				}
-				else if (g_strcmp0(key, "lac") == 0) {
-					cell_info.umts_list->lac =
-						g_variant_get_int32(key_value);
-				}
-				else if (g_strcmp0(key, "arfcn") == 0) {
-					cell_info.umts_list->arfcn =
-						g_variant_get_int32(key_value);
-				}
-				else if (g_strcmp0(key, "psc") == 0) {
-					cell_info.umts_list->psc =
-						g_variant_get_int32(key_value);
-				}
-				else if (g_strcmp0(key, "rscp") == 0) {
-					cell_info.umts_list->rscp =
-						g_variant_get_int32(key_value);
-				}
-			}
-			i++;
-			g_variant_iter_free(iter_row);
-		}
-		g_variant_iter_free(iter);
-	}
-	else {
-		warn("GSM Cell list count is NOT valid - Count: [%d]",
-			cell_info.umts_list_count);
-		cell_info.umts_list_count = 0;
-	}
-	g_variant_unref(umts_var);
-
-	RESP_CALLBACK_CALL(rsp_cb_data, result, &cell_info);
-
-	/* Free resource */
-	g_free(cell_info.gsm_list);
-	g_free(cell_info.umts_list);
-}
-
-EXPORT_API TelReturn tapi_network_get_neighboring_cell_info(TelHandle *handle,
-	TapiResponseCb callback, void *user_data)
-{
-	TapiRespCbData *rsp_cb_data;
-
-	dbg("Entry");
-
-	g_return_val_if_fail(handle != NULL && callback != NULL,
-			TEL_RETURN_INVALID_PARAMETER);
-
-	MAKE_RESP_CB_DATA(rsp_cb_data, handle, callback, user_data);
-
-	telephony_network_call_get_ngbr_cell_info(handle->network_proxy,
-		NULL,
-		on_response_network_get_neighboring_cell_info, rsp_cb_data);
-
-	return TEL_RETURN_SUCCESS;
+	return ret;
 }
