@@ -150,7 +150,7 @@ static void _show_menu (MManager *m, struct menu_data menu[])
 		}
 
 		if (item->sub_menu) {
-			msg ("\e[1A\e[%dC >", POS_MORE);
+			msg ("\e[1A\e[%dC >", (int)POS_MORE);
 		}
 
 		i++;
