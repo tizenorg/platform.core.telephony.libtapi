@@ -12,7 +12,6 @@ Source0:        libslp-tapi-%{version}.tar.gz
 BuildRequires:  cmake
 BuildRequires:  pkgconfig(dlog)
 BuildRequires:  pkgconfig(glib-2.0)
-BuildRequires:  pkgconfig(security-server)
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 
