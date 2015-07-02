@@ -31,31 +31,31 @@ __BEGIN_DECLS
 #define TAPI_LOG_TAG "LIBTAPI"
 #endif
 
-#define msg(fmt,args...)  { RLOG(LOG_INFO, TAPI_LOG_TAG, fmt "\n", ##args); }
-#define dbg(fmt,args...)  { RLOG(LOG_DEBUG, TAPI_LOG_TAG, fmt "\n", ##args); }
-#define warn(fmt,args...)  { RLOG(LOG_WARN, TAPI_LOG_TAG, fmt "\n", ##args); }
-#define err(fmt,args...)  { RLOG(LOG_ERROR, TAPI_LOG_TAG, fmt "\n", ##args); }
-#define fatal(fmt,args...)  { RLOG(LOG_FATAL, TAPI_LOG_TAG, fmt "\n", ##args); }
+#define msg(fmt,args...)  do { RLOG(LOG_INFO, TAPI_LOG_TAG, fmt "\n", ##args); } while (0)
+#define dbg(fmt,args...)  do { RLOG(LOG_DEBUG, TAPI_LOG_TAG, fmt "\n", ##args); } while (0)
+#define warn(fmt,args...)  do { RLOG(LOG_WARN, TAPI_LOG_TAG, fmt "\n", ##args); } while (0)
+#define err(fmt,args...)  do { RLOG(LOG_ERROR, TAPI_LOG_TAG, fmt "\n", ##args); } while (0)
+#define fatal(fmt,args...)  do { RLOG(LOG_FATAL, TAPI_LOG_TAG, fmt "\n", ##args); } while (0)
 
-#define smsg(fmt,args...)  { SECURE_RLOG(LOG_INFO, TAPI_LOG_TAG, fmt "\n", ##args); }
-#define sdbg(fmt,args...)  { SECURE_RLOG(LOG_DEBUG, TAPI_LOG_TAG, fmt "\n", ##args); }
-#define swarn(fmt,args...)  { SECURE_RLOG(LOG_WARN, TAPI_LOG_TAG, fmt "\n", ##args); }
-#define serr(fmt,args...)  { SECURE_RLOG(LOG_ERROR, TAPI_LOG_TAG, fmt "\n", ##args); }
-#define sfatal(fmt,args...)  { SECURE_RLOG(LOG_FATAL, TAPI_LOG_TAG, fmt "\n", ##args); }
+#define smsg(fmt,args...)  do { SECURE_RLOG(LOG_INFO, TAPI_LOG_TAG, fmt "\n", ##args); } while (0)
+#define sdbg(fmt,args...)  do { SECURE_RLOG(LOG_DEBUG, TAPI_LOG_TAG, fmt "\n", ##args); } while (0)
+#define swarn(fmt,args...)  do { SECURE_RLOG(LOG_WARN, TAPI_LOG_TAG, fmt "\n", ##args); } while (0)
+#define serr(fmt,args...)  do { SECURE_RLOG(LOG_ERROR, TAPI_LOG_TAG, fmt "\n", ##args); } while (0)
+#define sfatal(fmt,args...)  do { SECURE_RLOG(LOG_FATAL, TAPI_LOG_TAG, fmt "\n", ##args); } while (0)
 
 #else
 
-#define msg(fmt,args...)
-#define dbg(fmt,args...)
-#define warn(fmt,args...)
-#define err(fmt,args...)
-#define fatal(fmt,args...)
+#define msg(fmt,args...) do {} while (0)
+#define dbg(fmt,args...) do {} while (0)
+#define warn(fmt,args...) do {} while (0)
+#define err(fmt,args...) do {} while (0)
+#define fatal(fmt,args...) do {} while (0)
 
-#define smsg(fmt,args...)
-#define sdbg(fmt,args...)
-#define swarn(fmt,args...)
-#define serr(fmt,args...)
-#define sfatal(fmt,args...)
+#define smsg(fmt,args...) do {} while (0)
+#define sdbg(fmt,args...) do {} while (0)
+#define swarn(fmt,args...) do {} while (0)
+#define serr(fmt,args...) do {} while (0)
+#define sfatal(fmt,args...) do {} while (0)
 
 #endif
 

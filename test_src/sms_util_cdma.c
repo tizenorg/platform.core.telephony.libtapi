@@ -39,7 +39,7 @@ static unsigned char __read_bits(const unsigned char *bytes, unsigned short star
 
 	/* Read only from the first byte */
 	if (start + len <= 8)
-		return (bytes[0] >> (8 - start - len)) & ((1 << len) -1);
+		return (bytes[0] >> (8 - start - len)) & ((1 << len) - 1);
 
 	/* Read (8 - start) from the first byte, (len - (8 - start)) from the second */
 	first = 8 - start;
@@ -253,20 +253,20 @@ static void __log_address(const struct sms_3gpp2_parameter *param)
 	char *number = NULL;
 	unsigned int iter;
 
-#define UPDATE_OFFSETS(num_bits) 	\
-	do {								\
-		bit_offset += num_bits;		\
-		if (bit_offset >= 8) {			\
-			bit_offset -= 8;			\
-			byte_offset += 1;			\
-		}							\
-	} while(0)						\
+#define UPDATE_OFFSETS(num_bits) do { \
+	bit_offset += num_bits; \
+	if (bit_offset >= 8) { \
+		bit_offset -= 8; \
+		byte_offset += 1; \
+	} \
+} while (0)
 
-#define SIZE_CHECK(req_size) 			\
-	if (param->len < req_size) {		\
-		msg("Unable to read Address");	\
-		return;						\
-	}								\
+#define SIZE_CHECK(req_size) do { \
+	if (param->len < req_size) { \
+		msg("Unable to read Address"); \
+		return; \
+	} \
+} while (0)
 
 	/*
 	 * 1 bit: Digit Mode
@@ -274,7 +274,7 @@ static void __log_address(const struct sms_3gpp2_parameter *param)
 	 * 3 bits: Number Type - If Digit Mode is DTMF, field is omitted
 	 * 4 bits: Number Plan - If Digit Mode is DTMF OR Number Mode is DNA, field is omitted
 	 * 8 bits: Num Fields
-	*/
+	 */
 
 	SIZE_CHECK(1);
 
@@ -283,13 +283,15 @@ static void __log_address(const struct sms_3gpp2_parameter *param)
 	switch (digit_mode) {
 	case SMS_3GPP2_DIGIT_MODE_DTMF:
 		msg("--Digit Mode: 4-bit DTMF code");
-		break;
+	break;
+
 	case SMS_3GPP2_DIGIT_MODE_ASCII:
 		msg("--Digit Mode: 8-bit DTMF code");
-		break;
+	break;
+
 	default:
 		msg("--Digit Mode: Unknown (%u)", digit_mode);
-		return;
+	return;
 	}
 
 	number_mode = __read_bits(&param->val[byte_offset], bit_offset, 1);
@@ -297,13 +299,15 @@ static void __log_address(const struct sms_3gpp2_parameter *param)
 	switch (number_mode) {
 	case SMS_3GPP2_NUMBER_MODE_ANSI:
 		msg("--Number Mode: ANSI T1.607-1990");
-		break;
+	break;
+
 	case SMS_3GPP2_NUMBER_MODE_DNA:
 		msg("--Number Mode: Data Network Address");
-		break;
+	break;
+
 	default:
 		msg("--Number Mode: Unknown (%u)", number_mode);
-		return;
+	return;
 	}
 
 	if (digit_mode == SMS_3GPP2_DIGIT_MODE_ASCII) {
@@ -379,32 +383,38 @@ static void __log_bearer_data_message_identifier
 	unsigned short msg_id;
 	unsigned char header_id;
 
-	if (subparam->len !=3)
+	if (subparam->len != 3)
 		return;
 
 	msg_type = __read_bits(&subparam->val[0], 0, 4);
 	switch (msg_type) {
 	case SMS_3GPP2_BSUB_TELSERVICE_MSG_TYPE_DELIVER:
 		msg("      Deliver (mobile-terminated only)");
-		break;
+	break;
+
 	case SMS_3GPP2_BSUB_TELSERVICE_MSG_TYPE_SUBMIT:
 		msg("      Submit (mobile-originated only)");
-		break;
+	break;
+
 	case SMS_3GPP2_BSUB_TELSERVICE_MSG_TYPE_CANCEL:
 		msg("      Cancellation (mobile-originated only)");
-		break;
+	break;
+
 	case SMS_3GPP2_BSUB_TELSERVICE_MSG_TYPE_DACK:
 		msg("      Delivery Acknowledgment (mobile-terminated only)");
-		break;
+	break;
+
 	case SMS_3GPP2_BSUB_TELSERVICE_MSG_TYPE_UACK:
 		msg("      User Acknowledgment (either direction)");
-		break;
+	break;
+
 	case SMS_3GPP2_BSUB_TELSERVICE_MSG_TYPE_RACK:
 		msg("      Read Acknowledgment (either direction)");
-		break;
+	break;
+
 	default:
 		msg("      Unknown msg_type (%u)", msg_type);
-		break;
+	break;
 	} /* End Switch */
 
 	msg_id = ((__read_bits(&subparam->val[0], 4, 8) << 8) | (__read_bits(&subparam->val[1], 4, 8)));
@@ -424,20 +434,20 @@ static void __log_bearer_data_user_data
 	unsigned int byte_offset = 0;
 	unsigned int bit_offset = 0;
 
-#define UPDATE_OFFSETS(num_bits) 	\
-	do {								\
-		bit_offset += num_bits;		\
-		if (bit_offset >= 8) {			\
-			bit_offset -= 8;			\
-			byte_offset += 1;			\
-		}							\
-	} while(0)						\
+#define UPDATE_OFFSETS(num_bits) do { \
+	bit_offset += num_bits; \
+	if (bit_offset >= 8) { \
+		bit_offset -= 8; \
+		byte_offset += 1; \
+	} \
+} while (0)
 
-#define SIZE_CHECK(req_size) 			\
-	if (subparam->len < req_size) {		\
-		msg("Unable to read Address");	\
-		return;						\
-	}								\
+#define SIZE_CHECK(req_size) do { \
+	if (subparam->len < req_size) { \
+		msg("Unable to read Address"); \
+		return; \
+	} \
+} while (0)
 
 	SIZE_CHECK(1);
 	msg_encoding = __read_bits(&subparam->val[byte_offset], bit_offset, 5);
@@ -445,40 +455,51 @@ static void __log_bearer_data_user_data
 	switch (msg_encoding) {
 	case SMS_3GPP2_BSUB_UD_OCTET_ENCODING:
 		msg("      Encoding: Octet, unspecified");
-		break;
+	break;
+
 	case SMS_3GPP2_BSUB_UD_EPM_ENCODING:
 		msg("      Encoding: Extended Protocol Message");
-		break;
+	break;
+
 	case SMS_3GPP2_BSUB_UD_ASCII7BIT_ENCODING:
 		msg("      Encoding: 7-bit ASCII");
-		break;
+	break;
+
 	case SMS_3GPP2_BSUB_UD_IA5_ENCODING:
 		msg("      Encoding: IA5");
-		break;
+	break;
+
 	case SMS_3GPP2_BSUB_UD_UNICODE_ENCODING:
 		msg("      Encoding: UNICODE");
-		break;
+	break;
+
 	case SMS_3GPP2_BSUB_UD_SHIFTJIS_ENCODING:
 		msg("      Encoding: Shift-JIS");
-		break;
+	break;
+
 	case SMS_3GPP2_BSUB_UD_KOREAN_ENCODING:
 		msg("      Encoding: Korean");
-		break;
+	break;
+
 	case SMS_3GPP2_BSUB_UD_HEBREW_ENCODING:
 		msg("      Encoding: Latin/Hebrew");
-		break;
+	break;
+
 	case SMS_3GPP2_BSUB_UD_LATIN_ENCODING:
 		msg("      Encoding: Latin");
-		break;
+	break;
+
 	case SMS_3GPP2_BSUB_UD_GSM7BIT_ENCODING:
 		msg("      Encoding: GSM 7-bit default alphabet");
-		break;
+	break;
+
 	case SMS_3GPP2_BSUB_UD_GSMDCS_ENCODING:
 		msg("      Encoding: GSM Data-Coding-Scheme");
-		break;
+	break;
+
 	default:
 		msg("      Unknown msg_encoding (%u)", msg_encoding);
-		break;
+	break;
 	} /* End Switch */
 
 	if (msg_encoding == SMS_3GPP2_BSUB_UD_EPM_ENCODING) {
@@ -495,12 +516,10 @@ static void __log_bearer_data_user_data
 	msg("      Num Fields (%u)", num_fields);
 
 	if (msg_encoding == SMS_3GPP2_BSUB_UD_OCTET_ENCODING) {
-		//TODO
-	}
-	else if (msg_encoding == SMS_3GPP2_BSUB_UD_EPM_ENCODING) {
-		//TODO
-	}
-	else if (msg_encoding == SMS_3GPP2_BSUB_UD_ASCII7BIT_ENCODING) {
+		/* TODO */
+	} else if (msg_encoding == SMS_3GPP2_BSUB_UD_EPM_ENCODING) {
+		/* TODO */
+	} else if (msg_encoding == SMS_3GPP2_BSUB_UD_ASCII7BIT_ENCODING) {
 		char *message;
 		unsigned int iter;
 
@@ -516,30 +535,22 @@ static void __log_bearer_data_user_data
 			msg("      Message (%s)", message);
 			free(message);
 		}
-	}
-	else if (msg_encoding == SMS_3GPP2_BSUB_UD_IA5_ENCODING) {
-		//TODO
-	}
-	else if (msg_encoding == SMS_3GPP2_BSUB_UD_UNICODE_ENCODING) {
-		//TODO
-	}
-	else if (msg_encoding == SMS_3GPP2_BSUB_UD_SHIFTJIS_ENCODING) {
-		//TODO
-	}
-	else if (msg_encoding == SMS_3GPP2_BSUB_UD_KOREAN_ENCODING) {
-		//TODO
-	}
-	else if (msg_encoding == SMS_3GPP2_BSUB_UD_HEBREW_ENCODING) {
-		//TODO
-	}
-	else if (msg_encoding == SMS_3GPP2_BSUB_UD_LATIN_ENCODING) {
-		//TODO
-	}
-	else if (msg_encoding == SMS_3GPP2_BSUB_UD_GSM7BIT_ENCODING) {
-		//TODO
-	}
-	else if (msg_encoding == SMS_3GPP2_BSUB_UD_GSMDCS_ENCODING) {
-		//TODO
+	} else if (msg_encoding == SMS_3GPP2_BSUB_UD_IA5_ENCODING) {
+		/* TODO */
+	} else if (msg_encoding == SMS_3GPP2_BSUB_UD_UNICODE_ENCODING) {
+		/* TODO */
+	} else if (msg_encoding == SMS_3GPP2_BSUB_UD_SHIFTJIS_ENCODING) {
+		/* TODO */
+	} else if (msg_encoding == SMS_3GPP2_BSUB_UD_KOREAN_ENCODING) {
+		/* TODO */
+	} else if (msg_encoding == SMS_3GPP2_BSUB_UD_HEBREW_ENCODING) {
+		/* TODO */
+	} else if (msg_encoding == SMS_3GPP2_BSUB_UD_LATIN_ENCODING) {
+		/* TODO */
+	} else if (msg_encoding == SMS_3GPP2_BSUB_UD_GSM7BIT_ENCODING) {
+		/* TODO */
+	} else if (msg_encoding == SMS_3GPP2_BSUB_UD_GSMDCS_ENCODING) {
+		/* TODO */
 	}
 
 #undef UPDATE_OFFSETS
@@ -550,11 +561,12 @@ static void __log_bearer_data(const struct sms_3gpp2_parameter *param)
 {
 	unsigned int offset = 0;
 
-#define SIZE_CHECK(req_size) 			\
-	if (param->len < req_size) {		\
-		msg("Unable to read Address");	\
-		return;						\
-	}								\
+#define SIZE_CHECK(req_size) do { \
+	if (param->len < req_size) { \
+		msg("Unable to read Address"); \
+		return; \
+	} \
+} while (0)
 
 	while (offset < param->len) {
 		const struct sms_3gpp2_parameter *subparam;
@@ -570,71 +582,92 @@ static void __log_bearer_data(const struct sms_3gpp2_parameter *param)
 		case SMS_3GPP2_BSUB_ID_MESSAGE_IDENTIFIER:
 			msg("--Bearer Data: Message Identifier");
 			__log_bearer_data_message_identifier(subparam);
-			break;
+		break;
+
 		case SMS_3GPP2_BSUB_ID_USER_DATA:
 			msg("--Bearer Data: User Data");
 			__log_bearer_data_user_data(subparam);
-			break;
+		break;
+
 		case SMS_3GPP2_BSUB_ID_USER_RESPONSE_CODE:
 			msg("--(TODO)Bearer Data: User Response Code");
-			break;
+		break;
+
 		case SMS_3GPP2_BSUB_ID_MESSAGE_CENTER_TIMESTAMP:
 			msg("--(TODO)Bearer Data: Message Center Time Stamp");
-			break;
+		break;
+
 		case SMS_3GPP2_BSUB_ID_VP_ABSOLUTE:
 			msg("--(TODO)Bearer Data: Validity Period - Absolute");
-			break;
+		break;
+
 		case SMS_3GPP2_BSUB_ID_VP_RELATIVE:
 			msg("--(TODO)Bearer Data: Validity Period - Relative");
-			break;
+		break;
+
 		case SMS_3GPP2_BSUB_ID_DDT_ABSOLUTE:
 			msg("--(TODO)Bearer Data: Deferred Delivery Time - Absolute");
-			break;
+		break;
+
 		case SMS_3GPP2_BSUB_ID_DDT_RELATIVE:
 			msg("--(TODO)Bearer Data: Deferred Delivery Time - Relative");
-			break;
+		break;
+
 		case SMS_3GPP2_BSUB_ID_PRIORITY_INDICATOR:
 			msg("--(TODO)Bearer Data: Priority Indicator");
-			break;
+		break;
+
 		case SMS_3GPP2_BSUB_ID_PRIVACY_INDICATOR:
 			msg("--(TODO)Bearer Data: Privacy Indicator");
-			break;
+		break;
+
 		case SMS_3GPP2_BSUB_ID_REPLY_OPTION:
 			msg("--(TODO)Bearer Data: Reply Option");
-			break;
+		break;
+
 		case SMS_3GPP2_BSUB_ID_MESSAGES_NUMBER:
 			msg("--(TODO)Bearer Data: Number of Messages");
-			break;
+		break;
+
 		case SMS_3GPP2_BSUB_ID_MESSAGE_DELIVERY_ALERT:
 			msg("--(TODO)Bearer Data: Alert on Message Delivery");
-			break;
+		break;
+
 		case SMS_3GPP2_BSUB_ID_LANGUAGE_INDICATOR:
 			msg("--(TODO)Bearer Data: Language Indicator");
-			break;
+		break;
+
 		case SMS_3GPP2_BSUB_ID_CALLBACK_NUMBER:
 			msg("--(TODO)Bearer Data: Call-Back Number");
-			break;
+		break;
+
 		case SMS_3GPP2_BSUB_ID_MESSAGE_DISPLAY_MODE:
 			msg("--(TODO)Bearer Data: Message Display Mode");
-			break;
+		break;
+
 		case SMS_3GPP2_BSUB_ID_MULTI_ENCODING_UD:
 			msg("--(TODO)Bearer Data: Multiple Encoding User Data");
-			break;
+		break;
+
 		case SMS_3GPP2_BSUB_ID_DEPOSIT_INDEX:
 			msg("--(TODO)Bearer Data: Message Deposit Index");
-			break;
+		break;
+
 		case SMS_3GPP2_BSUB_ID_SERVICE_PROGRAM_DATA:
 			msg("--(TODO)Bearer Data: Service Category Program Data");
-			break;
+		break;
+
 		case SMS_3GPP2_BSUB_ID_SERVICE_PROGRAM_RESULTS:
 			msg("--(TODO)Bearer Data: Service Category Program Results");
-			break;
+		break;
+
 		case SMS_3GPP2_BSUB_ID_MESSAGE_STATUS:
 			msg("--(TODO)Bearer Data: Message Status");
-			break;
+		break;
+
 		default:
 			msg("--Bearer Data: Unknown (%u)", subparam->id);
-			break;
+		break;
 		} /* End Switch */
 	}
 
@@ -646,11 +679,12 @@ void sms_util_decode_3gpp2(unsigned int pdu_len, unsigned char *pdu)
 	unsigned int offset = 0;
 	unsigned int msg_type;
 
-#define SIZE_CHECK(req_size, err_log) 	\
-	if (pdu_len < req_size) {			\
-		msg("%s", #err_log);			\
-		return;						\
-	}
+#define SIZE_CHECK(req_size, err_log) do { \
+	if (pdu_len < req_size) { \
+		msg("%s", #err_log); \
+		return; \
+	} \
+} while (0)
 
 	/* Message Type */
 	SIZE_CHECK(offset + 1, "Unbale to read Message Type");
@@ -658,16 +692,19 @@ void sms_util_decode_3gpp2(unsigned int pdu_len, unsigned char *pdu)
 	switch (msg_type) {
 	case SMS_3GPP2_POINT_TO_POINT:
 		msg("--new 3GPP2 Point to Point message");
-		break;
+	break;
+
 	case SMS_3GPP2_ACKNOWLEDGE:
 		msg("--new 3GPP2 ACK message");
-		break;
+	break;
+
 	case SMS_3GPP2_BROADCAST:
 		msg("--new 3GPP2 Broadcast message");
-		break;
+	break;
+
 	default:
 		msg("Unknown Message Type");
-		return;
+	return;
 	}
 
 	/* Rest all are sms_3gpp2_parameter */
@@ -681,55 +718,46 @@ void sms_util_decode_3gpp2(unsigned int pdu_len, unsigned char *pdu)
 		SIZE_CHECK(offset + param->len, "Unable to read Parameter Value");
 		offset += param->len;
 
-		switch(param->id) {
+		switch (param->id) {
 		case SMS_3GPP2_PARAM_ID_TELESERVICE_ID:
-		{
 			__log_teleservice_id(param);
-		} break;
+		break;
 
 		case SMS_3GPP2_PARAM_ID_SERVICE_CATEGORY:
-		{
 			__log_service_category(param);
-		} break;
+		break;
 
 		case SMS_3GPP2_PARAM_ID_ORIGINATING_ADDRESS:
-		{
 			__log_address(param);
-		} break;
+		break;
 
 		case SMS_3GPP2_PARAM_ID_ORIGINATING_SUBADDRESS:
-		{
 			msg("TODO: Originating Sub-Address");
-		} break;
+		break;
 
 		case SMS_3GPP2_PARAM_ID_DESTINATION_ADDRESS:
-		{
 			__log_address(param);
-		} break;
+		break;
 
 		case SMS_3GPP2_PARAM_ID_DESTINATION_SUBADDRESS:
-		{
 			msg("TODO: Originating Sub-Address");
-		} break;
+		break;
 
 		case SMS_3GPP2_PARAM_ID_BEARER_REPLY_OPTION:
-		{
 			__log_bearer_reply_option(param);
-		} break;
+		break;
 
 		case SMS_3GPP2_PARAM_ID_CAUSE_CODES:
-		{
 			__log_cause_codes(param);
-		} break;
+		break;
 
 		case SMS_3GPP2_PARAM_ID_BEARER_DATA:
-		{
 			__log_bearer_data(param);
-		} break;
+		break;
 
 		default:
 			msg("Unhandled Parameter ID 0x%x", param->id);
-			break;
+		break;
 		} /* End Switch */
 	}
 

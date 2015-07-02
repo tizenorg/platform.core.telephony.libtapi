@@ -40,18 +40,17 @@ static void on_response_default(GObject *source_object, GAsyncResult *res, gpoin
 	GVariant *dbus_result = NULL;
 	int data = 0;
 
-	conn = G_DBUS_CONNECTION (source_object);
+	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
 	CHECK_ERROR(error);
 
 	dbg("on_response_default type_format(%s)", g_variant_get_type_string(dbus_result));
 
-	g_variant_get (dbus_result, "(i)", &result);
+	g_variant_get(dbus_result, "(i)", &result);
 
 	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn) {
+		if (evt_cb_data->cb_fn)
 			evt_cb_data->cb_fn(evt_cb_data->handle, result, &data, evt_cb_data->user_data);
-		}
 
 		g_free(evt_cb_data);
 	}
@@ -65,7 +64,7 @@ static void on_response_read_msg(GObject *source_object, GAsyncResult *res, gpoi
 	struct tapi_resp_data *evt_cb_data = user_data;
 	int result = -1;
 
-	TelSmsData_t	readMsg = {0,};
+	TelSmsData_t readMsg = {0,};
 	GVariant *dbus_result = NULL;
 
 	GVariant *sca = 0, *tpdu = 0;
@@ -73,14 +72,13 @@ static void on_response_read_msg(GObject *source_object, GAsyncResult *res, gpoi
 	GVariantIter *iter = 0;
 	GVariant *inner_gv = 0;
 
-	conn = G_DBUS_CONNECTION (source_object);
+	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
 	CHECK_ERROR(error);
 
 	dbg("on_response_read_msg type_format(%s)", g_variant_get_type_string(dbus_result));
 
-//	readMsg.SimIndex = 0xFFFFFFFF;
-	g_variant_get (dbus_result, "(iiii@vi@v)", &result,
+	g_variant_get(dbus_result, "(iiii@vi@v)", &result,
 			&readMsg.SimIndex,
 			&readMsg.MsgStatus,
 			&readMsg.SmsData.format,
@@ -88,22 +86,22 @@ static void on_response_read_msg(GObject *source_object, GAsyncResult *res, gpoi
 			&readMsg.SmsData.MsgLength,
 			&tpdu);
 
-	inner_gv = g_variant_get_variant( sca );
+	inner_gv = g_variant_get_variant(sca);
 	g_variant_get(inner_gv, "ay", &iter);
-	while( g_variant_iter_loop(iter, "y", &readMsg.SmsData.Sca[i] ) ) {
+	while (g_variant_iter_loop(iter, "y", &readMsg.SmsData.Sca[i])) {
 		i++;
-		if( i >= TAPI_SIM_SMSP_ADDRESS_LEN )
+		if (i >= TAPI_SIM_SMSP_ADDRESS_LEN)
 			break;
 	}
 
 	g_variant_iter_free(iter);
 
-	inner_gv = g_variant_get_variant( tpdu );
+	inner_gv = g_variant_get_variant(tpdu);
 	g_variant_get(inner_gv, "ay", &iter);
-	i= 0;
-	while( g_variant_iter_loop(iter, "y", &readMsg.SmsData.szData[i]) ) {
+	i = 0;
+	while (g_variant_iter_loop(iter, "y", &readMsg.SmsData.szData[i])) {
 		i++;
-		if( i >= TAPI_NETTEXT_SMDATA_SIZE_MAX + 1 )
+		if (i >= TAPI_NETTEXT_SMDATA_SIZE_MAX + 1)
 			break;
 	}
 	g_variant_iter_free(iter);
@@ -112,9 +110,8 @@ static void on_response_read_msg(GObject *source_object, GAsyncResult *res, gpoi
 	g_variant_unref(inner_gv);
 
 	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn) {
+		if (evt_cb_data->cb_fn)
 			evt_cb_data->cb_fn(evt_cb_data->handle, result, &readMsg, evt_cb_data->user_data);
-		}
 
 		g_free(evt_cb_data);
 	}
@@ -131,18 +128,17 @@ static void on_response_write_msg(GObject *source_object, GAsyncResult *res, gpo
 
 	GVariant *dbus_result = NULL;
 
-	conn = G_DBUS_CONNECTION (source_object);
+	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
 	CHECK_ERROR(error);
 
 	dbg("on_response_write_msg type_format(%s)", g_variant_get_type_string(dbus_result));
 
-	g_variant_get (dbus_result, "(ii)", &result, &sms_index);
+	g_variant_get(dbus_result, "(ii)", &result, &sms_index);
 
 	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn) {
+		if (evt_cb_data->cb_fn)
 			evt_cb_data->cb_fn(evt_cb_data->handle, result, &sms_index, evt_cb_data->user_data);
-		}
 
 		g_free(evt_cb_data);
 	}
@@ -159,18 +155,17 @@ static void on_response_delete_msg(GObject *source_object, GAsyncResult *res, gp
 
 	GVariant *dbus_result = NULL;
 
-	conn = G_DBUS_CONNECTION (source_object);
+	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
 	CHECK_ERROR(error);
 
 	dbg("on_response_delete_msg type_format(%s)", g_variant_get_type_string(dbus_result));
 
-	g_variant_get (dbus_result, "(ii)", &result, &del_index);
+	g_variant_get(dbus_result, "(ii)", &result, &del_index);
 
 	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn) {
+		if (evt_cb_data->cb_fn)
 			evt_cb_data->cb_fn(evt_cb_data->handle, result, &del_index, evt_cb_data->user_data);
-		}
 
 		g_free(evt_cb_data);
 	}
@@ -190,16 +185,16 @@ static void on_response_get_msg_count(GObject *source_object, GAsyncResult *res,
 	int idx = 0;
 	GVariantIter *iter = NULL;
 
-	conn = G_DBUS_CONNECTION (source_object);
+	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
 	CHECK_ERROR(error);
 
 	dbg("on_response_get_msg_count type_format(%s)", g_variant_get_type_string(dbus_result));
 
-	g_variant_get (dbus_result, "(iiiai)", &result,
-								&storedMsgCnt.TotalCount,
-								&storedMsgCnt.UsedCount,
-								&iter);
+	g_variant_get(dbus_result, "(iiiai)", &result,
+		&storedMsgCnt.TotalCount,
+		&storedMsgCnt.UsedCount,
+		&iter);
 
 	i = 0;
 	while (g_variant_iter_loop(iter, "i", &idx)) {
@@ -212,9 +207,8 @@ static void on_response_get_msg_count(GObject *source_object, GAsyncResult *res,
 	g_variant_iter_free(iter);
 
 	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn) {
+		if (evt_cb_data->cb_fn)
 			evt_cb_data->cb_fn(evt_cb_data->handle, result, &storedMsgCnt, evt_cb_data->user_data);
-		}
 
 		g_free(evt_cb_data);
 	}
@@ -237,23 +231,23 @@ static void on_response_get_sca(GObject *source_object, GAsyncResult *res, gpoin
 	GVariant *inner_gv = 0;
 
 
-	conn = G_DBUS_CONNECTION (source_object);
+	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
 	CHECK_ERROR(error);
 
 	dbg("on_response_get_sca type_format(%s)", g_variant_get_type_string(dbus_result));
 
-	g_variant_get (dbus_result, "(iiii@v)", &result,
-					&scaInfo.Ton,
-					&scaInfo.Npi,
-					&scaInfo.DialNumLen,
-					&num);
+	g_variant_get(dbus_result, "(iiii@v)", &result,
+		&scaInfo.Ton,
+		&scaInfo.Npi,
+		&scaInfo.DialNumLen,
+		&num);
 
-	inner_gv = g_variant_get_variant( num );
+	inner_gv = g_variant_get_variant(num);
 	g_variant_get(inner_gv, "ay", &iter);
-	while( g_variant_iter_loop(iter, "y", &scaInfo.szDiallingNum[i] ) ) {
+	while (g_variant_iter_loop(iter, "y", &scaInfo.szDiallingNum[i])) {
 		i++;
-		if( i >= TAPI_SIM_SMSP_ADDRESS_LEN + 1 )
+		if (i >= TAPI_SIM_SMSP_ADDRESS_LEN + 1)
 			break;
 	}
 	g_variant_iter_free(iter);
@@ -261,9 +255,8 @@ static void on_response_get_sca(GObject *source_object, GAsyncResult *res, gpoin
 	g_variant_unref(inner_gv);
 
 	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn) {
+		if (evt_cb_data->cb_fn)
 			evt_cb_data->cb_fn(evt_cb_data->handle, result, &scaInfo, evt_cb_data->user_data);
-		}
 
 		g_free(evt_cb_data);
 	}
@@ -285,37 +278,32 @@ static void on_response_get_cb_config(GObject *source_object, GAsyncResult *res,
 	GVariantIter *iter_row = NULL;
 	const gchar *key = NULL;
 
-	conn = G_DBUS_CONNECTION (source_object);
+	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
 	CHECK_ERROR(error);
 
 	dbg("on_response_get_cb_config type_format(%s)", g_variant_get_type_string(dbus_result));
 
-	g_variant_get (dbus_result, "(iiiiiaa{sv})", &result,
-					&cbConfig.Net3gppType,
-					&cbConfig.CBEnabled,
-					&cbConfig.MsgIdMaxCount,
-					&cbConfig.MsgIdRangeCount,
-					&iter);
+	g_variant_get(dbus_result, "(iiiiiaa{sv})", &result,
+			&cbConfig.Net3gppType,
+			&cbConfig.CBEnabled,
+			&cbConfig.MsgIdMaxCount,
+			&cbConfig.MsgIdRangeCount,
+			&iter);
 
 	i = 0;
 	while (g_variant_iter_next(iter, "a{sv}", &iter_row)) {
 		while (g_variant_iter_loop(iter_row, "{sv}", &key, &value)) {
-			if (!g_strcmp0(key, "FromMsgId")) {
+			if (!g_strcmp0(key, "FromMsgId"))
 				cbConfig.MsgIDs[i].Net3gpp.FromMsgId = g_variant_get_uint16(value);
-			}
-			if (!g_strcmp0(key, "ToMsgId")) {
+			else if (!g_strcmp0(key, "ToMsgId"))
 				cbConfig.MsgIDs[i].Net3gpp.ToMsgId = g_variant_get_uint16(value);
-			}
-			if (!g_strcmp0(key, "CBCategory")) {
+			else if (!g_strcmp0(key, "CBCategory"))
 				cbConfig.MsgIDs[i].Net3gpp2.CBCategory = g_variant_get_uint16(value);
-			}
-			if (!g_strcmp0(key, "CBLanguage")) {
+			else if (!g_strcmp0(key, "CBLanguage"))
 				cbConfig.MsgIDs[i].Net3gpp2.CBLanguage = g_variant_get_uint16(value);
-			}
-			if (!g_strcmp0(key, "Selected")) {
+			else if (!g_strcmp0(key, "Selected"))
 				cbConfig.MsgIDs[i].Net3gpp.Selected = g_variant_get_byte(value);
-			}
 		}
 		i++;
 		g_variant_iter_free(iter_row);
@@ -323,9 +311,8 @@ static void on_response_get_cb_config(GObject *source_object, GAsyncResult *res,
 	g_variant_iter_free(iter);
 
 	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn) {
+		if (evt_cb_data->cb_fn)
 			evt_cb_data->cb_fn(evt_cb_data->handle, result, &cbConfig, evt_cb_data->user_data);
-		}
 
 		g_free(evt_cb_data);
 	}
@@ -347,13 +334,13 @@ static void on_response_get_sms_params(GObject *source_object, GAsyncResult *res
 	GVariantIter *iter = 0;
 	GVariant *inner_gv = 0;
 
-	conn = G_DBUS_CONNECTION (source_object);
+	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
 	CHECK_ERROR(error);
 
 	dbg("on_response_get_sms_params type_format(%s)", g_variant_get_type_string(dbus_result));
 
-	g_variant_get (dbus_result, "(iiii@viiii@viii@viii)", &result,
+	g_variant_get(dbus_result, "(iiii@viiii@viii@viii)", &result,
 								&paramInfo.RecordIndex,
 								&paramInfo.RecordLen,
 								&paramInfo.AlphaIdLen,
@@ -371,33 +358,33 @@ static void on_response_get_sms_params(GObject *source_object, GAsyncResult *res
 								&paramInfo.TpDataCodingScheme,
 								&paramInfo.TpValidityPeriod);
 
-	inner_gv = g_variant_get_variant( alphaId );
+	inner_gv = g_variant_get_variant(alphaId);
 	g_variant_get(inner_gv, "ay", &iter);
-	while( g_variant_iter_loop(iter, "y", &paramInfo.szAlphaId[i] ) ) {
+	while (g_variant_iter_loop(iter, "y", &paramInfo.szAlphaId[i])) {
 		i++;
-		if( i >= TAPI_SIM_SMSP_ALPHA_ID_LEN_MAX + 1 )
+		if (i >= TAPI_SIM_SMSP_ALPHA_ID_LEN_MAX + 1)
 			break;
 	}
 
 	g_variant_iter_free(iter);
 
-	inner_gv = g_variant_get_variant( destDialNum );
+	inner_gv = g_variant_get_variant(destDialNum);
 	g_variant_get(inner_gv, "ay", &iter);
 	i = 0;
-	while( g_variant_iter_loop(iter, "y", &paramInfo.TpDestAddr.szDiallingNum[i] ) ) {
+	while (g_variant_iter_loop(iter, "y", &paramInfo.TpDestAddr.szDiallingNum[i])) {
 		i++;
-		if( i >= TAPI_SIM_SMSP_ADDRESS_LEN + 1 )
+		if (i >= TAPI_SIM_SMSP_ADDRESS_LEN + 1)
 			break;
 	}
 
 	g_variant_iter_free(iter);
 
-	inner_gv = g_variant_get_variant( scaDialNum );
+	inner_gv = g_variant_get_variant(scaDialNum);
 	g_variant_get(inner_gv, "ay", &iter);
 	i = 0;
-	while( g_variant_iter_loop(iter, "y", &paramInfo.TpSvcCntrAddr.szDiallingNum[i] ) ) {
+	while (g_variant_iter_loop(iter, "y", &paramInfo.TpSvcCntrAddr.szDiallingNum[i])) {
 		i++;
-		if( i >= TAPI_SIM_SMSP_ADDRESS_LEN + 1 )
+		if (i >= TAPI_SIM_SMSP_ADDRESS_LEN + 1)
 			break;
 	}
 
@@ -408,9 +395,8 @@ static void on_response_get_sms_params(GObject *source_object, GAsyncResult *res
 	g_variant_unref(inner_gv);
 
 	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn) {
+		if (evt_cb_data->cb_fn)
 			evt_cb_data->cb_fn(evt_cb_data->handle, result, &paramInfo, evt_cb_data->user_data);
-		}
 
 		g_free(evt_cb_data);
 	}
@@ -427,19 +413,18 @@ static void on_response_get_sms_param_cnt(GObject *source_object, GAsyncResult *
 
 	GVariant *dbus_result = NULL;
 
-	conn = G_DBUS_CONNECTION (source_object);
+	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
 	CHECK_ERROR(error);
 
 	dbg("on_response_get_sms_param_cnt type_format(%s)", g_variant_get_type_string(dbus_result));
 
-	g_variant_get (dbus_result, "(ii)", &result,
+	g_variant_get(dbus_result, "(ii)", &result,
 			&recordCount);
 
 	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn) {
+		if (evt_cb_data->cb_fn)
 			evt_cb_data->cb_fn(evt_cb_data->handle, result, &recordCount, evt_cb_data->user_data);
-		}
 
 		g_free(evt_cb_data);
 	}
@@ -449,7 +434,7 @@ static void on_response_get_sms_param_cnt(GObject *source_object, GAsyncResult *
 EXPORT_API int tel_send_sms(struct tapi_handle *handle,
 		const TelSmsDatapackageInfo_t *pDataPackage,
 		int bMoreMsgToSend,
-		tapi_response_cb callback, void* user_data)
+		tapi_response_cb callback, void *user_data)
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 	GVariant *param;
@@ -471,24 +456,20 @@ EXPORT_API int tel_send_sms(struct tapi_handle *handle,
 
 	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
-	g_variant_builder_init(&b, G_VARIANT_TYPE("ay") );
-	for( i=0; i<TAPI_SIM_SMSP_ADDRESS_LEN; i++) {
-		g_variant_builder_add(&b, "y", pDataPackage->Sca[i] );
-	}
+	g_variant_builder_init(&b, G_VARIANT_TYPE("ay"));
+	for (i = 0; i < TAPI_SIM_SMSP_ADDRESS_LEN; i++)
+		g_variant_builder_add(&b, "y", pDataPackage->Sca[i]);
 	sca = g_variant_builder_end(&b);
 	packet_sca = g_variant_new("v", sca);
 
-	g_variant_builder_init(&b, G_VARIANT_TYPE("ay") );
-	for( i=0; i<TAPI_NETTEXT_SMDATA_SIZE_MAX + 1; i++) {
-		g_variant_builder_add(&b, "y", pDataPackage->szData[i] );
-	}
+	g_variant_builder_init(&b, G_VARIANT_TYPE("ay"));
+	for (i = 0; i < TAPI_NETTEXT_SMDATA_SIZE_MAX + 1; i++)
+		g_variant_builder_add(&b, "y", pDataPackage->szData[i]);
 	tpdu = g_variant_builder_end(&b);
 	packet_tpdu = g_variant_new("v", tpdu);
 
 	param = g_variant_new("(i@vi@vi)", pDataPackage->format, packet_sca,
-							pDataPackage->MsgLength,
-							packet_tpdu,
-							bMoreMsgToSend);
+		pDataPackage->MsgLength, packet_tpdu, bMoreMsgToSend);
 
 	g_dbus_connection_call(handle->dbus_connection,
 		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,
@@ -499,7 +480,7 @@ EXPORT_API int tel_send_sms(struct tapi_handle *handle,
 	return TAPI_API_SUCCESS;
 }
 
-EXPORT_API int tel_read_sms_in_sim(struct tapi_handle *handle, int read_index, tapi_response_cb callback, void* user_data)
+EXPORT_API int tel_read_sms_in_sim(struct tapi_handle *handle, int read_index, tapi_response_cb callback, void *user_data)
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 	GVariant *param;
@@ -509,8 +490,8 @@ EXPORT_API int tel_read_sms_in_sim(struct tapi_handle *handle, int read_index, t
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
-	if( (read_index < 0) || (read_index > TAPI_NETTEXT_MAX_INDEX) ) {
-		err("Invalid Input -Read SMS %d",read_index);
+	if ((read_index < 0) || (read_index > TAPI_NETTEXT_MAX_INDEX)) {
+		err("Invalid Input -Read SMS %d", read_index);
 
 		return TAPI_API_INVALID_INPUT;
 	}
@@ -528,7 +509,7 @@ EXPORT_API int tel_read_sms_in_sim(struct tapi_handle *handle, int read_index, t
 	return TAPI_API_SUCCESS;
 }
 
-EXPORT_API int tel_write_sms_in_sim(struct tapi_handle *handle, const TelSmsData_t *pWriteData, tapi_response_cb callback, void* user_data)
+EXPORT_API int tel_write_sms_in_sim(struct tapi_handle *handle, const TelSmsData_t *pWriteData, tapi_response_cb callback, void *user_data)
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 	GVariant *param;
@@ -545,24 +526,23 @@ EXPORT_API int tel_write_sms_in_sim(struct tapi_handle *handle, const TelSmsData
 
 	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
-	 g_variant_builder_init(&b, G_VARIANT_TYPE("ay") );
-	for( i=0; i<TAPI_SIM_SMSP_ADDRESS_LEN; i++) {
-		g_variant_builder_add(&b, "y", pWriteData->SmsData.Sca[i] );
-	}
+	 g_variant_builder_init(&b, G_VARIANT_TYPE("ay"));
+	for (i = 0; i < TAPI_SIM_SMSP_ADDRESS_LEN; i++)
+		g_variant_builder_add(&b, "y", pWriteData->SmsData.Sca[i]);
 	sca = g_variant_builder_end(&b);
 	packet_sca = g_variant_new("v", sca);
 
-	 g_variant_builder_init(&b, G_VARIANT_TYPE("ay") );
-	for( i=0; i<TAPI_NETTEXT_SMDATA_SIZE_MAX + 1; i++) {
-		g_variant_builder_add(&b, "y", pWriteData->SmsData.szData[i] );
-	}
+	 g_variant_builder_init(&b, G_VARIANT_TYPE("ay"));
+	for (i = 0; i < TAPI_NETTEXT_SMDATA_SIZE_MAX + 1; i++)
+		g_variant_builder_add(&b, "y", pWriteData->SmsData.szData[i]);
 	tpdu = g_variant_builder_end(&b);
 	packet_tpdu = g_variant_new("v", tpdu);
 
-	param = g_variant_new("(ii@vi@v)", pWriteData->SmsData.format,pWriteData->MsgStatus,
-							packet_sca,
-							pWriteData->SmsData.MsgLength,
-							packet_tpdu);
+	param = g_variant_new("(ii@vi@v)", pWriteData->SmsData.format,
+		pWriteData->MsgStatus,
+		packet_sca,
+		pWriteData->SmsData.MsgLength,
+		packet_tpdu);
 
 	g_dbus_connection_call(handle->dbus_connection,
 		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,
@@ -573,7 +553,7 @@ EXPORT_API int tel_write_sms_in_sim(struct tapi_handle *handle, const TelSmsData
 	return TAPI_API_SUCCESS;
 }
 
-EXPORT_API int tel_delete_sms_in_sim(struct tapi_handle *handle, int del_index, tapi_response_cb callback, void* user_data)
+EXPORT_API int tel_delete_sms_in_sim(struct tapi_handle *handle, int del_index, tapi_response_cb callback, void *user_data)
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 	GVariant *param;
@@ -601,7 +581,7 @@ EXPORT_API int tel_delete_sms_in_sim(struct tapi_handle *handle, int del_index, 
 	return TAPI_API_SUCCESS;
 }
 
-EXPORT_API int tel_get_sms_count(struct tapi_handle *handle, tapi_response_cb callback, void* user_data)
+EXPORT_API int tel_get_sms_count(struct tapi_handle *handle, tapi_response_cb callback, void *user_data)
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 
@@ -621,7 +601,7 @@ EXPORT_API int tel_get_sms_count(struct tapi_handle *handle, tapi_response_cb ca
 	return TAPI_API_SUCCESS;
 }
 
-EXPORT_API int tel_get_sms_sca(struct tapi_handle *handle, int sca_index, tapi_response_cb callback, void* user_data)
+EXPORT_API int tel_get_sms_sca(struct tapi_handle *handle, int sca_index, tapi_response_cb callback, void *user_data)
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 	GVariant *param;
@@ -649,7 +629,7 @@ EXPORT_API int tel_get_sms_sca(struct tapi_handle *handle, int sca_index, tapi_r
 	return TAPI_API_SUCCESS;
 }
 
-EXPORT_API int tel_set_sms_sca(struct tapi_handle *handle, const TelSmsAddressInfo_t *pSCA, int sca_index, tapi_response_cb callback, void* user_data)
+EXPORT_API int tel_set_sms_sca(struct tapi_handle *handle, const TelSmsAddressInfo_t *pSCA, int sca_index, tapi_response_cb callback, void *user_data)
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 	GVariant *param;
@@ -669,10 +649,9 @@ EXPORT_API int tel_set_sms_sca(struct tapi_handle *handle, const TelSmsAddressIn
 
 	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
-	 g_variant_builder_init(&b, G_VARIANT_TYPE("ay") );
-	for( i=0; i<TAPI_SIM_SMSP_ADDRESS_LEN + 1; i++) {
-		g_variant_builder_add(&b, "y", pSCA->szDiallingNum[i] );
-	}
+	 g_variant_builder_init(&b, G_VARIANT_TYPE("ay"));
+	for (i = 0; i < TAPI_SIM_SMSP_ADDRESS_LEN + 1; i++)
+		g_variant_builder_add(&b, "y", pSCA->szDiallingNum[i]);
 	sca = g_variant_builder_end(&b);
 	packet_sca = g_variant_new("v", sca);
 
@@ -691,7 +670,7 @@ EXPORT_API int tel_set_sms_sca(struct tapi_handle *handle, const TelSmsAddressIn
 	return TAPI_API_SUCCESS;
 }
 
-EXPORT_API int tel_get_sms_cb_config(struct tapi_handle *handle, tapi_response_cb callback, void* user_data)
+EXPORT_API int tel_get_sms_cb_config(struct tapi_handle *handle, tapi_response_cb callback, void *user_data)
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 
@@ -711,7 +690,7 @@ EXPORT_API int tel_get_sms_cb_config(struct tapi_handle *handle, tapi_response_c
 	return TAPI_API_SUCCESS;
 }
 
-EXPORT_API int tel_set_sms_cb_config(struct tapi_handle *handle, const TelSmsCbConfig_t *pCBConfig, tapi_response_cb callback, void* user_data)
+EXPORT_API int tel_set_sms_cb_config(struct tapi_handle *handle, const TelSmsCbConfig_t *pCBConfig, tapi_response_cb callback, void *user_data)
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 	GVariant *param;
@@ -725,22 +704,22 @@ EXPORT_API int tel_set_sms_cb_config(struct tapi_handle *handle, const TelSmsCbC
 	TAPI_RET_ERR_NUM_IF_FAIL(pCBConfig, TAPI_API_INVALID_PTR);
 
 	if ((pCBConfig->Net3gppType > 2) || (pCBConfig->MsgIdRangeCount < 0)) {
-		err("Invalid Input -3gppType(%d)",pCBConfig->Net3gppType);
-		err("Invalid Input -MsgIdRangeCount(%d)",pCBConfig->MsgIdRangeCount);
+		err("Invalid Input -3gppType(%d)", pCBConfig->Net3gppType);
+		err("Invalid Input -MsgIdRangeCount(%d)", pCBConfig->MsgIdRangeCount);
 
 		return TAPI_API_INVALID_INPUT;
 	}
 
 	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
-	g_variant_builder_init( &b, G_VARIANT_TYPE("aa{sv}") );
+	g_variant_builder_init(&b, G_VARIANT_TYPE("aa{sv}"));
 
 	for (i = 0; i < pCBConfig->MsgIdRangeCount; i++) {
 		g_variant_builder_open(&b, G_VARIANT_TYPE("a{sv}"));
-		if( pCBConfig->Net3gppType == TAPI_NETTEXT_CB_MSG_GSM ) {
+		if (pCBConfig->Net3gppType == TAPI_NETTEXT_CB_MSG_GSM) {
 			g_variant_builder_add(&b, "{sv}", "FromMsgId", g_variant_new_uint16(pCBConfig->MsgIDs[i].Net3gpp.FromMsgId));
 			g_variant_builder_add(&b, "{sv}", "ToMsgId", g_variant_new_uint16(pCBConfig->MsgIDs[i].Net3gpp.ToMsgId));
-		} else if( pCBConfig->Net3gppType == TAPI_NETTEXT_CB_MSG_UMTS) {
+		} else if (pCBConfig->Net3gppType == TAPI_NETTEXT_CB_MSG_UMTS) {
 			g_variant_builder_add(&b, "{sv}", "CBCategory", g_variant_new_uint16(pCBConfig->MsgIDs[i].Net3gpp2.CBCategory));
 			g_variant_builder_add(&b, "{sv}", "CBLanguage", g_variant_new_uint16(pCBConfig->MsgIDs[i].Net3gpp2.CBLanguage));
 		} else {
@@ -769,7 +748,7 @@ EXPORT_API int tel_set_sms_cb_config(struct tapi_handle *handle, const TelSmsCbC
 	return TAPI_API_SUCCESS;
 }
 
-EXPORT_API int tel_set_sms_memory_status(struct tapi_handle *handle, int memoryStatus, tapi_response_cb callback, void* user_data)
+EXPORT_API int tel_set_sms_memory_status(struct tapi_handle *handle, int memoryStatus, tapi_response_cb callback, void *user_data)
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 	GVariant *param;
@@ -799,7 +778,7 @@ EXPORT_API int tel_set_sms_memory_status(struct tapi_handle *handle, int memoryS
 EXPORT_API int tel_send_sms_deliver_report(struct tapi_handle *handle,
 		const TelSmsDatapackageInfo_t *pDataPackage,
 		TelSmsResponse_t RPCause,
-		tapi_response_cb callback, void* user_data)
+		tapi_response_cb callback, void *user_data)
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 	GVariant *param;
@@ -846,7 +825,7 @@ EXPORT_API int tel_send_sms_deliver_report(struct tapi_handle *handle,
 	return TAPI_API_SUCCESS;
 }
 
-EXPORT_API int tel_set_sms_message_status(struct tapi_handle *handle, int set_index, TelSmsMsgStatus_t msgStatus, tapi_response_cb callback, void* user_data)
+EXPORT_API int tel_set_sms_message_status(struct tapi_handle *handle, int set_index, TelSmsMsgStatus_t msgStatus, tapi_response_cb callback, void *user_data)
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 	GVariant *param;
@@ -874,7 +853,7 @@ EXPORT_API int tel_set_sms_message_status(struct tapi_handle *handle, int set_in
 	return TAPI_API_SUCCESS;
 }
 
-EXPORT_API int tel_get_sms_parameters(struct tapi_handle *handle, int get_index, tapi_response_cb callback, void* user_data)
+EXPORT_API int tel_get_sms_parameters(struct tapi_handle *handle, int get_index, tapi_response_cb callback, void *user_data)
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 	GVariant *param;
@@ -902,7 +881,7 @@ EXPORT_API int tel_get_sms_parameters(struct tapi_handle *handle, int get_index,
 	return TAPI_API_SUCCESS;
 }
 
-EXPORT_API int tel_set_sms_parameters(struct tapi_handle *handle, const TelSmsParams_t *pSmsSetParameters, tapi_response_cb callback, void* user_data)
+EXPORT_API int tel_set_sms_parameters(struct tapi_handle *handle, const TelSmsParams_t *pSmsSetParameters, tapi_response_cb callback, void *user_data)
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 	GVariant *param;
@@ -919,43 +898,40 @@ EXPORT_API int tel_set_sms_parameters(struct tapi_handle *handle, const TelSmsPa
 
 	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
-	 g_variant_builder_init(&b, G_VARIANT_TYPE("ay") );
-	for( i=0; i<TAPI_SIM_SMSP_ALPHA_ID_LEN_MAX + 1; i++) {
-		g_variant_builder_add(&b, "y", pSmsSetParameters->szAlphaId[i] );
-	}
+	 g_variant_builder_init(&b, G_VARIANT_TYPE("ay"));
+	for (i = 0; i < TAPI_SIM_SMSP_ALPHA_ID_LEN_MAX + 1; i++)
+		g_variant_builder_add(&b, "y", pSmsSetParameters->szAlphaId[i]);
 	alphaId = g_variant_builder_end(&b);
 	packet_alphaId = g_variant_new("v", alphaId);
 
-	 g_variant_builder_init(&b, G_VARIANT_TYPE("ay") );
-	for( i=0; i<TAPI_SIM_SMSP_ADDRESS_LEN + 1; i++) {
-		g_variant_builder_add(&b, "y", pSmsSetParameters->TpDestAddr.szDiallingNum[i] );
-	}
+	 g_variant_builder_init(&b, G_VARIANT_TYPE("ay"));
+	for (i = 0; i < TAPI_SIM_SMSP_ADDRESS_LEN + 1; i++)
+		g_variant_builder_add(&b, "y", pSmsSetParameters->TpDestAddr.szDiallingNum[i]);
 	destDialNum = g_variant_builder_end(&b);
 	packet_destDialNum = g_variant_new("v", destDialNum);
 
-	 g_variant_builder_init(&b, G_VARIANT_TYPE("ay") );
-	for( i=0; i<TAPI_SIM_SMSP_ADDRESS_LEN + 1; i++) {
-		g_variant_builder_add(&b, "y", pSmsSetParameters->TpSvcCntrAddr.szDiallingNum[i] );
-	}
+	 g_variant_builder_init(&b, G_VARIANT_TYPE("ay"));
+	for (i = 0; i < TAPI_SIM_SMSP_ADDRESS_LEN + 1; i++)
+		g_variant_builder_add(&b, "y", pSmsSetParameters->TpSvcCntrAddr.szDiallingNum[i]);
 	scaDialNum = g_variant_builder_end(&b);
 	packet_scaDialNum = g_variant_new("v", scaDialNum);
 
 	param = g_variant_new("(iii@viiii@viii@viii)", pSmsSetParameters->RecordIndex,
-									pSmsSetParameters->RecordLen,
-									pSmsSetParameters->AlphaIdLen,
-									packet_alphaId,
-									pSmsSetParameters->ParamIndicator,
-									pSmsSetParameters->TpDestAddr.DialNumLen,
-									pSmsSetParameters->TpDestAddr.Ton,
-									pSmsSetParameters->TpDestAddr.Npi,
-									packet_destDialNum,
-									pSmsSetParameters->TpSvcCntrAddr.DialNumLen,
-									pSmsSetParameters->TpSvcCntrAddr.Ton,
-									pSmsSetParameters->TpSvcCntrAddr.Npi,
-									packet_scaDialNum,
-									pSmsSetParameters->TpProtocolId,
-									pSmsSetParameters->TpDataCodingScheme,
-									pSmsSetParameters->TpValidityPeriod);
+			pSmsSetParameters->RecordLen,
+			pSmsSetParameters->AlphaIdLen,
+			packet_alphaId,
+			pSmsSetParameters->ParamIndicator,
+			pSmsSetParameters->TpDestAddr.DialNumLen,
+			pSmsSetParameters->TpDestAddr.Ton,
+			pSmsSetParameters->TpDestAddr.Npi,
+			packet_destDialNum,
+			pSmsSetParameters->TpSvcCntrAddr.DialNumLen,
+			pSmsSetParameters->TpSvcCntrAddr.Ton,
+			pSmsSetParameters->TpSvcCntrAddr.Npi,
+			packet_scaDialNum,
+			pSmsSetParameters->TpProtocolId,
+			pSmsSetParameters->TpDataCodingScheme,
+			pSmsSetParameters->TpValidityPeriod);
 
 	g_dbus_connection_call(handle->dbus_connection,
 		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,
@@ -966,7 +942,7 @@ EXPORT_API int tel_set_sms_parameters(struct tapi_handle *handle, const TelSmsPa
 	return TAPI_API_SUCCESS;
 }
 
-EXPORT_API int tel_get_sms_parameter_count(struct tapi_handle *handle, tapi_response_cb callback, void* user_data)
+EXPORT_API int tel_get_sms_parameter_count(struct tapi_handle *handle, tapi_response_cb callback, void *user_data)
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 
@@ -1004,8 +980,8 @@ EXPORT_API int tel_check_sms_device_status(struct tapi_handle *handle, int *pRea
 		"GetSmsReadyStatus", NULL, NULL, G_DBUS_CALL_FLAGS_NONE,
 		TAPI_DEFAULT_TIMEOUT, NULL, &error);
 	if (!smsReady) {
-		dbg( "error to get SMS ready_status(%s)", error->message);
-		g_error_free (error);
+		dbg("error to get SMS ready_status(%s)", error->message);
+		g_error_free(error);
 		return TAPI_API_OPERATION_FAILED;
 	}
 

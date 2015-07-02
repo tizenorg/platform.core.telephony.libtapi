@@ -90,19 +90,18 @@ static void on_noti_ss_release_complete(TapiHandle *handle, const char *noti_id,
 
 	msg(" - info->RelCompMsgLen = 0x%x", info->RelCompMsgLen);
 	msg(" - info->szRelCompMsg = ");
-	for ( i=0; i<info->RelCompMsgLen; i++ ) {
+	for (i = 0; i < info->RelCompMsgLen; i++)
 		msg("%d : [%x]", i, info->szRelCompMsg[i]);
-	}
 }
 
 static void on_noti_ss_forwarding_status(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
 	TelSsForwardNoti_t *noti = data;
-	int i =0;
+	int i = 0;
 
 	msg("SS Forwarding Status Noti");
 
-	for ( i=0; i<noti->record_num; i++ ) {
+	for (i = 0; i < noti->record_num; i++) {
 		msg("class : %d", noti->record[i].Class);
 		msg("status : %d", noti->record[i].Status);
 		msg("condition : %d", noti->record[i].ForwardCondition);
@@ -119,11 +118,11 @@ static void on_noti_ss_forwarding_status(TapiHandle *handle, const char *noti_id
 static void on_noti_ss_barring_status(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
 	TelSsBarringNoti_t *noti = data;
-	int i =0;
+	int i = 0;
 
 	msg("SS Barring Status Noti");
 
-	for ( i=0; i<noti->record_num; i++ ) {
+	for (i = 0; i < noti->record_num; i++) {
 		msg("class : %d", noti->record[i].Class);
 		msg("status : %d", noti->record[i].Status);
 		msg("type : %d", noti->record[i].Flavour);
@@ -135,11 +134,11 @@ static void on_noti_ss_barring_status(TapiHandle *handle, const char *noti_id, v
 static void on_noti_ss_waiting_status(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
 	TelSsWaitingNoti_t *noti = data;
-	int i =0;
+	int i = 0;
 
 	msg("SS Waiting Status Noti");
 
-	for ( i=0; i<noti->record_num; i++ ) {
+	for (i = 0; i < noti->record_num; i++) {
 		msg("class : %d", noti->record[i].Class);
 		msg("status : %d", noti->record[i].Status);
 		msg("");
@@ -290,12 +289,10 @@ static int run_ss_set_barring(MManager *mm, struct menu_data *menu)
 	g_strlcpy(info.szPassword, data_ss_set_barring_password, TAPI_SS_GSM_BARR_PW_LEN_MAX+1);
 
 	msg("info.szPassword - %s data_ss_set_barring_password- %s\n", info.szPassword, data_ss_set_barring_password);
-	msg("Call barring Mode [%d]\n", info.Mode);
 
 	result = tel_set_ss_barring(handle, &info, on_ss_barring, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return 0;
 }
@@ -313,9 +310,8 @@ static int run_ss_get_barring_status(MManager *mm, struct menu_data *menu)
 	type = atoi(data_ss_get_barring_status_type);
 
 	result = tel_get_ss_barring_status(handle, class, type, on_ss_barring, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return 0;
 }
@@ -332,9 +328,8 @@ static int run_ss_change_barring_password(MManager *mm, struct menu_data *menu)
 			data_ss_change_barring_password_new,
 			data_ss_change_barring_password_new,
 			on_ss_change_barring_password, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return 0;
 }
@@ -361,13 +356,12 @@ static int run_ss_set_forward(MManager *mm, struct menu_data *menu)
 	info.Mode = atoi(data_ss_set_forward_mode);
 	info.Ton = 0x01;
 	info.Npi = 0x01;
-	strncpy((char*)info.szPhoneNumber, data_ss_set_forward_number, len);
+	strncpy((char *)info.szPhoneNumber, data_ss_set_forward_number, len);
 	info.szPhoneNumber[len] = '\0';
 
 	result = tel_set_ss_forward(handle, &info, on_ss_forward, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return 0;
 }
@@ -385,9 +379,8 @@ static int run_ss_get_forward_status(MManager *mm, struct menu_data *menu)
 	condition = atoi(data_ss_get_forward_status_condition);
 
 	result = tel_get_ss_forward_status(handle, class, condition, on_ss_forward, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return 0;
 }
@@ -405,9 +398,8 @@ static int run_ss_set_waiting(MManager *mm, struct menu_data *menu)
 	info.Mode = atoi(data_ss_set_waiting_mode);
 
 	result = tel_set_ss_waiting(handle, &info, on_ss_waiting, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return 0;
 }
@@ -423,9 +415,8 @@ static int run_ss_get_waiting_status(MManager *mm, struct menu_data *menu)
 	class = atoi(data_ss_get_waiting_status_class);
 
 	result = tel_get_ss_waiting_status(handle, class, on_ss_waiting, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return 0;
 }
@@ -443,9 +434,8 @@ static int run_ss_set_cli_status(MManager *mm, struct menu_data *menu)
 	status  = atoi(data_ss_set_cli_status);
 
 	result = tel_set_ss_cli_status(handle, type, status, on_ss_set_cli_status, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return 0;
 }
@@ -462,9 +452,8 @@ static int run_ss_get_cli_status(MManager *mm, struct menu_data *menu)
 	type = atoi(data_ss_get_cli_status_type);
 
 	result = tel_get_ss_cli_status(handle, type, on_ss_get_cli_status, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return 0;
 }
@@ -488,9 +477,8 @@ static int run_ss_send_ussd_request(MManager *mm, struct menu_data *menu)
 	strncpy(info.szString, data_ss_ussd_request_string, TAPI_SS_USSD_DATA_SIZE_MAX - 1);
 
 	result = tel_send_ss_ussd_request(handle, &info, on_ss_send_ussd_request, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return 0;
 }
@@ -622,32 +610,26 @@ void register_ss_event(TapiHandle *handle)
 	int ret;
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_SS_USSD, on_noti_ss_ussd, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_SS_RELEASE_COMPLETE, on_noti_ss_release_complete, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_SS_FORWARD_STATUS, on_noti_ss_forwarding_status, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_SS_BARRING_STATUS, on_noti_ss_barring_status, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_SS_WAITING_STATUS, on_noti_ss_waiting_status, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_SS_INFO, on_noti_ss_sups_info, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 }

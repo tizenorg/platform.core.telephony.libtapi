@@ -23,7 +23,6 @@
  */
 
 /**
- * @internal
  * @addtogroup CAPI_TELEPHONY_SERVICE_MODEM
  * @{
  */
@@ -55,6 +54,7 @@ extern "C" {
 #define TAPI_MISC_MIN_LEN_MAX				10
 #define TAPI_MISC_MDN_LEN_MAX				15
 #define TAPI_MISC_NAME_LEN_MAX				17
+#define TAPI_MISC_ME_DEVICE_NAME_LEN_MAX		32
 
 /**
  * @brief Enumeration for the MMI check key values.
@@ -344,6 +344,16 @@ typedef struct {
 	tapi_misc_nitz_dayofweek_t day_of_week; /**< Day of the week */
 	unsigned long plmn; /**< Day of the week */
 } tapi_misc_time_zone_info_type;
+
+/**
+ * @brief The structure type for device info of cellular dongle.
+ * @since_tizen 2.4
+ */
+typedef struct {
+	unsigned char vendor_name[TAPI_MISC_ME_DEVICE_NAME_LEN_MAX+1]; /**< Vendor name */
+	unsigned char device_name[TAPI_MISC_ME_DEVICE_NAME_LEN_MAX+1]; /**< Device name */
+} TelMiscDeviceInfo_t;
+
 
 #ifdef __cplusplus
 }

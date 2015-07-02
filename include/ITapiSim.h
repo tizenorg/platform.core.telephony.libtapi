@@ -26,7 +26,6 @@
  */
 
 /**
- * @internal
  * @addtogroup CAPI_TELEPHONY_SERVICE_SIM
  * @{
  */

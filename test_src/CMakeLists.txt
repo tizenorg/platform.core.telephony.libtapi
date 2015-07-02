@@ -16,6 +16,10 @@ SET(tapitest
 	call.c
 )
 
+##Address-Space Layout Randomization
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIE")
+SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pie")
+
 ADD_EXECUTABLE(tapitest ${tapitest})
 TARGET_LINK_LIBRARIES(tapitest ${pkgs_LDFLAGS} "-L${CMAKE_BINARY_DIR} -lSLP-tapi")
 INSTALL(TARGETS tapitest RUNTIME DESTINATION bin/)

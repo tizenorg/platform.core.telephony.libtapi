@@ -22,7 +22,6 @@
 #define __TIZEN_TELEPHONY_SERVICE_DOC_H__
 
 /**
- * @internal
  * @ingroup CAPI_TELEPHONY_FRAMEWORK
  * @defgroup CAPI_TELEPHONY_SERVICE Telephony Service
  * @brief The Telephony Service module provides call, modem, network, phonebook, SAT, SIM, SMS, and SS services.
@@ -46,7 +45,6 @@
  */
 
 /**
- * @internal
  * @ingroup CAPI_TELEPHONY_SERVICE
  * @defgroup CAPI_TELEPHONY_SERVICE_CALL Call
  * @brief
@@ -77,7 +75,6 @@
  */
 
 /**
- * @internal
  * @ingroup CAPI_TELEPHONY_SERVICE
  * @defgroup CAPI_TELEPHONY_SERVICE_MODEM Modem
  * @brief
@@ -105,7 +102,6 @@
  */
 
 /**
- * @internal
  * @ingroup CAPI_TELEPHONY_SERVICE
  * @defgroup CAPI_TELEPHONY_SERVICE_NETWORK Network
  * @brief
@@ -132,7 +128,6 @@
  */
 
 /**
- * @internal
  * @ingroup CAPI_TELEPHONY_SERVICE
  * @defgroup CAPI_TELEPHONY_SERVICE_PHONEBOOK Phonebook
  * @brief
@@ -159,7 +154,6 @@
  */
 
 /**
- * @internal
  * @ingroup CAPI_TELEPHONY_SERVICE
  * @defgroup CAPI_TELEPHONY_SERVICE_SAT SAT
  * @brief
@@ -189,7 +183,6 @@
  */
 
 /**
- * @internal
  * @ingroup CAPI_TELEPHONY_SERVICE
  * @defgroup CAPI_TELEPHONY_SERVICE_SIM SIM
  * @brief
@@ -222,7 +215,6 @@
  */
 
 /**
- * @internal
  * @ingroup CAPI_TELEPHONY_SERVICE
  * @defgroup CAPI_TELEPHONY_SERVICE_SMS SMS
  * @brief
@@ -251,7 +243,6 @@
  */
 
 /**
- * @internal
  * @ingroup CAPI_TELEPHONY_SERVICE
  * @defgroup CAPI_TELEPHONY_SERVICE_SS Supplementary Service
  * @brief

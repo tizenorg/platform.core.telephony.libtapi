@@ -41,7 +41,7 @@ static void on_noti_setup_menu(TapiHandle *handle, const char *noti_id, void *da
 
 	msg("noti id (%s)", noti_id);
 
-	if(!data){
+	if (!data) {
 		msg("noti data is null");
 		return;
 	}
@@ -51,9 +51,9 @@ static void on_noti_setup_menu(TapiHandle *handle, const char *noti_id, void *da
 	msg("menu present (%d)", setup_menu->bIsMainMenuPresent);
 	msg("menu title (%s)", setup_menu->satMainTitle);
 	msg("item cnt (%d)", setup_menu->satMainMenuNum);
-	for(local_index=0;local_index < setup_menu->satMainMenuNum; local_index++){
+	for (local_index = 0; local_index < setup_menu->satMainMenuNum; local_index++)
 		msg("item id(%d) (%s)", setup_menu->satMainMenuItem[local_index].itemId, setup_menu->satMainMenuItem[local_index].itemString);
-	}
+
 	msg("menu help info (%d)", setup_menu->bIsSatMainMenuHelpInfo);
 	msg("menu updated (%d)", setup_menu->bIsUpdatedSatMainMenu);
 }
@@ -64,7 +64,7 @@ static void on_noti_display_text(TapiHandle *handle, const char *noti_id, void *
 
 	msg("noti id (%s)", noti_id);
 
-	if(!data){
+	if (!data) {
 		msg("noti data is null");
 		return;
 	}
@@ -86,7 +86,7 @@ static void on_noti_select_item(TapiHandle *handle, const char *noti_id, void *d
 
 	msg("noti id (%s)", noti_id);
 
-	if(!data){
+	if (!data) {
 		msg("noti data is null");
 		return;
 	}
@@ -99,7 +99,7 @@ static void on_noti_select_item(TapiHandle *handle, const char *noti_id, void *d
 	msg("string len(%d)", select_item->text.stringLen);
 	msg("default item local_index(%d)", select_item->defaultItemIndex);
 	msg("item count(%d)", select_item->menuItemCount);
-	for(local_index=0;local_index < select_item->menuItemCount; local_index++){
+	for (local_index = 0; local_index < select_item->menuItemCount; local_index++) {
 		msg("item local_index(%d) id(%d) len(%d) str(%s)", local_index,
 			select_item->menuItem[local_index].itemId, select_item->menuItem[local_index].textLen, select_item->menuItem[local_index].text);
 	}
@@ -119,9 +119,8 @@ static int run_sat_get_main_menu_info(MManager *mm, struct menu_data *menu)
 	msg("call get main menu info()");
 
 	result = tel_get_sat_main_menu_info(handle, &main_menu);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	msg("success to get main menu");
 	return 0;
@@ -131,14 +130,14 @@ static int run_sat_select_menu(MManager *mm, struct menu_data *menu)
 {
 	TapiHandle *handle = menu_manager_ref_user_data(mm);
 	TelSatMenuSelectionReqInfo_t selected_menu;
-	int result, local_index=0;
+	int result, local_index = 0;
 	int item_id;
 
 	msg("call select menu()");
 
-	for(local_index=0;local_index < main_menu.satMainMenuNum; local_index++){
+	for (local_index = 0; local_index < main_menu.satMainMenuNum; local_index++)
 		msg("item id(%d) (%s)", main_menu.satMainMenuItem[local_index].itemId, main_menu.satMainMenuItem[local_index].itemString);
-	}
+
 	msg("select item >>> ");
 	if (scanf("%d", &item_id) < 0) {
 		msg("scanf() failed.");
@@ -150,9 +149,8 @@ static int run_sat_select_menu(MManager *mm, struct menu_data *menu)
 
 	msg("selected item id (%d)", selected_menu.itemIdentifier);
 	result = tel_select_sat_menu(handle, &selected_menu, on_resp_select_menu, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return 0;
 }
@@ -186,19 +184,16 @@ void register_sat_event(TapiHandle *handle)
 
 	/* SAT */
 	ret = tel_register_noti_event(handle, TAPI_NOTI_SAT_SETUP_MENU, on_noti_setup_menu, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_SAT_DISPLAY_TEXT, on_noti_display_text, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_SAT_SELECT_ITEM, on_noti_select_item, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	/*	ret = tel_register_noti_event(handle, TAPI_NOTI_SAT_GET_INKEY, on_noti_get_inkey, NULL);
 	ret = tel_register_noti_event(handle, TAPI_NOTI_SAT_GET_INPUT, on_noti_get_input, NULL);*/

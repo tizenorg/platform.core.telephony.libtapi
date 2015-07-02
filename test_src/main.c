@@ -65,7 +65,7 @@ static int get_modem_info(MManager *mm, struct menu_data *menu)
 	int i = 0;
 
 	while (cp_list[i]) {
-		msg("[%02d] strlen(%d), '%s'", i, (unsigned int)strlen(cp_list[i]), cp_list[i]);
+		msg("[%02d] strlen(%d), '%s'", i, strlen(cp_list[i]), cp_list[i]);
 		i++;
 	}
 
@@ -117,9 +117,8 @@ static int get_property_int(MManager *mm, struct menu_data *menu)
 	msg("call tel_get_property_int()");
 
 	ret = tel_get_property_int(local_handle, data_property_int, &result_int);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("failed. (return = %d)", ret);
-	}
 
 	msg(" - result = %d", result_int);
 
@@ -134,15 +133,14 @@ static int get_property_string(MManager *mm, struct menu_data *menu)
 
 	msg("call tel_get_property_string()");
 
-	ret = tel_get_property_string (local_handle, data_property_string, &result_str);
-	if (ret != TAPI_API_SUCCESS) {
+	ret = tel_get_property_string(local_handle, data_property_string, &result_str);
+	if (ret != TAPI_API_SUCCESS)
 		msg("failed. (return = %d)", ret);
-	}
 
 	msg(" - result = %s", result_str);
 
 	if (result_str)
-		free (result_str);
+		free(result_str);
 
 	return 0;
 }
@@ -155,15 +153,14 @@ static int convert_string(MManager *mm, struct menu_data *menu)
 
 	msg("call tel_get_property_string()");
 
-	ret = tel_get_property_string (local_handle, data_property_string, &result_str);
-	if (ret != TAPI_API_SUCCESS) {
+	ret = tel_get_property_string(local_handle, data_property_string, &result_str);
+	if (ret != TAPI_API_SUCCESS)
 		msg("failed. (return = %d)", ret);
-	}
 
 	msg(" - result = %s", result_str);
 
 	if (result_str)
-		free (result_str);
+		free(result_str);
 
 	return 0;
 }
@@ -171,7 +168,7 @@ static int convert_string(MManager *mm, struct menu_data *menu)
 static struct menu_data menu_common[] = {
 	{ "1", "tel_get_modem_info", NULL, get_modem_info, NULL},
 	{ "2", "tel_init", NULL, init, NULL},
-	{ "3", "tel_deinit", NULL,	deinit, NULL},
+	{ "3", "tel_deinit", NULL, deinit, NULL},
 	{ "4", "tel_get_property_int",	NULL, get_property_int, NULL},
 	{ "4s", " - property", NULL, NULL, data_property_int},
 	{ "5", "tel_get_property_string", NULL, get_property_string, NULL},
@@ -183,19 +180,19 @@ static struct menu_data menu_common[] = {
 };
 
 static struct menu_data menu_main[] = {
-	{ "1", "Common",	menu_common,NULL,		NULL},
-	{ "2", "Modem",		menu_modem,	NULL,		NULL},
-	{ "3", "Network",	menu_net,	NULL,		NULL},
-	{ "4", "SIM",		menu_sim,	NULL,		NULL},
-	{ "5", "Phonebook",	menu_phonebook,	NULL,	NULL},
-	{ "6", "SMS",		menu_sms,	NULL,		NULL},
-	{ "7", "SS",		menu_ss,	NULL,		NULL},
-	{ "8", "SAT",		menu_sat,	NULL,		NULL},
-	{ "9", "Call",		menu_call,	NULL,		NULL},
+	{ "1", "Common", menu_common, NULL, NULL},
+	{ "2", "Modem", menu_modem, NULL, NULL},
+	{ "3", "Network", menu_net, NULL, NULL},
+	{ "4", "SIM", menu_sim, NULL, NULL},
+	{ "5", "Phonebook", menu_phonebook, NULL,	NULL},
+	{ "6", "SMS", menu_sms, NULL, NULL},
+	{ "7", "SS", menu_ss, NULL, NULL},
+	{ "8", "SAT", menu_sat, NULL, NULL},
+	{ "9", "Call", menu_call, NULL, NULL},
 	{ NULL, NULL, },
 };
 
-static int __select_handle_register_event (MManager *mm, struct menu_data *menu)
+static int __select_handle_register_event(MManager *mm, struct menu_data *menu)
 {
 	int subs_type = atoi(data_subscription_type);
 
@@ -268,17 +265,17 @@ static gboolean __create_sim_selection_menu(struct menu_data sim_selection_menu[
 	 */
 	title_len = total_cp_len + (2*cp_count) + (cp_count-1) + 8 + 1;
 	sim_selection_menu[0].title = (char *)g_try_malloc0(title_len);
-	index_count += sprintf((char *)&sim_selection_menu[0].title[index_count], "Modems(");
+	index_count += snprintf((char *)&sim_selection_menu[0].title[index_count], title_len, "Modems(");
 
-	i=0;
+	i = 0;
 	while (cp_list[i]) {
 		if (i != 0)
-//			sim_selection_menu[0].title[index_count++] = ',';
 			strncat((char *)&sim_selection_menu[0].title[index_count++], ",", sizeof(char));
 
-
-		index_count += sprintf((char *)&sim_selection_menu[0].title[index_count], "%d=", (i+1));
-		index_count += sprintf((char *)&sim_selection_menu[0].title[index_count], "%s", cp_list[i]);
+		index_count += snprintf((char *)&sim_selection_menu[0].title[index_count],
+			title_len - index_count, "%d=", (i+1));
+		index_count += snprintf((char *)&sim_selection_menu[0].title[index_count],
+			title_len - index_count, "%s", cp_list[i]);
 		i++;
 	}
 
@@ -306,12 +303,12 @@ static gboolean __create_sim_selection_menu(struct menu_data sim_selection_menu[
 
 int main(int arg, char **argv)
 {
-	GMainLoop *mainloop;
+	GMainLoop *mainloop = NULL;
 	GIOChannel *channel = g_io_channel_unix_new(STDIN_FILENO);
 	MManager *manager;
 	struct menu_data sim_selection_menu[SIM_SEL_MENU_KEY_COUNT+1] = { {NULL, NULL, }, };
 
-#if !GLIB_CHECK_VERSION(2,35,0)
+#if !GLIB_CHECK_VERSION(2, 35, 0)
 	g_type_init();
 #endif
 	mainloop = g_main_loop_new(NULL, FALSE);
@@ -324,6 +321,9 @@ int main(int arg, char **argv)
 		goto OUT;
 
 	manager = menu_manager_new(sim_selection_menu, mainloop);
+	if (!manager)
+		goto OUT;
+
 	menu_manager_run(manager);
 
 	g_io_add_watch(channel, (G_IO_IN | G_IO_ERR | G_IO_HUP | G_IO_NVAL),

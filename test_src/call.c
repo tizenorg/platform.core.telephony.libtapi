@@ -55,7 +55,7 @@ static char data_preferred_voice_subscription[MENU_DATA_SIZE + 1] = "0";
 
 static void on_noti_call_status_idle(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
-	TelCallStatusIdleNoti_t *noti_data = (TelCallStatusIdleNoti_t*)data;
+	TelCallStatusIdleNoti_t *noti_data = (TelCallStatusIdleNoti_t *)data;
 
 	msg("");
 	msgb("event(%s) receive !!", TAPI_NOTI_VOICE_CALL_STATUS_IDLE);
@@ -69,7 +69,7 @@ static void on_noti_call_status_idle(TapiHandle *handle, const char *noti_id, vo
 
 static void on_noti_call_status_active(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
-	TelCallStatusActiveNoti_t *noti_data = (TelCallStatusActiveNoti_t*)data;
+	TelCallStatusActiveNoti_t *noti_data = (TelCallStatusActiveNoti_t *)data;
 
 	msg("");
 	msgb("event(%s) receive !!", TAPI_NOTI_VOICE_CALL_STATUS_ACTIVE);
@@ -82,7 +82,7 @@ static void on_noti_call_status_active(TapiHandle *handle, const char *noti_id, 
 
 static void on_noti_call_status_held(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
-	TelCallStatusHeldNoti_t *noti_data = (TelCallStatusHeldNoti_t*)data;
+	TelCallStatusHeldNoti_t *noti_data = (TelCallStatusHeldNoti_t *)data;
 
 	msg("");
 	msgb("event(%s) receive !!", TAPI_NOTI_VOICE_CALL_STATUS_HELD);
@@ -95,7 +95,7 @@ static void on_noti_call_status_held(TapiHandle *handle, const char *noti_id, vo
 
 static void on_noti_call_status_dialing(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
-	TelCallStatusDialingNoti_t *noti_data = (TelCallStatusDialingNoti_t*)data;
+	TelCallStatusDialingNoti_t *noti_data = (TelCallStatusDialingNoti_t *)data;
 
 	msg("");
 	msgb("event(%s) receive !!", TAPI_NOTI_VOICE_CALL_STATUS_DIALING);
@@ -108,7 +108,7 @@ static void on_noti_call_status_dialing(TapiHandle *handle, const char *noti_id,
 
 static void on_noti_call_status_alert(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
-	TelCallStatusAlertNoti_t *noti_data = (TelCallStatusAlertNoti_t*)data;
+	TelCallStatusAlertNoti_t *noti_data = (TelCallStatusAlertNoti_t *)data;
 
 	msg("");
 	msgb("event(%s) receive !!", TAPI_NOTI_VOICE_CALL_STATUS_ALERT);
@@ -121,7 +121,7 @@ static void on_noti_call_status_alert(TapiHandle *handle, const char *noti_id, v
 
 static void on_noti_call_status_incoming(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
-	TelCallStatusIncomingNoti_t *noti_data = (TelCallStatusIncomingNoti_t*)data;
+	TelCallStatusIncomingNoti_t *noti_data = (TelCallStatusIncomingNoti_t *)data;
 
 	msg("");
 	msgb("event(%s) receive !!", TAPI_NOTI_VOICE_CALL_STATUS_INCOMING);
@@ -134,7 +134,7 @@ static void on_noti_call_status_incoming(TapiHandle *handle, const char *noti_id
 
 static void on_noti_call_sound_ringback_tone(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
-	TelCallSoundRingbackToneNoti_t *noti_data = (TelCallSoundRingbackToneNoti_t*)data;
+	TelCallSoundRingbackToneNoti_t *noti_data = (TelCallSoundRingbackToneNoti_t *)data;
 
 	msg("");
 	msgb("event(%s) receive !!", TAPI_NOTI_CALL_SOUND_RINGBACK_TONE);
@@ -147,7 +147,7 @@ static void on_noti_call_sound_ringback_tone(TapiHandle *handle, const char *not
 
 static void on_noti_call_sound_wbamr(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
-	gboolean *noti_data = (gboolean*)data;
+	gboolean *noti_data = (gboolean *)data;
 
 	msg("");
 	msgb("event(%s) receive !!", TAPI_NOTI_CALL_SOUND_WBAMR);
@@ -186,7 +186,7 @@ static void on_noti_call_sound_path(TapiHandle *handle, const char *noti_id, voi
 
 static void on_noti_call_on_hold(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
-	unsigned int *noti_data = (unsigned int*)data;
+	unsigned int *noti_data = (unsigned int *)data;
 
 	msg("");
 	msgb("event(%s) receive !!", TAPI_NOTI_CALL_INFO_HELD);
@@ -199,7 +199,7 @@ static void on_noti_call_on_hold(TapiHandle *handle, const char *noti_id, void *
 
 static void on_noti_call_active(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
-	unsigned int *noti_data = (unsigned int*)data;
+	unsigned int *noti_data = (unsigned int *)data;
 
 	msg("");
 	msgb("event(%s) receive !!", TAPI_NOTI_CALL_INFO_ACTIVE);
@@ -212,7 +212,7 @@ static void on_noti_call_active(TapiHandle *handle, const char *noti_id, void *d
 
 static void on_noti_call_joined(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
-	unsigned int *noti_data = (unsigned int*)data;
+	unsigned int *noti_data = (unsigned int *)data;
 
 	msg("");
 	msgb("event(%s) receive !!", TAPI_NOTI_CALL_INFO_JOINED);
@@ -225,7 +225,7 @@ static void on_noti_call_joined(TapiHandle *handle, const char *noti_id, void *d
 
 static void on_noti_call_privacy_mode(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
-	TelCallVoicePrivacyNoti_t *noti_data = (TelCallVoicePrivacyNoti_t*)data;
+	TelCallVoicePrivacyNoti_t *noti_data = (TelCallVoicePrivacyNoti_t *)data;
 
 	msg("");
 	msgb("event(%s) receive !!", TAPI_NOTI_CALL_PRIVACY_MODE);
@@ -238,7 +238,7 @@ static void on_noti_call_privacy_mode(TapiHandle *handle, const char *noti_id, v
 
 static void on_noti_call_otasp_status(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
-	TelCallOtaspStatusNoti_t *noti_data = (TelCallOtaspStatusNoti_t*)data;
+	TelCallOtaspStatusNoti_t *noti_data = (TelCallOtaspStatusNoti_t *)data;
 
 	msg("");
 	msgb("event(%s) receive !!", TAPI_NOTI_CALL_OTASP_STATUS);
@@ -251,25 +251,24 @@ static void on_noti_call_otasp_status(TapiHandle *handle, const char *noti_id, v
 
 static void on_noti_call_signal_info(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
-	TelCallSignalInfoNoti_t *noti_data = (TelCallSignalInfoNoti_t*)data;
+	TelCallSignalInfoNoti_t *noti_data = (TelCallSignalInfoNoti_t *)data;
 
 	msg("");
 	msgb("event(%s) receive !!", TAPI_NOTI_CALL_SIGNAL_INFO);
 
 	if (!noti_data)
 		return;
-	if (noti_data->signal_type == TAPI_CALL_SIGNAL_TYPE_TONE) {
+	if (noti_data->signal_type == TAPI_CALL_SIGNAL_TYPE_TONE)
 		msg(" Signal type = 0x%x, Pitch Type =0x%x, Signal = %d", noti_data->signal_type, noti_data->pitch_type, noti_data->signal.sig_tone_type);
-	} else if (noti_data->signal_type == TAPI_CALL_SIGNAL_TYPE_ISDN_ALERTING) {
+	else if (noti_data->signal_type == TAPI_CALL_SIGNAL_TYPE_ISDN_ALERTING)
 		msg(" Signal type = 0x%x, Pitch Type =0x%x, Signal = %d", noti_data->signal_type, noti_data->pitch_type, noti_data->signal.sig_isdn_alert_type);
-	} else if (noti_data->signal_type == TAPI_CALL_SIGNAL_TYPE_IS54B_ALERTING) {
+	else if (noti_data->signal_type == TAPI_CALL_SIGNAL_TYPE_IS54B_ALERTING)
 		msg(" Signal type = 0x%x, Pitch Type =0x%x, Signal = %d", noti_data->signal_type, noti_data->pitch_type, noti_data->signal.sig_is54b_alert_type);
-	}
 }
 
 static void on_noti_call_otapa_status(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
-	TelCallOtapaStatusNoti_t *noti_data = (TelCallOtapaStatusNoti_t*)data;
+	TelCallOtapaStatusNoti_t *noti_data = (TelCallOtapaStatusNoti_t *)data;
 
 	msg("");
 	msgb("event(%s) receive !!", TAPI_NOTI_CALL_OTAPA_STATUS);
@@ -287,56 +286,56 @@ static void on_dial_call(TapiHandle *handle, int result, void *data, void *user_
 
 static void on_answer_call(TapiHandle *handle, int result, void *data, void *user_data)
 {
-	TelCallAnswerCnf_t *cnf_data = (TelCallAnswerCnf_t*)data;
+	TelCallAnswerCnf_t *cnf_data = (TelCallAnswerCnf_t *)data;
 
 	msg("on_answer_call() - cnf_data->id : %d", cnf_data->id);
 }
 
 static void on_end_call(TapiHandle *handle, int result, void *data, void *user_data)
 {
-	TelCallEndCnf_t *cnf_data = (TelCallEndCnf_t*)data;
+	TelCallEndCnf_t *cnf_data = (TelCallEndCnf_t *)data;
 
 	msg("on_end_call() - cnf_data->id : %d result : 0x%x", cnf_data->id, result);
 }
 
 static void on_hold_call(TapiHandle *handle, int result, void *data, void *user_data)
 {
-	TelCallHoldCnf_t *cnf_data = (TelCallHoldCnf_t*)data;
+	TelCallHoldCnf_t *cnf_data = (TelCallHoldCnf_t *)data;
 
 	msg("on_hold_call() - cnf_data->id : %d result : 0x%x", cnf_data->id, result);
 }
 
 static void on_active_call(TapiHandle *handle, int result, void *data, void *user_data)
 {
-	TelCallActiveCnf_t *cnf_data = (TelCallActiveCnf_t*)data;
+	TelCallActiveCnf_t *cnf_data = (TelCallActiveCnf_t *)data;
 
 	msg("on_active_call() - cnf_data->id : %d result : 0x%x", cnf_data->id, result);
 }
 
 static void on_swap_call(TapiHandle *handle, int result, void *data, void *user_data)
 {
-	TelCallSwapCnf_t *cnf_data = (TelCallSwapCnf_t*)data;
+	TelCallSwapCnf_t *cnf_data = (TelCallSwapCnf_t *)data;
 
 	msg("on_swap_call() - cnf_data->id : %d result : 0x%x", cnf_data->id, result);
 }
 
 static void on_join_call(TapiHandle *handle, int result, void *data, void *user_data)
 {
-	TelCallJoinCnf_t *cnf_data = (TelCallJoinCnf_t*)data;
+	TelCallJoinCnf_t *cnf_data = (TelCallJoinCnf_t *)data;
 
 	msg("on_join_call() - cnf_data->id : %d result : 0x%x", cnf_data->id, result);
 }
 
 static void on_split_call(TapiHandle *handle, int result, void *data, void *user_data)
 {
-	TelCallSplitCnf_t *cnf_data = (TelCallSplitCnf_t*)data;
+	TelCallSplitCnf_t *cnf_data = (TelCallSplitCnf_t *)data;
 
 	msg("on_split_call() - cnf_data->id : %d result : 0x%x", cnf_data->id, result);
 }
 
 static void on_transfer_call(TapiHandle *handle, int result, void *data, void *user_data)
 {
-	TelCallTransferCnf_t *cnf_data = (TelCallTransferCnf_t*)data;
+	TelCallTransferCnf_t *cnf_data = (TelCallTransferCnf_t *)data;
 
 	msg("on_transfer_call() - cnf_data->id : %d result : 0x%x", cnf_data->id, result);
 }
@@ -383,7 +382,7 @@ static void on_call_get_volume_info(TapiHandle *handle, int result, void *data, 
 	msg("on_call_get_volume_info() - result : 0x%x", result);
 	msg("on_call_get_volume_info() - record_num : 0x%x", resp->record_num);
 
-	for ( i=0; i<resp->record_num; i++ ) {
+	for (i = 0; i < resp->record_num; i++) {
 		msg("on_call_get_volume_info() - record[%d].device : 0x%x", (i+1), resp->record[i].device);
 		msg("on_call_get_volume_info() - record[%d].type : 0x%x", (i+1), resp->record[i].device);
 		msg("on_call_get_volume_info() - record[%d].volume : 0x%x", (i+1), resp->record[i].volume);
@@ -433,9 +432,8 @@ static int run_call_dial(MManager *mm, struct menu_data *menu)
 	msg("call tel_dail_call()");
 
 	result = tel_dial_call(handle, &data, on_dial_call, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return result;
 }
@@ -454,9 +452,8 @@ static int run_call_answer(MManager *mm, struct menu_data *menu)
 	answer_type = atoi(data_answer_type);
 
 	result = tel_answer_call(handle, call_id, answer_type, on_answer_call, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return result;
 }
@@ -474,29 +471,27 @@ static int run_call_end(MManager *mm, struct menu_data *menu)
 	end_type = atoi(data_end_type);
 
 	result = tel_end_call(handle, call_id, end_type, on_end_call, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return result;
 }
 
 static int run_call_hold(MManager *mm, struct menu_data *menu)
 {
-        TapiHandle *handle = menu_manager_ref_user_data(mm);
-        int result;
-        unsigned int call_id;
+	TapiHandle *handle = menu_manager_ref_user_data(mm);
+	int result;
+	unsigned int call_id;
 
-        msg("call tel_hold_call()");
+	msg("call tel_hold_call()");
 
-        call_id = atoi(data_call_id);
-        result = tel_hold_call(handle, call_id, on_hold_call, NULL);
+	call_id = atoi(data_call_id);
+	result = tel_hold_call(handle, call_id, on_hold_call, NULL);
 
-        if (result != TAPI_API_SUCCESS) {
-                msg("failed. (result = %d)", result);
-        }
+	if (result != TAPI_API_SUCCESS)
+		msg("failed. (result = %d)", result);
 
-        return result;
+	return result;
 }
 
 static int run_call_join(MManager *mm, struct menu_data *menu)
@@ -510,28 +505,26 @@ static int run_call_join(MManager *mm, struct menu_data *menu)
 	call_id = atoi(data_call_id);
 
 	result = tel_join_call(handle, call_id, 0, on_join_call, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return result;
 }
 
 static int run_call_active(MManager *mm, struct menu_data *menu)
 {
-        TapiHandle *handle = menu_manager_ref_user_data(mm);
-        int result;
-        unsigned int call_id;
+	TapiHandle *handle = menu_manager_ref_user_data(mm);
+	int result;
+	unsigned int call_id;
 
-        msg("call tel_active_call()");
+	msg("call tel_active_call()");
 
-        call_id = atoi(data_call_id);
-        result = tel_active_call(handle, call_id, on_active_call, NULL);
-        if (result != TAPI_API_SUCCESS) {
-                msg("failed. (result = %d)", result);
-        }
+	call_id = atoi(data_call_id);
+	result = tel_active_call(handle, call_id, on_active_call, NULL);
+	if (result != TAPI_API_SUCCESS)
+		msg("failed. (result = %d)", result);
 
-        return result;
+	return result;
 }
 
 
@@ -546,31 +539,29 @@ static int run_call_split(MManager *mm, struct menu_data *menu)
 	call_id = atoi(data_call_id);
 
 	result = tel_split_call(handle, call_id, on_split_call, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return result;
 }
 
 static int run_call_swap(MManager *mm, struct menu_data *menu)
 {
-        TapiHandle *handle = menu_manager_ref_user_data(mm);
-        int result;
-        unsigned int call_id;
-        unsigned int call_id2;
+	TapiHandle *handle = menu_manager_ref_user_data(mm);
+	int result;
+	unsigned int call_id;
+	unsigned int call_id2;
 
-        msg("call tel_swap_call()");
+	msg("call tel_swap_call()");
 
-        call_id = atoi(data_call_id);
-        call_id2 = atoi(data_call_id2);
-        result = tel_swap_call(handle, call_id, call_id2, on_swap_call, NULL);
+	call_id = atoi(data_call_id);
+	call_id2 = atoi(data_call_id2);
+	result = tel_swap_call(handle, call_id, call_id2, on_swap_call, NULL);
 
-        if (result != TAPI_API_SUCCESS) {
-                msg("failed. (result = %d)", result);
-        }
+	if (result != TAPI_API_SUCCESS)
+		msg("failed. (result = %d)", result);
 
-        return result;
+	return result;
 }
 
 
@@ -586,9 +577,8 @@ static int run_call_transfer(MManager *mm, struct menu_data *menu)
 	call_id = atoi(data_call_id);
 
 	result = tel_transfer_call(handle, call_id, on_transfer_call, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return result;
 }
@@ -601,9 +591,8 @@ static int run_call_start_cont_dtmf(MManager *mm, struct menu_data *menu)
 	msg("call tel_start_call_cont_dtmf()");
 
 	result = tel_start_call_cont_dtmf(handle, data_dtmf_digit[0], on_start_cont_dtmf_call, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return result;
 }
@@ -616,9 +605,8 @@ static int run_call_stop_cont_dtmf(MManager *mm, struct menu_data *menu)
 	msg("call tel_stop_call_cont_dtmf()");
 
 	result = tel_stop_call_cont_dtmf(handle, on_stop_cont_dtmf_call, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return result;
 }
@@ -635,16 +623,15 @@ static int run_call_send_burst_dtmf(MManager *mm, struct menu_data *menu)
 
 	msg("call tel_send_call_burst_dtmf()");
 
-	result = tel_send_call_burst_dtmf(handle, &info,on_send_burst_dtmf_call, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	result = tel_send_call_burst_dtmf(handle, &info, on_send_burst_dtmf_call, NULL);
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return result;
 }
 
 
-static void call_status_callback( TelCallStatus_t *status, void *user_data )
+static void call_status_callback(TelCallStatus_t *status, void *user_data)
 {
 
 	msg(" - id = %d", status->CallHandle);
@@ -691,9 +678,8 @@ static int run_call_get_status_all(MManager *mm, struct menu_data *menu)
 	msg("call tel_get_call_status_all()");
 
 	result = tel_get_call_status_all(handle, call_status_callback, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return result;
 }
@@ -714,9 +700,8 @@ static int run_call_set_mute_status(MManager *mm, struct menu_data *menu)
 	msg("status : (%d)", status);
 
 	result = tel_set_call_mute_status(handle, status, path, on_call_set_mute_status, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return result;
 }
@@ -729,9 +714,8 @@ static int run_call_get_mute_status(MManager *mm, struct menu_data *menu)
 	msg("call tel_get_call_mute_status()");
 
 	result = tel_get_call_mute_status(handle, on_call_get_mute_status, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return result;
 }
@@ -753,9 +737,8 @@ static int run_call_set_volume_info(MManager *mm, struct menu_data *menu)
 	msg("volume : (%d)", data.volume);
 
 	result = tel_set_call_volume_info(handle, &data, on_call_set_volume_info, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return result;
 }
@@ -776,9 +759,8 @@ static int run_call_get_volume_info(MManager *mm, struct menu_data *menu)
 	msg("type : (%d)", type);
 
 	result = tel_get_call_volume_info(handle, device, type, on_call_get_volume_info, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return result;
 }
@@ -798,9 +780,8 @@ static int run_call_set_sound_path(MManager *mm, struct menu_data *menu)
 	msg("sound_path.ex_volume : (0x%x)", sound_path.ex_volume);
 
 	result = tel_set_call_sound_path(handle, &sound_path, on_call_set_sound_path, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return result;
 }
@@ -818,9 +799,8 @@ static int run_call_set_preferred_voice_subscription(MManager *mm, struct menu_d
 	msg("preferred_subscription : (%d)", preferred_subscription);
 
 	result = tel_set_call_preferred_voice_subscription(handle, preferred_subscription, on_call_set_preferred_voice_subscription, NULL);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
 
 	return result;
 }
@@ -834,12 +814,10 @@ static int run_call_get_preferred_voice_subscription(MManager *mm, struct menu_d
 	msg("call tel_get_call_preferred_voice_subscription()");
 
 	result = tel_get_call_preferred_voice_subscription(handle, &preferred_subscription);
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	}
-	else {
+	else
 		msg("'preferred' Voice call subscription = (%d)", preferred_subscription);
-	}
 
 	return result;
 }
@@ -1012,7 +990,7 @@ static struct menu_data menu_call_get_volume_info[] = {
 
 static struct menu_data menu_call_set_sound_path[] = {
 	{ "1", "Sound path(1= HANDSET, 2= HEADSET, 3= HANDSFREE, 4=BUETOOTH, 5=STEREO_BLUETOOTH, 6=SPK_PHONE, 7=HEADSET_5_PI, 8=BT_NSCE_OFF, 9=MIC1, 10=MIC2, 11=HEADSET_HAC)", NULL, NULL, data_sound_path},
-	{ "2", "Extra Volume Status( 0=OFF, 1=ON)", NULL, NULL, data_extra_volume_status},
+	{ "2", "Extra Volume Status(0=OFF, 1=ON)", NULL, NULL, data_extra_volume_status},
 	{ "3", "run", NULL, run_call_set_sound_path, NULL},
 	{ NULL, NULL, },
 };
@@ -1059,8 +1037,8 @@ struct menu_data menu_call_3gpp[] = {
 	{ "17", "tel_set_call_volume_info", menu_call_set_volume_info, NULL, NULL},
 	{ "18", "tel_get_call_volume_info", menu_call_get_volume_info, NULL, NULL},
 	{ "19", "tel_set_call_sound_path", menu_call_set_sound_path, NULL, NULL},
-       { "20", "tel_set_call_preferred_voice_subscription", menu_call_set_preferred_voice_subscription, 0, 0},
-       { "21", "tel_get_call_preferred_voice_subscription", menu_call_get_preferred_voice_subscription, 0, 0},
+	{ "20", "tel_set_call_preferred_voice_subscription", menu_call_set_preferred_voice_subscription, 0, 0},
+	{ "21", "tel_get_call_preferred_voice_subscription", menu_call_get_preferred_voice_subscription, 0, 0},
 	{ NULL, NULL, },
 };
 
@@ -1096,88 +1074,71 @@ void register_call_event(TapiHandle *handle)
 	int ret;
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_VOICE_CALL_STATUS_IDLE, on_noti_call_status_idle, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_VOICE_CALL_STATUS_ACTIVE, on_noti_call_status_active, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_VOICE_CALL_STATUS_HELD, on_noti_call_status_held, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_VOICE_CALL_STATUS_DIALING, on_noti_call_status_dialing, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_VOICE_CALL_STATUS_ALERT, on_noti_call_status_alert, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_VOICE_CALL_STATUS_INCOMING, on_noti_call_status_incoming, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_CALL_INFO_HELD, on_noti_call_on_hold, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_CALL_INFO_ACTIVE, on_noti_call_active, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_CALL_INFO_JOINED, on_noti_call_joined, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_CALL_PRIVACY_MODE, on_noti_call_privacy_mode, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_CALL_OTASP_STATUS, on_noti_call_otasp_status, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_CALL_OTAPA_STATUS, on_noti_call_otapa_status, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_CALL_SIGNAL_INFO, on_noti_call_signal_info, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_CALL_SOUND_RINGBACK_TONE, on_noti_call_sound_ringback_tone, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_CALL_SOUND_WBAMR, on_noti_call_sound_wbamr, 0);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_CALL_SOUND_PATH, on_noti_call_sound_path, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_CALL_PREFERRED_VOICE_SUBSCRIPTION, on_noti_call_preferred_voice_subscription, 0);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 }
 

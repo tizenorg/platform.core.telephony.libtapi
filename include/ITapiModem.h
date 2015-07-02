@@ -23,7 +23,6 @@
  */
 
 /**
- * @internal
  * @addtogroup CAPI_TELEPHONY_SERVICE_MODEM
  * @{
  */
@@ -244,6 +243,30 @@ char *tel_get_misc_me_imei_sync(TapiHandle *handle);
  *         else it will return failure and an error code (Refer Doxygen doc or #TapiResult_t).
  */
 int tel_check_modem_power_status(TapiHandle *handle, int *result);
+
+/**
+ * @brief Gets device vendor name and device name of cellular dongle.
+ *
+ * @details This function provides vendor and device name of cellular dongle.
+ *          Result can be delivered with only cellular dongle insertion.
+ *
+ * <b> Sync (or) Async: </b> This is an Asynchronous API.\n
+ *
+ * <b> Prospective Clients: </b> External Apps.
+ *
+ * @since_tizen 2.4
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/telephony
+ *
+ * @param[in] handle The handle from tel_init()
+ * @param[in] callback To register a callback function for result
+ * @param[in] user_data The user data for user specification
+ *
+ * @return The return type (int) \n
+ *         Integer '0' ( same with #TAPI_API_SUCCESS ): indicates that the operation is completed successfully. \n
+ *         Negative integer : It provides an error code (Refer #TapiResult_t).
+ */
+int tel_get_device_info(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
 #ifdef __cplusplus
 }

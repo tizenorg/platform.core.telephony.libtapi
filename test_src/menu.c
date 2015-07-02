@@ -34,6 +34,7 @@
 #define DEFAULT_MENU_PREV	"p"
 #define DEFAULT_MENU_QUIT	"q"
 #define DEFAULT_MENU_NONE	"-"
+#define TAB_SPACE     "  "
 
 struct menu_manager {
 	GQueue *stack;
@@ -52,28 +53,28 @@ char key_buffer[MENU_DATA_SIZE];
 int flag_pid_display = 1;
 
 
-static void _show_prompt (void)
+static void _show_prompt(void)
 {
-	msgn ("(%5d) >> ", get_tid ());
+	msgn("(%5d) >> ", get_tid());
 }
 
-static void _show_reserved_menu (void)
+static void _show_reserved_menu(void)
 {
-	msg (ANSI_COLOR_DARKGRAY HR_SINGLE2 ANSI_COLOR_NORMAL);
-	msg (ANSI_COLOR_DARKGRAY " [ " ANSI_COLOR_NORMAL "%s" ANSI_COLOR_DARKGRAY
+	msg(ANSI_COLOR_DARKGRAY HR_SINGLE2 ANSI_COLOR_NORMAL);
+	msg(ANSI_COLOR_DARKGRAY " [ " ANSI_COLOR_NORMAL "%s" ANSI_COLOR_DARKGRAY
 			" ] " ANSI_COLOR_NORMAL "Previous menu " , DEFAULT_MENU_PREV);
-	msg (ANSI_COLOR_DARKGRAY " [ " ANSI_COLOR_NORMAL "%s" ANSI_COLOR_DARKGRAY
+	msg(ANSI_COLOR_DARKGRAY " [ " ANSI_COLOR_NORMAL "%s" ANSI_COLOR_DARKGRAY
 			" ] " ANSI_COLOR_NORMAL "Show Menu " , DEFAULT_MENU_MENU);
-	msg (ANSI_COLOR_DARKGRAY " [ " ANSI_COLOR_NORMAL "%s" ANSI_COLOR_DARKGRAY
+	msg(ANSI_COLOR_DARKGRAY " [ " ANSI_COLOR_NORMAL "%s" ANSI_COLOR_DARKGRAY
 			" ] " ANSI_COLOR_NORMAL "Quit " , DEFAULT_MENU_QUIT);
 }
 
-static void _show_input_ok (void)
+static void _show_input_ok(void)
 {
-	msg ("OK.");
+	msg("OK.");
 }
 
-static void _show_menu (MManager *m, struct menu_data menu[])
+static void _show_menu(MManager *m, struct menu_data menu[])
 {
 	int i = 0;
 	int len = 0;
@@ -83,19 +84,19 @@ static void _show_menu (MManager *m, struct menu_data menu[])
 	if (!menu)
 		return;
 
-	msg ("");
-	msg (HR_DOUBLE);
+	msg("");
+	msg(HR_DOUBLE);
 
-	len = g_queue_get_length (m->title_stack);
-	msgn (ANSI_COLOR_YELLOW " Main");
+	len = g_queue_get_length(m->title_stack);
+	msgn(ANSI_COLOR_YELLOW " Main");
 	if (len > 0) {
 		for (i = 0; i < len; i++) {
-			msgn (ANSI_COLOR_NORMAL " >> " ANSI_COLOR_YELLOW "%s",
-					(char *) g_queue_peek_nth (m->title_stack, i));
+			msgn(ANSI_COLOR_NORMAL " >> " ANSI_COLOR_YELLOW "%s",
+					(char *)g_queue_peek_nth(m->title_stack, i));
 		}
 	}
-	msg (ANSI_COLOR_NORMAL);
-	msg (HR_SINGLE);
+	msg(ANSI_COLOR_NORMAL);
+	msg(HR_SINGLE);
 
 	hide_pid();
 	i = 0;
@@ -105,53 +106,47 @@ static void _show_menu (MManager *m, struct menu_data menu[])
 		if (item->key == NULL)
 			break;
 
-		if (!g_strcmp0 (item->key, "-")) {
-			msgn ("       ");
-		}
-		else if (!g_strcmp0 (item->key, "_")) {
-			msg (ANSI_COLOR_DARKGRAY HR_SINGLE2 ANSI_COLOR_NORMAL);
+		if (!g_strcmp0(item->key, "-")) {
+			msgn("       ");
+		} else if (!g_strcmp0(item->key, "_")) {
+			msg(ANSI_COLOR_DARKGRAY HR_SINGLE2 ANSI_COLOR_NORMAL);
 
 			if (item->callback)
-				item->callback (m, item);
+				item->callback(m, item);
 
 			i++;
 
 			continue;
-		}
-		else if (!g_strcmp0 (item->key, "*")) {
-			msg (" %s", item->title);
+		} else if (!g_strcmp0(item->key, "*")) {
+			msg(" %s", item->title);
 			if (item->callback)
-				item->callback (m, item);
-		}
-		else {
-			msgn (ANSI_COLOR_DARKGRAY " [" ANSI_COLOR_NORMAL "%3s"
+				item->callback(m, item);
+		} else {
+			msgn(ANSI_COLOR_DARKGRAY " [" ANSI_COLOR_NORMAL "%3s"
 					ANSI_COLOR_DARKGRAY "] " ANSI_COLOR_NORMAL,	item->key);
 		}
 
-		memset (title_buf, 0, 256);
+		memset(title_buf, 0, 256);
 		if (item->title) {
-			snprintf (title_buf, MAX_TITLE, "%s", item->title);
+			snprintf(title_buf, MAX_TITLE, "%s", item->title);
 
-			if (strlen (item->title) >= MAX_TITLE) {
+			if (strlen(item->title) >= MAX_TITLE) {
 				title_buf[MAX_TITLE - 2] = '.';
 				title_buf[MAX_TITLE - 1] = '.';
 			}
 		}
 
 		if (item->data) {
-			msg ("%s " ANSI_COLOR_LIGHTBLUE "(%s)" ANSI_COLOR_NORMAL,
+			msg("%s " ANSI_COLOR_LIGHTBLUE "(%s)" ANSI_COLOR_NORMAL,
 					title_buf, item->data);
-		}
-		else if (!g_strcmp0 (item->key, "*")) {
+		} else if (!g_strcmp0(item->key, "*")) {
 			/* none */
-		}
-		else {
-			msg ("%s", title_buf);
+		} else {
+			msg("%s", title_buf);
 		}
 
-		if (item->sub_menu) {
-			msg ("\e[1A\e[%dC >", (int)POS_MORE);
-		}
+		if (item->sub_menu)
+			msg("\e[1A\e[%dC >", POS_MORE);
 
 		i++;
 	}
@@ -160,22 +155,22 @@ static void _show_menu (MManager *m, struct menu_data menu[])
 
 	_show_reserved_menu();
 
-	msg (HR_DOUBLE);
+	msg(HR_DOUBLE);
 
 	_show_prompt();
 }
 
-static void _show_item_data_input_msg (struct menu_data *item)
+static void _show_item_data_input_msg(struct menu_data *item)
 {
-	msg ("");
-	msg (HR_DOUBLE);
-	msg (" Input [%s] data ", item->title);
-	msg (HR_SINGLE);
-	msg (" current = [%s]", item->data);
-	msgn (" new >> ");
+	msg("");
+	msg(HR_DOUBLE);
+	msg(" Input [%s] data ", item->title);
+	msg(HR_SINGLE);
+	msg(" current = [%s]", item->data);
+	msgn(" new >> ");
 }
 
-static void _move_menu (MManager *mm, struct menu_data menu[], char *key)
+static void _move_menu(MManager *mm, struct menu_data menu[], char *key)
 {
 	struct menu_data *item;
 	int i = 0;
@@ -183,26 +178,23 @@ static void _move_menu (MManager *mm, struct menu_data menu[], char *key)
 	if (!mm->menu)
 		return;
 
-	if (!g_strcmp0 (DEFAULT_MENU_PREV, key)) {
-		if (g_queue_get_length (mm->stack) > 0) {
-			mm->menu = g_queue_pop_tail (mm->stack);
-			g_queue_pop_tail (mm->title_stack);
+	if (!g_strcmp0(DEFAULT_MENU_PREV, key)) {
+		if (g_queue_get_length(mm->stack) > 0) {
+			mm->menu = g_queue_pop_tail(mm->stack);
+			g_queue_pop_tail(mm->title_stack);
 		}
 
-		_show_menu (mm, mm->menu);
+		_show_menu(mm, mm->menu);
 		mm->buf = key_buffer;
 
 		return;
-	}
-	else if (!g_strcmp0 (DEFAULT_MENU_MENU, key)) {
-		_show_menu (mm, mm->menu);
+	} else if (!g_strcmp0(DEFAULT_MENU_MENU, key)) {
+		_show_menu(mm, mm->menu);
 		return;
-	}
-	else if (!g_strcmp0 (DEFAULT_MENU_QUIT, key)) {
-		g_main_loop_quit (mm->mainloop);
+	} else if (!g_strcmp0(DEFAULT_MENU_QUIT, key)) {
+		g_main_loop_quit(mm->mainloop);
 		return;
-	}
-	else if (!g_strcmp0 (DEFAULT_MENU_NONE, key)) {
+	} else if (!g_strcmp0(DEFAULT_MENU_NONE, key)) {
 		_show_prompt();
 		return;
 	}
@@ -213,24 +205,24 @@ static void _move_menu (MManager *mm, struct menu_data menu[], char *key)
 		if (item->key == NULL)
 			break;
 
-		if (!g_strcmp0 (item->key, key)) {
+		if (!g_strcmp0(item->key, key)) {
 			if (item->callback) {
-				ret = item->callback (mm, item);
+				ret = item->callback(mm, item);
 				_show_prompt();
 			}
 
-			if(RET_SUCCESS == ret) {
+			if (RET_SUCCESS == ret) {
 				if (item->sub_menu) {
-					g_queue_push_tail (mm->stack, mm->menu);
-					g_queue_push_tail (mm->title_stack, (gpointer *)item->title);
+					g_queue_push_tail(mm->stack, mm->menu);
+					g_queue_push_tail(mm->title_stack, (gpointer *)item->title);
 
 					mm->menu = item->sub_menu;
-					_show_menu (mm, mm->menu);
+					_show_menu(mm, mm->menu);
 					mm->buf = key_buffer;
 				}
 
 				if (item->data) {
-					_show_item_data_input_msg (item);
+					_show_item_data_input_msg(item);
 					mm->buf = item->data;
 				}
 			}
@@ -244,11 +236,11 @@ static void _move_menu (MManager *mm, struct menu_data menu[], char *key)
 	_show_prompt();
 }
 
-MManager *menu_manager_new (struct menu_data items[], GMainLoop *mainloop)
+MManager *menu_manager_new(struct menu_data items[], GMainLoop *mainloop)
 {
 	MManager *mm;
 
-	mm = calloc (sizeof (struct menu_manager), 1);
+	mm = calloc(sizeof(struct menu_manager), 1);
 	if (!mm)
 		return NULL;
 
@@ -260,16 +252,16 @@ MManager *menu_manager_new (struct menu_data items[], GMainLoop *mainloop)
 	return mm;
 }
 
-int menu_manager_run (MManager *mm)
+int menu_manager_run(MManager *mm)
 {
-	_show_menu (mm, mm->menu);
+	_show_menu(mm, mm->menu);
 
 	mm->buf = key_buffer;
 
 	return 0;
 }
 
-int menu_manager_set_user_data (MManager *mm, void *user_data)
+int menu_manager_set_user_data(MManager *mm, void *user_data)
 {
 	if (!mm)
 		return -1;
@@ -279,7 +271,7 @@ int menu_manager_set_user_data (MManager *mm, void *user_data)
 	return 0;
 }
 
-void *menu_manager_ref_user_data (MManager *mm)
+void *menu_manager_ref_user_data(MManager *mm)
 {
 	if (!mm)
 		return NULL;
@@ -287,57 +279,56 @@ void *menu_manager_ref_user_data (MManager *mm)
 	return mm->user_data;
 }
 
-gboolean on_menu_manager_keyboard (GIOChannel *src, GIOCondition con,
+gboolean on_menu_manager_keyboard(GIOChannel *src, GIOCondition con,
 		gpointer data)
 {
 	MManager *mm = data;
 	char local_buf[MENU_DATA_SIZE + 1] = { 0, };
 
-	if (fgets (local_buf, MENU_DATA_SIZE, stdin) == NULL)
+	if (fgets(local_buf, MENU_DATA_SIZE, stdin) == NULL)
 		return TRUE;
 
-	if (strlen (local_buf) > 0) {
-		if (local_buf[strlen (local_buf) - 1] == '\n')
-			local_buf[strlen (local_buf) - 1] = '\0';
+	if (strlen(local_buf) > 0) {
+		if (local_buf[strlen(local_buf) - 1] == '\n')
+			local_buf[strlen(local_buf) - 1] = '\0';
 	}
 
 	if (mm->buf == key_buffer) {
-		if (strlen (local_buf) < 1) {
+		if (strlen(local_buf) < 1) {
 			_show_prompt();
 			return TRUE;
 		}
 
-		_move_menu (mm, mm->menu, local_buf);
-	}
-	else {
+		_move_menu(mm, mm->menu, local_buf);
+	} else {
 		if (mm->buf) {
-			memset (mm->buf, 0, MENU_DATA_SIZE);
-			memcpy (mm->buf, local_buf, MENU_DATA_SIZE);
+			memset(mm->buf, 0, MENU_DATA_SIZE);
+			memcpy(mm->buf, local_buf, MENU_DATA_SIZE);
 			_show_input_ok();
 		}
 		mm->buf = key_buffer;
-		_move_menu (mm, mm->menu, (char *)DEFAULT_MENU_MENU);
+		_move_menu(mm, mm->menu, (char *)DEFAULT_MENU_MENU);
 	}
 
 	return TRUE;
 }
 
-pid_t get_tid ()
+pid_t get_tid()
 {
-	return syscall (__NR_gettid);
+	return syscall(__NR_gettid);
 }
 
-void hide_pid ()
+void hide_pid()
 {
 	flag_pid_display = 0;
 }
 
-void show_pid ()
+void show_pid()
 {
 	flag_pid_display = 1;
 }
 
-int is_pid_show ()
+int is_pid_show()
 {
 	return flag_pid_display;
 }
@@ -356,18 +347,17 @@ static void _hex_dump(const char *pad, int size, const void *data)
 	p = (unsigned char *)data;
 
 	snprintf(buf, 255, "%s%04X: ", pad, 0);
-	for (i = 0; i<size; i++) {
+	for (i = 0; i < size; i++) {
 		snprintf(hex, 4, "%02X ", p[i]);
-		strcat(buf, hex);
+		strncat(buf, hex, strlen(hex));
 
 		if ((i + 1) % 8 == 0) {
 			if ((i + 1) % 16 == 0) {
 				msg("%s", buf);
 				memset(buf, 0, 255);
 				snprintf(buf, 255, "%s%04X: ", pad, i + 1);
-			}
-			else {
-				strcat(buf, "  ");
+			} else {
+				strncat(buf, TAB_SPACE, strlen(TAB_SPACE));
 			}
 		}
 	}
@@ -377,7 +367,7 @@ static void _hex_dump(const char *pad, int size, const void *data)
 
 void menu_print_dump(int data_len, void *data)
 {
-	if(!data)
+	if (!data)
 		return;
 
 	msg("");

@@ -44,36 +44,35 @@ __BEGIN_DECLS
 #define ANSI_COLOR_WHITE		"\e[1;37m"
 
 
-#define msg(fmt,args...)	{ fprintf(stdout, fmt "\n", ##args); \
-		fflush(stdout); }
-
-#define msgn(fmt,args...)	{ fprintf(stdout, fmt, ##args); \
-		fflush(stdout); }
+#define msg(fmt,args...)	do { fprintf(stdout, fmt "\n", ##args); \
+		fflush(stdout); } while (0)
+#define msgn(fmt,args...)	do { fprintf(stdout, fmt, ##args); \
+		fflush(stdout); } while (0)
 
 /* Bold (green) */
-#define msgb(fmt,args...)  { fprintf(stdout, ANSI_COLOR_LIGHTGREEN fmt \
-		ANSI_COLOR_NORMAL "\n", ##args); fflush(stdout); }
+#define msgb(fmt,args...)  do { fprintf(stdout, ANSI_COLOR_LIGHTGREEN fmt \
+		ANSI_COLOR_NORMAL "\n", ##args); fflush(stdout); } while (0)
 
 /* Property message */
-#define msgp(fmt,args...)  { fprintf(stdout, ANSI_COLOR_LIGHTMAGENTA fmt \
-		ANSI_COLOR_NORMAL "\n", ##args); fflush(stdout); }
+#define msgp(fmt,args...) do { fprintf(stdout, ANSI_COLOR_LIGHTMAGENTA fmt \
+		ANSI_COLOR_NORMAL "\n", ##args); fflush(stdout); } while (0)
 
-#define msgt(n,fmt,args...)	{ fprintf(stdout, "\e[%dC" fmt "\n", \
-		3 + ((n) * 2), ##args); fflush(stdout); }
+#define msgt(n,fmt,args...) do { fprintf(stdout, "\e[%dC" fmt "\n", \
+		3 + ((n) * 2), ##args); fflush(stdout); } while (0)
 
-#define pmsg(fmt,args...)	{ \
+#define pmsg(fmt,args...) do { \
 	if (is_pid_show()) { fprintf(stdout, "(%5d) ", get_tid()); } \
-	fprintf(stdout, fmt "\n", ##args); fflush(stdout); }
+	fprintf(stdout, fmt "\n", ##args); fflush(stdout); } while (0)
 
-#define pmsgb(fmt,args...)	{ \
+#define pmsgb(fmt,args...) do { \
 	if (is_pid_show()) { fprintf(stdout, "(%5d) ", get_tid()); } \
 	fprintf(stdout, ANSI_COLOR_LIGHTGREEN fmt \
-			ANSI_COLOR_NORMAL "\n", ##args); fflush(stdout); }
+			ANSI_COLOR_NORMAL "\n", ##args); fflush(stdout); } while (0)
 
-#define pmsgt(n,fmt,args...) { \
+#define pmsgt(n,fmt,args...) do { \
 	if (is_pid_show()) { fprintf(stdout, "(%5d) ", get_tid()); } \
 	fprintf(stdout, "\e[%dC" fmt "\n", \
-			3 + ((n) * 2), ##args); fflush(stdout); }
+			3 + ((n) * 2), ##args); fflush(stdout); } while (0)
 
 #define MENU_DATA_SIZE 255
 

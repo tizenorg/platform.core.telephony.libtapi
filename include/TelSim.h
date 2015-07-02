@@ -23,7 +23,6 @@
  */
 
 /**
- * @internal
  * @addtogroup CAPI_TELEPHONY_SERVICE_SIM
  * @{
  */
@@ -664,6 +663,16 @@ typedef enum {
 	TAPI_PB_3G_GRP, /**< Group */
 	TAPI_PB_3G_PBC, /**< 1 byte control info and 1 byte hidden info */
 } TelSimPb3GFileType_t;
+
+/**
+ * @brief Enumeration for the phonebook operation types.
+ * @since_tizen 2.4
+ */
+typedef enum {
+	TAPI_PB_UPDATE, /**< Contact added or updated */
+	TAPI_PB_DELETE, /**< Existing contact deleted */
+	TAPI_PB_MAX, /**< MAX value */
+} TelSimPbOp_t;
 
 /**
  * @brief Enumeration for the list of SST services in the SIM Service Table (GSM).
@@ -1619,6 +1628,16 @@ typedef struct {
 	unsigned short FileTypeCount; /**< Phonebook file type count */
 	TelSimPb3GFileTypeCapabiltyInfo_t FileTypeInfo[TAPI_SIM_PB_3G_FILE_MAX_COUNT]; /**< Phonebook file type information */
 } TelSimPbCapabilityInfo_t;
+
+/**
+ * @brief The structure type for phonebook contact change informarion.
+ * @since_tizen 2.4
+ */
+typedef struct {
+	TelSimPbType_t pb_type; /**< Storage file type */
+	unsigned short index; /**< Changed index */
+	TelSimPbOp_t operation; /**< Phonebook operation */
+} TelSimPbContactChangeInfo_t;
 
 
 

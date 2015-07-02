@@ -32,181 +32,209 @@
 
 extern TelSatEventDownloadType_t g_event_list[TAPI_SAT_EVENT_LIST_MAX_COUNT];
 
-static GVariant* _tapi_sat_gen_app_exec_result_data(TelSatAppsRetInfo_t *result_info)
+static GVariant *_tapi_sat_gen_app_exec_result_data(TelSatAppsRetInfo_t *result_info)
 {
 	GVariant *result = NULL;
 
-	switch(result_info->commandType)
-	{
-		case TAPI_SAT_CMD_TYPE_SETUP_MENU:{
-			gint exec_result;
-			dbg("setup menu : result format (i)");
+	switch (result_info->commandType) {
+	case TAPI_SAT_CMD_TYPE_SETUP_MENU: {
+		gint exec_result;
+		dbg("setup menu : result format (i)");
 
-			exec_result = result_info->appsRet.setupMenu.resp;
-			result = g_variant_new("(i)", exec_result);
-		} break;
-		case TAPI_SAT_CMD_TYPE_REFRESH:{
-			gint app_type, exec_result;
-			dbg("refresh : result format (ii)");
+		exec_result = result_info->appsRet.setupMenu.resp;
+		result = g_variant_new("(i)", exec_result);
+	}
+	break;
 
-			app_type = result_info->appsRet.refresh.appType;
-			exec_result = result_info->appsRet.refresh.resp;
-			result = g_variant_new("(ii)", app_type, exec_result);
-		} break;
-		case TAPI_SAT_CMD_TYPE_SETUP_CALL:{
-			gint exec_result, me_problem, call_ctrl_problem, call_cause;
-			dbg("setup call : result format (iiii)");
+	case TAPI_SAT_CMD_TYPE_REFRESH: {
+		gint app_type, exec_result;
+		dbg("refresh : result format (ii)");
 
-			exec_result = result_info->appsRet.setupCall.resp;
-			me_problem = result_info->appsRet.setupCall.meProblem;
-			call_ctrl_problem = result_info->appsRet.setupCall.permanentCallCtrlProblem;
-			call_cause = result_info->appsRet.setupCall.tapiCause;
-			result = g_variant_new("(iiii)", exec_result, me_problem, call_ctrl_problem, call_cause);
-		} break;
-		case TAPI_SAT_CMD_TYPE_SEND_SS:{
-			int ss_index;
-			gint exec_result, me_problem, ss_cause, call_ctrl_problem, ss_str_len;
-			GVariantBuilder builder;
-			GVariant *ss_str = NULL;
-			dbg("send ss : result format (iiivii)");
+		app_type = result_info->appsRet.refresh.appType;
+		exec_result = result_info->appsRet.refresh.resp;
+		result = g_variant_new("(ii)", app_type, exec_result);
+	}
+	break;
 
-			exec_result = result_info->appsRet.sendSs.resp;
-			me_problem = result_info->appsRet.sendSs.meProblem;
-			ss_cause = result_info->appsRet.sendSs.ssCause;
-			call_ctrl_problem = result_info->appsRet.sendSs.additionalCallCtrlProblemInfo;
-			ss_str_len = result_info->appsRet.sendSs.ssString.stringLen;
+	case TAPI_SAT_CMD_TYPE_SETUP_CALL: {
+		gint exec_result, me_problem, call_ctrl_problem, call_cause;
+		dbg("setup call : result format (iiii)");
 
-			g_variant_builder_init(&builder, G_VARIANT_TYPE ("ay"));
-			for (ss_index = 0; ss_index < ss_str_len; ss_index++) {
-				dbg("index(%d) data(%d)", ss_index, result_info->appsRet.sendSs.ssString.string[ss_index]);
-				g_variant_builder_add(&builder, "y", result_info->appsRet.sendSs.ssString.string[ss_index]);
-			}
-			ss_str = g_variant_builder_end(&builder);
+		exec_result = result_info->appsRet.setupCall.resp;
+		me_problem = result_info->appsRet.setupCall.meProblem;
+		call_ctrl_problem = result_info->appsRet.setupCall.permanentCallCtrlProblem;
+		call_cause = result_info->appsRet.setupCall.tapiCause;
+		result = g_variant_new("(iiii)", exec_result, me_problem, call_ctrl_problem, call_cause);
+	}
+	break;
 
-			result = g_variant_new("(iiivii)", exec_result, me_problem, ss_cause, ss_str, ss_str_len, call_ctrl_problem);
-		} break;
-		case TAPI_SAT_CMD_TYPE_SEND_USSD:{
-			int ussd_index;
-			gint exec_result, me_problem, ss_cause, ussd_str_len;
-			GVariantBuilder builder;
-			GVariant *ussd_str = NULL;
+	case TAPI_SAT_CMD_TYPE_SEND_SS: {
+		int ss_index;
+		gint exec_result, me_problem, ss_cause, call_ctrl_problem, ss_str_len;
+		GVariantBuilder builder;
+		GVariant *ss_str = NULL;
+		dbg("send ss : result format (iiivii)");
 
-			dbg("send ussd : result format (iiivi)");
+		exec_result = result_info->appsRet.sendSs.resp;
+		me_problem = result_info->appsRet.sendSs.meProblem;
+		ss_cause = result_info->appsRet.sendSs.ssCause;
+		call_ctrl_problem = result_info->appsRet.sendSs.additionalCallCtrlProblemInfo;
+		ss_str_len = result_info->appsRet.sendSs.ssString.stringLen;
 
-			exec_result = result_info->appsRet.sendUssd.resp;
-			me_problem = result_info->appsRet.sendUssd.meProblem;
-			ss_cause = result_info->appsRet.sendUssd.ssCause;
-			ussd_str_len = result_info->appsRet.sendUssd.ussdString.stringLen;
+		g_variant_builder_init(&builder, G_VARIANT_TYPE("ay"));
+		for (ss_index = 0; ss_index < ss_str_len; ss_index++) {
+			dbg("index(%d) data(%d)", ss_index, result_info->appsRet.sendSs.ssString.string[ss_index]);
+			g_variant_builder_add(&builder, "y", result_info->appsRet.sendSs.ssString.string[ss_index]);
+		}
+		ss_str = g_variant_builder_end(&builder);
 
-			g_variant_builder_init(&builder, G_VARIANT_TYPE ("ay"));
-			for (ussd_index = 0; ussd_index < ussd_str_len; ussd_index++) {
-				dbg("index(%d) data(%d)", ussd_index, result_info->appsRet.sendUssd.ussdString.string[ussd_index]);
-				g_variant_builder_add(&builder, "y", result_info->appsRet.sendUssd.ussdString.string[ussd_index]);
-			}
-			ussd_str = g_variant_builder_end(&builder);
+		result = g_variant_new("(iiivii)", exec_result, me_problem, ss_cause, ss_str, ss_str_len, call_ctrl_problem);
+	}
+	break;
 
-			result = g_variant_new("(iiivi)", exec_result, me_problem, ss_cause, ussd_str, ussd_str_len);
-		} break;
-		case TAPI_SAT_CMD_TYPE_SEND_SMS:{
-			gint exec_result;
-			dbg("send sms: result format (i)");
+	case TAPI_SAT_CMD_TYPE_SEND_USSD: {
+		int ussd_index;
+		gint exec_result, me_problem, ss_cause, ussd_str_len;
+		GVariantBuilder builder;
+		GVariant *ussd_str = NULL;
 
-			exec_result = result_info->appsRet.sendSms.resp;
-			result = g_variant_new("(i)", exec_result);
-		} break;
-		case TAPI_SAT_CMD_TYPE_SEND_DTMF:{
-			gint exec_result;
-			dbg("send DTMF: result format (i)");
+		dbg("send ussd : result format (iiivi)");
 
-			exec_result = result_info->appsRet.sendDtmf.resp;
-			result = g_variant_new("(i)", exec_result);
-		} break;
-		case TAPI_SAT_CMD_TYPE_LAUNCH_BROWSER:{
-			gint exec_result, browser_problem;
-			dbg("launch browser: result format (ii)");
+		exec_result = result_info->appsRet.sendUssd.resp;
+		me_problem = result_info->appsRet.sendUssd.meProblem;
+		ss_cause = result_info->appsRet.sendUssd.ssCause;
+		ussd_str_len = result_info->appsRet.sendUssd.ussdString.stringLen;
 
-			exec_result = result_info->appsRet.launchBrowser.resp;
-			browser_problem = result_info->appsRet.launchBrowser.browserProblem;
-			result = g_variant_new("(ii)", exec_result, browser_problem);
-		} break;
-		case TAPI_SAT_CMD_TYPE_SETUP_IDLE_MODE_TEXT:{
-			gint exec_result;
-			dbg("setup idle mode text: result format (i)");
+		g_variant_builder_init(&builder, G_VARIANT_TYPE("ay"));
+		for (ussd_index = 0; ussd_index < ussd_str_len; ussd_index++) {
+			dbg("index(%d) data(%d)", ussd_index, result_info->appsRet.sendUssd.ussdString.string[ussd_index]);
+			g_variant_builder_add(&builder, "y", result_info->appsRet.sendUssd.ussdString.string[ussd_index]);
+		}
+		ussd_str = g_variant_builder_end(&builder);
 
-			exec_result = result_info->appsRet.setupIdleModeText.resp;
-			result = g_variant_new("(i)", exec_result);
-		} break;
-		case TAPI_SAT_CMD_TYPE_LANGUAGE_NOTIFICATION:{
-			gint exec_result;
-			dbg("language notification: result format (i)");
+		result = g_variant_new("(iiivi)", exec_result, me_problem, ss_cause, ussd_str, ussd_str_len);
+	}
+	break;
 
-			exec_result = result_info->appsRet.languageNoti.resp;
-			result = g_variant_new("(i)", exec_result);
-		} break;
-		case TAPI_SAT_CMD_TYPE_PROVIDE_LOCAL_INFO:{
-			gint exec_result;
-			dbg("provide local info: result format (i)");
+	case TAPI_SAT_CMD_TYPE_SEND_SMS: {
+		gint exec_result;
+		dbg("send sms: result format (i)");
 
-			exec_result = result_info->appsRet.provideLocalInfo.resp;
-			result = g_variant_new("(i)", exec_result);
-		} break;
-		case TAPI_SAT_CMD_TYPE_PLAY_TONE:{
-			gint exec_result;
-			dbg("play tone: result format (i)");
+		exec_result = result_info->appsRet.sendSms.resp;
+		result = g_variant_new("(i)", exec_result);
+	}
+	break;
 
-			exec_result = result_info->appsRet.playTone.resp;
-			result = g_variant_new("(i)", exec_result);
-		} break;
-		case TAPI_SAT_CMD_TYPE_DISPLAY_TEXT:{
-			gint exec_result, me_problem;
-			dbg("display text: result format (ii)");
+	case TAPI_SAT_CMD_TYPE_SEND_DTMF: {
+		gint exec_result;
+		dbg("send DTMF: result format (i)");
 
-			exec_result = result_info->appsRet.displayText.resp;
-			me_problem = result_info->appsRet.displayText.meProblem;
-			result = g_variant_new("(ii)", exec_result, me_problem);
-		} break;
-		default:
-			dbg("unhandled command type(0x%x", result_info->commandType);
-			result = g_variant_new("()");
-			break;
+		exec_result = result_info->appsRet.sendDtmf.resp;
+		result = g_variant_new("(i)", exec_result);
+	}
+	break;
+
+	case TAPI_SAT_CMD_TYPE_LAUNCH_BROWSER: {
+		gint exec_result, browser_problem;
+		dbg("launch browser: result format (ii)");
+
+		exec_result = result_info->appsRet.launchBrowser.resp;
+		browser_problem = result_info->appsRet.launchBrowser.browserProblem;
+		result = g_variant_new("(ii)", exec_result, browser_problem);
+	}
+	break;
+
+	case TAPI_SAT_CMD_TYPE_SETUP_IDLE_MODE_TEXT: {
+		gint exec_result;
+		dbg("setup idle mode text: result format (i)");
+
+		exec_result = result_info->appsRet.setupIdleModeText.resp;
+		result = g_variant_new("(i)", exec_result);
+	} break;
+	case TAPI_SAT_CMD_TYPE_LANGUAGE_NOTIFICATION: {
+		gint exec_result;
+		dbg("language notification: result format (i)");
+
+		exec_result = result_info->appsRet.languageNoti.resp;
+		result = g_variant_new("(i)", exec_result);
+	}
+	break;
+
+	case TAPI_SAT_CMD_TYPE_PROVIDE_LOCAL_INFO: {
+		gint exec_result;
+		dbg("provide local info: result format (i)");
+
+		exec_result = result_info->appsRet.provideLocalInfo.resp;
+		result = g_variant_new("(i)", exec_result);
+	}
+	break;
+
+	case TAPI_SAT_CMD_TYPE_PLAY_TONE: {
+		gint exec_result;
+		dbg("play tone: result format (i)");
+
+		exec_result = result_info->appsRet.playTone.resp;
+		result = g_variant_new("(i)", exec_result);
+	}
+	break;
+
+	case TAPI_SAT_CMD_TYPE_DISPLAY_TEXT: {
+		gint exec_result, me_problem;
+		dbg("display text: result format (ii)");
+
+		exec_result = result_info->appsRet.displayText.resp;
+		me_problem = result_info->appsRet.displayText.meProblem;
+		result = g_variant_new("(ii)", exec_result, me_problem);
+	}
+	break;
+
+	default:
+		dbg("unhandled command type(0x%x", result_info->commandType);
+		result = g_variant_new("()");
+	break;
 	}
 
 	return result;
 }
 
-static GVariant* _tapi_sat_gen_event_download_data(const TelSatEventDownloadReqInfo_t *pEventData)
+static GVariant *_tapi_sat_gen_event_download_data(const TelSatEventDownloadReqInfo_t *pEventData)
 {
 	GVariant *result = NULL;
 
-	switch(pEventData->eventDownloadType)
-	{
-		case TAPI_EVENT_SAT_DW_TYPE_IDLE_SCREEN_AVAILABLE:{
-			gboolean idle_screen;
-			dbg("idle screen available (%d)", pEventData->u.bIdleScreenAvailable);
+	switch (pEventData->eventDownloadType) {
+	case TAPI_EVENT_SAT_DW_TYPE_IDLE_SCREEN_AVAILABLE: {
+		gboolean idle_screen;
+		dbg("idle screen available (%d)", pEventData->u.bIdleScreenAvailable);
 
-			idle_screen = pEventData->u.bIdleScreenAvailable;
-			result = g_variant_new("(b)", idle_screen);
-		} break;
-		case TAPI_EVENT_SAT_DW_TYPE_LANGUAGE_SELECTION:{
-			gint selected_language;
-			dbg("selected language (%d)", pEventData->u.languageSelectionEventReqInfo.language);
+		idle_screen = pEventData->u.bIdleScreenAvailable;
+		result = g_variant_new("(b)", idle_screen);
+	}
+	break;
 
-			selected_language = pEventData->u.languageSelectionEventReqInfo.language;
-			result = g_variant_new("(i)", selected_language);
-		} break;
-		case TAPI_EVENT_SAT_DW_TYPE_BROWSER_TERMINATION:{
-			gint browser_termination_cause;
-			dbg("Cause of browser termination (%d)", pEventData->u.browserTerminationEventReqInfo.browserTerminationCause);
+	case TAPI_EVENT_SAT_DW_TYPE_LANGUAGE_SELECTION: {
+		gint selected_language;
+		dbg("selected language (%d)", pEventData->u.languageSelectionEventReqInfo.language);
 
-			browser_termination_cause = pEventData->u.browserTerminationEventReqInfo.browserTerminationCause;
-			result = g_variant_new("(i)", browser_termination_cause);
-		} break;
-		case TAPI_EVENT_SAT_DW_TYPE_DATA_AVAILABLE:
-		case TAPI_EVENT_SAT_DW_TYPE_CHANNEL_STATUS:
-		default :
-			dbg("not support download event (%d)", pEventData->eventDownloadType);
-			result = g_variant_new("()");
-			break;
+		selected_language = pEventData->u.languageSelectionEventReqInfo.language;
+		result = g_variant_new("(i)", selected_language);
+	}
+	break;
+
+	case TAPI_EVENT_SAT_DW_TYPE_BROWSER_TERMINATION: {
+		gint browser_termination_cause;
+		dbg("Cause of browser termination (%d)", pEventData->u.browserTerminationEventReqInfo.browserTerminationCause);
+
+		browser_termination_cause = pEventData->u.browserTerminationEventReqInfo.browserTerminationCause;
+		result = g_variant_new("(i)", browser_termination_cause);
+	}
+	break;
+
+	case TAPI_EVENT_SAT_DW_TYPE_DATA_AVAILABLE:
+	case TAPI_EVENT_SAT_DW_TYPE_CHANNEL_STATUS:
+	default:
+		dbg("not support download event (%d)", pEventData->eventDownloadType);
+		result = g_variant_new("()");
+	break;
 	}
 
 	return result;
@@ -223,16 +251,15 @@ static void on_response_menu_selection_envelop(GObject *source_object, GAsyncRes
 	int result = -1;
 	int envelop_rsp = 0;
 
-	conn = G_DBUS_CONNECTION (source_object);
+	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
 	CHECK_ERROR(error);
 
-	g_variant_get (dbus_result, "(ii)", &result, &envelop_rsp);
+	g_variant_get(dbus_result, "(ii)", &result, &envelop_rsp);
 	dbg("menu selection envelop result(%d) envelop response(%d)", result, envelop_rsp);
 
-	if (evt_cb_data->cb_fn) {
+	if (evt_cb_data->cb_fn)
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &envelop_rsp, evt_cb_data->user_data);
-	}
 
 	g_variant_unref(dbus_result);
 	g_free(evt_cb_data);
@@ -249,16 +276,15 @@ static void on_response_download_event_envelop(GObject *source_object, GAsyncRes
 	int result = -1;
 	int envelop_rsp = 0;
 
-	conn = G_DBUS_CONNECTION (source_object);
+	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
 	CHECK_ERROR(error);
 
-	g_variant_get (dbus_result, "(ii)", &result, &envelop_rsp);
+	g_variant_get(dbus_result, "(ii)", &result, &envelop_rsp);
 	dbg("download event envelop result(%d) envelop response(%d)", result, envelop_rsp);
 
-	if (evt_cb_data->cb_fn) {
+	if (evt_cb_data->cb_fn)
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, &envelop_rsp, evt_cb_data->user_data);
-	}
 
 	g_variant_unref(dbus_result);
 	g_free(evt_cb_data);
@@ -291,7 +317,7 @@ EXPORT_API int tel_select_sat_menu(TapiHandle *handle, const TelSatMenuSelection
 	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	item_id = pMenuSelect->itemIdentifier;
-	help_req = ( (pMenuSelect->bIsHelpRequested != 0) ? TRUE : FALSE);
+	help_req = ((pMenuSelect->bIsHelpRequested != 0) ? TRUE : FALSE);
 	dbg("item id(%d) help request(%d)", item_id, help_req);
 	inparam = g_variant_new("(ib)", item_id, help_req);
 
@@ -330,14 +356,15 @@ EXPORT_API int tel_download_sat_event(TapiHandle *handle, const TelSatEventDownl
 	TAPI_RET_ERR_NUM_IF_FAIL(handle->dbus_connection, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pEventData, TAPI_API_INVALID_PTR);
 
-	for(g_index = 0; g_event_list[g_index] > 0; g_index++){
-		if(pEventData->eventDownloadType == TAPI_EVENT_SAT_DW_TYPE_BROWSER_TERMINATION || g_event_list[g_index] == pEventData->eventDownloadType ){
+	for (g_index = 0; g_event_list[g_index] > 0; g_index++) {
+		if (pEventData->eventDownloadType == TAPI_EVENT_SAT_DW_TYPE_BROWSER_TERMINATION
+				|| g_event_list[g_index] == pEventData->eventDownloadType) {
 			dbg("event (%d) shoud be passed to sim");
 			evt_check = TRUE;
 		}
 	}
 
-	if(!evt_check){
+	if (!evt_check) {
 		dbg("sim does not request event(%d)", pEventData->eventDownloadType);
 		return TAPI_API_SAT_EVENT_NOT_REQUIRED_BY_USIM;
 	}
@@ -412,9 +439,9 @@ EXPORT_API int tel_get_sat_main_menu_info(TapiHandle *handle, TelSatSetupMenuInf
 	rst = g_dbus_connection_call_sync(handle->dbus_connection, DBUS_TELEPHONY_SERVICE , handle->path,
 			DBUS_TELEPHONY_SAT_INTERFACE, "GetMainMenuInfo", NULL, NULL, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca, &error);
 
-	if(!rst){
-		dbg( "error to get main menu(%s)", error->message);
-		g_error_free (error);
+	if (!rst) {
+		dbg("error to get main menu(%s)", error->message);
+		g_error_free(error);
 		return TAPI_API_OPERATION_FAILED;
 	}
 
@@ -432,16 +459,15 @@ EXPORT_API int tel_get_sat_main_menu_info(TapiHandle *handle, TelSatSetupMenuInf
 	pMainMenu->commandId = command_id;
 	pMainMenu->bIsMainMenuPresent = (b_present ? 1 : 0);
 
-	if(strlen(title) > TAPI_SAT_DEF_TITLE_LEN_MAX+1){
+	if (strlen(title) > TAPI_SAT_DEF_TITLE_LEN_MAX+1)
 		memcpy(pMainMenu->satMainTitle, title, TAPI_SAT_DEF_TITLE_LEN_MAX+1);
-	}
-	else{
+	else
 		memcpy(pMainMenu->satMainTitle, title, strlen(title));
-	}
+
 	g_free(title);
 
 	pMainMenu->satMainMenuNum = item_cnt;
-	if(items && item_cnt > 0){
+	if (items && item_cnt > 0) {
 		GVariant *unbox;
 		GVariantIter *iter;
 
@@ -451,18 +477,15 @@ EXPORT_API int tel_get_sat_main_menu_info(TapiHandle *handle, TelSatSetupMenuInf
 		dbg("items(%p) items type_format(%s)", items, g_variant_get_type_string(unbox));
 
 		g_variant_get(unbox, "a(si)", &iter);
-		while(g_variant_iter_loop(iter,"(si)",&item_str, &item_id)){
+		while (g_variant_iter_loop(iter, "(si)", &item_str, &item_id)) {
 			pMainMenu->satMainMenuItem[sat_index].itemId = item_id;
 
-			if(strlen(item_str) > TAPI_SAT_DEF_ITEM_STR_LEN_MAX + 6){
+			if (strlen(item_str) > TAPI_SAT_DEF_ITEM_STR_LEN_MAX + 6)
 				memcpy(pMainMenu->satMainMenuItem[sat_index].itemString, item_str, TAPI_SAT_DEF_ITEM_STR_LEN_MAX + 6);
-			}
-			else{
+			else
 				memcpy(pMainMenu->satMainMenuItem[sat_index].itemString, item_str, strlen(item_str));
-			}
 
-			dbg("item index(%d) id(%d) str(%s)",sat_index, pMainMenu->satMainMenuItem[sat_index].itemId, pMainMenu->satMainMenuItem[sat_index].itemString);
-			//dbg("item index(%d) id(%d) str(%s)",index, item_id, item_str);
+			dbg("item index(%d) id(%d) str(%s)", sat_index, pMainMenu->satMainMenuItem[sat_index].itemId, pMainMenu->satMainMenuItem[sat_index].itemString);
 			sat_index++;
 		}
 		g_variant_iter_free(iter);
@@ -471,12 +494,12 @@ EXPORT_API int tel_get_sat_main_menu_info(TapiHandle *handle, TelSatSetupMenuInf
 	pMainMenu->bIsUpdatedSatMainMenu = (b_updated ? 1 : 0);
 
 #if defined(TIZEN_SUPPORT_SAT_ICON)
-	if(icon_id) {
+	if (icon_id) {
 		unbox = g_variant_get_variant(icon_id);
 		g_variant_get(unbox, "a(biiiiiis)", &iter);
 
-		while(g_variant_iter_loop(iter,"(biiiiiis)", &is_exist, &icon_quali, &icon_identifier, &width, &height, &ics, &icon_data_len, &icon_data)){
-			if(!is_exist)
+		while (g_variant_iter_loop(iter, "(biiiiiis)", &is_exist, &icon_quali, &icon_identifier, &width, &height, &ics, &icon_data_len, &icon_data)) {
+			if (!is_exist)
 				break;
 			pMainMenu->iconId.bIsPresent = is_exist;
 			pMainMenu->iconId.iconQualifier = icon_quali;
@@ -484,7 +507,7 @@ EXPORT_API int tel_get_sat_main_menu_info(TapiHandle *handle, TelSatSetupMenuInf
 			pMainMenu->iconId.iconInfo.width = width;
 			pMainMenu->iconId.iconInfo.height = height;
 			pMainMenu->iconId.iconInfo.ics = ics;
-			if(icon_data_len > 0) {
+			if (icon_data_len > 0) {
 				pMainMenu->iconId.iconInfo.iconDataLen = icon_data_len;
 				memcpy(pMainMenu->iconId.iconInfo.iconFile, icon_data, icon_data_len);
 			}
@@ -494,12 +517,12 @@ EXPORT_API int tel_get_sat_main_menu_info(TapiHandle *handle, TelSatSetupMenuInf
 		g_variant_iter_free(iter);
 	}
 
-	if(icon_list){
+	if (icon_list) {
 		unbox_list = g_variant_get_variant(icon_list);
 		g_variant_get(unbox_list, "a(biiv)", &iter);
 
-		while(g_variant_iter_loop(iter,"(biiv)", &is_list_exist, &icon_list_quali, &list_cnt, &icon_list_info)){
-			if(!is_list_exist)
+		while (g_variant_iter_loop(iter, "(biiv)", &is_list_exist, &icon_list_quali, &list_cnt, &icon_list_info)) {
+			if (!is_list_exist)
 				break;
 			pMainMenu->iconIdList.bIsPresent = is_list_exist;
 			pMainMenu->iconIdList.iconListQualifier = icon_list_quali;
@@ -508,12 +531,12 @@ EXPORT_API int tel_get_sat_main_menu_info(TapiHandle *handle, TelSatSetupMenuInf
 			unbox_list_info = g_variant_get_variant(icon_list_info);
 			g_variant_get(unbox_list_info, "a(iiiiis)", &iter2);
 
-			while(g_variant_iter_loop(iter2,"(iiiiis)",&icon_list_identifier, &list_width, &list_height, &list_ics, &icon_list_data_len, &icon_list_data)){
-				pMainMenu->iconIdList.iconIdentifierList[icon_index]= icon_identifier;
+			while (g_variant_iter_loop(iter2, "(iiiiis)", &icon_list_identifier, &list_width, &list_height, &list_ics, &icon_list_data_len, &icon_list_data)) {
+				pMainMenu->iconIdList.iconIdentifierList[icon_index] = icon_identifier;
 				pMainMenu->iconIdList.iconInfo[icon_index].width = list_width;
 				pMainMenu->iconIdList.iconInfo[icon_index].height = list_height;
 				pMainMenu->iconIdList.iconInfo[icon_index].ics = list_ics;
-				if(icon_list_data_len > 0) {
+				if (icon_list_data_len > 0) {
 					pMainMenu->iconIdList.iconInfo[icon_index].iconDataLen = icon_list_data_len;
 					memcpy(pMainMenu->iconIdList.iconInfo[icon_index].iconFile, icon_list_data, icon_list_data_len);
 				}
@@ -561,7 +584,7 @@ EXPORT_API int tel_send_sat_ui_display_status(TapiHandle *handle, int commandId,
 	TAPI_RET_ERR_NUM_IF_FAIL(handle->dbus_connection, TAPI_API_INVALID_PTR);
 
 	command_id = commandId;
-	display_status = ( (status == TAPI_SAT_DISPLAY_SUCCESS) ? TRUE : FALSE);
+	display_status = ((status == TAPI_SAT_DISPLAY_SUCCESS) ? TRUE : FALSE);
 	dbg("command id(%d) display status(%d)", command_id, display_status);
 	inparam = g_variant_new("(ib)", command_id, display_status);
 
@@ -569,21 +592,20 @@ EXPORT_API int tel_send_sat_ui_display_status(TapiHandle *handle, int commandId,
 	rst = g_dbus_connection_call_sync(handle->dbus_connection, DBUS_TELEPHONY_SERVICE , handle->path,
 			DBUS_TELEPHONY_SAT_INTERFACE, "SendUiDisplayStatus", inparam, NULL, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca, &error);
 
-	if(!rst){
-		dbg( "error to send ui display status(%s)", error->message);
-		g_error_free (error);
+	if (!rst) {
+		dbg("error to send ui display status(%s)", error->message);
+		g_error_free(error);
 		return TAPI_API_OPERATION_FAILED;
 	}
 
 	dbg("send ui display status format(%s)", g_variant_get_type_string(rst));
 
 	g_variant_get(rst, "(i)", &result);
-	if(result){
+	if (result)
 		result = TAPI_API_SUCCESS;
-	}
-	else{
+	else
 		result = TAPI_API_OPERATION_FAILED;
-	}
+
 	g_variant_unref(rst);
 	dbg("result (%d)", result);
 
@@ -628,7 +650,7 @@ EXPORT_API int tel_send_sat_ui_user_confirm(TapiHandle *handle, TelSatUiUserConf
 	data = (gchar *)pUserConfirmData->pAdditionalData;
 	data_len = pUserConfirmData->dataLen;
 
-	g_variant_builder_init(&builder, G_VARIANT_TYPE ("ay"));
+	g_variant_builder_init(&builder, G_VARIANT_TYPE("ay"));
 	for (sat_index = 0; sat_index < data_len; sat_index++) {
 		dbg("index(%d) data(%d)", sat_index, data[sat_index]);
 		g_variant_builder_add(&builder, "y", data[sat_index]);
@@ -643,21 +665,20 @@ EXPORT_API int tel_send_sat_ui_user_confirm(TapiHandle *handle, TelSatUiUserConf
 	rst = g_dbus_connection_call_sync(handle->dbus_connection, DBUS_TELEPHONY_SERVICE , handle->path,
 			DBUS_TELEPHONY_SAT_INTERFACE, "SendUserConfirm", inparam, NULL, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca, &error);
 
-	if(!rst){
-		dbg( "error to send ui user confirm(%s)", error->message);
-		g_error_free (error);
+	if (!rst) {
+		dbg("error to send ui user confirm(%s)", error->message);
+		g_error_free(error);
 		return TAPI_API_OPERATION_FAILED;
 	}
 
 	dbg("send ui user confirm format(%s)", g_variant_get_type_string(rst));
 
 	g_variant_get(rst, "(i)", &result);
-	if(result){
+	if (result)
 		result = TAPI_API_SUCCESS;
-	}
-	else{
+	else
 		result = TAPI_API_OPERATION_FAILED;
-	}
+
 	g_variant_unref(rst);
 	dbg("result (%d)", result);
 
@@ -702,21 +723,20 @@ EXPORT_API int tel_send_sat_app_exec_result(TapiHandle *handle, TelSatAppsRetInf
 	rst = g_dbus_connection_call_sync(handle->dbus_connection, DBUS_TELEPHONY_SERVICE , handle->path,
 			DBUS_TELEPHONY_SAT_INTERFACE, "SendAppExecResult", inparam, NULL, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca, &error);
 
-	if(!rst){
-		dbg( "error to send app execution result(%s)", error->message);
-		g_error_free (error);
+	if (!rst) {
+		dbg("error to send app execution result(%s)", error->message);
+		g_error_free(error);
 		return TAPI_API_OPERATION_FAILED;
 	}
 
 	dbg("send app execution result format(%s)", g_variant_get_type_string(rst));
 
 	g_variant_get(rst, "(i)", &result);
-	if(result){
+	if (result)
 		result = TAPI_API_SUCCESS;
-	}
-	else{
+	else
 		result = TAPI_API_OPERATION_FAILED;
-	}
+
 	g_variant_unref(rst);
 	dbg("result (%d)", result);
 
