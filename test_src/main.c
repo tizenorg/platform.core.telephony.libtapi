@@ -65,7 +65,7 @@ static int get_modem_info(MManager *mm, struct menu_data *menu)
 	int i = 0;
 
 	while (cp_list[i]) {
-		msg("[%02d] strlen(%d), '%s'", i, strlen(cp_list[i]), cp_list[i]);
+		msg("[%02d] strlen(%d), '%s'", i, (unsigned int)strlen(cp_list[i]), cp_list[i]);
 		i++;
 	}
 

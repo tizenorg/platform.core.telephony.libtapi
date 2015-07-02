@@ -440,9 +440,9 @@ int SmsUtilDecodeScAddrField(SmsAddressInfo_t *pSmsAddrField, unsigned char *pAd
 
 		local_index++; /* ignore Type of Address field */
 
-		SmsUtilConvertBCD2Digit((char *) pSmsAddrField->DialNumLen, (char *)&pAddrField[local_index], pSmsAddrField->DialNumLen);
+		SmsUtilConvertBCD2Digit((char *) pSmsAddrField->szDiallingNum, (char *)&pAddrField[local_index], pSmsAddrField->DialNumLen);
 
-		printf("SmsUtilDecodeScAddrField: diallingNum [%s].\n", (char *)pSmsAddrField->DialNumLen);
+		printf("SmsUtilDecodeScAddrField: diallingNum [%s].\n", (char *)pSmsAddrField->szDiallingNum);
 
 		printf("length=%d , ton %d, npi =%d\n", pSmsAddrField->DialNumLen, pSmsAddrField->Ton, pSmsAddrField->Npi);
 	}
@@ -468,7 +468,7 @@ int  SmsUtilEncodeScAddrField(unsigned char *pAddrField, SmsAddressInfo_t *pSmsA
 
 	local_index++; /* SET_TON_NPI �� MACRO �̹Ƿ� ���ο��� ������Ű�� ���׹߻� */
 
-	SmsUtilConvertDigit2BCD((char *)&pAddrField[local_index], (char *) pSmsAddrField->DialNumLen, pSmsAddrField->DialNumLen);
+	SmsUtilConvertDigit2BCD((char *)&pAddrField[local_index], (char *) pSmsAddrField->szDiallingNum, pSmsAddrField->DialNumLen);
 
 	if (pSmsAddrField->DialNumLen % 2)
 		local_index += pSmsAddrField->DialNumLen / 2 + 1;
