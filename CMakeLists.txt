@@ -8,7 +8,7 @@ SET(INCLUDEDIR "\${prefix}/include")
 
 # Set required packages
 INCLUDE(FindPkgConfig)
-pkg_check_modules(pkgs REQUIRED glib-2.0 gio-2.0 gthread-2.0 dlog)
+pkg_check_modules(pkgs REQUIRED glib-2.0 gio-2.0 gthread-2.0 dlog vconf)
 
 FOREACH(flag ${pkgs_CFLAGS})
 	SET(EXTRA_CFLAGS "${EXTRA_CFLAGS} ${flag}")
@@ -33,16 +33,17 @@ MESSAGE(${CMAKE_EXE_LINKER_FLAGS})
 
 ### Build ###
 SET(SRCS
-		src/tapi_common.c
-		src/tapi_network.c
-		src/tapi_sim.c
-		src/tapi_phonebook.c
-		src/tapi_sap.c
-		src/tapi_call.c
-		src/tapi_ss.c
-		src/tapi_sms.c
-		src/tapi_sat.c
-		src/tapi_modem.c
+	src/tapi_common.c
+	src/tapi_network.c
+	src/tapi_sim.c
+	src/tapi_phonebook.c
+	src/tapi_sap.c
+	src/tapi_call.c
+	src/tapi_ss.c
+	src/tapi_sms.c
+	src/tapi_sat.c
+	src/tapi_modem.c
+	src/tapi_oem.c
 )
 
 ADD_LIBRARY(SLP-tapi SHARED ${SRCS})

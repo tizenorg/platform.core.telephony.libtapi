@@ -1,17 +1,18 @@
 %define major 0
 %define minor 7
-%define patchlevel 93
+%define patchlevel 94
 
 Name:           libtapi
 Version:        %{major}.%{minor}.%{patchlevel}
 Release:        2
-License:        Apache
+License:        Apache-2.0
 Summary:        Telephony dbus client library
 Group:          System/Libraries
 Source0:        libslp-tapi-%{version}.tar.gz
 BuildRequires:  cmake
 BuildRequires:  pkgconfig(dlog)
 BuildRequires:  pkgconfig(glib-2.0)
+BuildRequires:  pkgconfig(vconf)
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 
@@ -62,8 +63,8 @@ mkdir -p %{buildroot}%{_datadir}/license
 %manifest libtapi.manifest
 %defattr(644,system,system,-)
 #%doc COPYING
-%{_libdir}/*.so.*
 %attr(755,system,system) %{_bindir}/tapitest
+%{_libdir}/*.so.*
 %{_datadir}/license/libslp-tapi
 
 %files devel

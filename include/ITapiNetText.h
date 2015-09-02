@@ -66,8 +66,9 @@ extern "C"
  * @return The return type (int)
  *         #TAPI_API_SUCCESS indicates that the operation is completed successfully,
  *         else it will return failure and an error code (Refer #TapiResult_t)
+ * @post callback will be invoked and data is NULL.
  */
-int tel_send_sms(TapiHandle *handle, const TelSmsDatapackageInfo_t *pDataPackage, int bMoreMsgToSend, tapi_response_cb callback, void* user_data);
+int tel_send_sms(TapiHandle *handle, const TelSmsDatapackageInfo_t *pDataPackage, int bMoreMsgToSend, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Reads a message from the SIM card storage.
@@ -86,15 +87,16 @@ int tel_send_sms(TapiHandle *handle, const TelSmsDatapackageInfo_t *pDataPackage
  * @remarks Access to this API is limited to in-house applications and Message Framework API(MAPI) is recommended instead.
  *
  * @param[in] handle The handle from tel_init()
- * @param[in] read_index  The index number of the message to be read
+ * @param[in] read_index The index number of the message to be read
  * @param[in] callback To register a callback function for result
  * @param[in] user_data The user data for user specification
  *
  * @return The return type (int)
  *         #TAPI_API_SUCCESS indicates that the operation is completed successfully,
  *         else it will return failure and an error code (Refer #TapiResult_t)
+ * @post callback will be invoked and #TelSmsData_t will be stored in data on success case.
  */
-int tel_read_sms_in_sim(TapiHandle *handle, int read_index, tapi_response_cb callback, void* user_data);
+int tel_read_sms_in_sim(TapiHandle *handle, int read_index, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Writes a message to the SIM storage area.
@@ -117,8 +119,9 @@ int tel_read_sms_in_sim(TapiHandle *handle, int read_index, tapi_response_cb cal
  * @return The return type (int)
  *         #TAPI_API_SUCCESS indicates that the operation is completed successfully,
  *         else it will return failure and an error code (Refer #TapiResult_t)
+ * @post callback will be invoked and SMS index(int) will be stored in data on success case.
  */
-int tel_write_sms_in_sim(TapiHandle *handle, const TelSmsData_t *pWriteData, tapi_response_cb callback, void* user_data);
+int tel_write_sms_in_sim(TapiHandle *handle, const TelSmsData_t *pWriteData, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Deletes the message specified by an index (SIM index used when storing the SMS)
@@ -142,8 +145,9 @@ int tel_write_sms_in_sim(TapiHandle *handle, const TelSmsData_t *pWriteData, tap
  * @return The return type (int)
  *         #TAPI_API_SUCCESS indicates that the operation is completed successfully,
  *         else it will return failure and an error code (Refer #TapiResult_t)
+ * @post callback will be invoked and SMS index(int) will be stored in data on success case.
  */
-int tel_delete_sms_in_sim(TapiHandle *handle, int del_index, tapi_response_cb callback, void* user_data);
+int tel_delete_sms_in_sim(TapiHandle *handle, int del_index, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Retrieves message count information like total record count,
@@ -151,7 +155,7 @@ int tel_delete_sms_in_sim(TapiHandle *handle, int del_index, tapi_response_cb ca
  *
  * @details <b> Sync (or) Async: </b> This is an Asynchronous API.
  *
- * <b> Prospective Clients: </b>  External Apps.
+ * <b> Prospective Clients: </b> External Apps.
  *
  * @since_tizen 2.3
  * @privlevel public
@@ -167,8 +171,9 @@ int tel_delete_sms_in_sim(TapiHandle *handle, int del_index, tapi_response_cb ca
  * @return The return type (int)
  *         #TAPI_API_SUCCESS indicates that the operation is completed successfully,
  *         else it will return failure and an error code (Refer #TapiResult_t)
+ * @post callback will be invoked and #TelSmsStoredMsgCountInfo_t will be stored in data on success case.
  */
-int tel_get_sms_count(TapiHandle *handle, tapi_response_cb callback, void* user_data);
+int tel_get_sms_count(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Sets SMS CB Message Identifiers in the appropriate EF-CBMI/EF-CBMIR file in the (U)SIM.
@@ -200,15 +205,16 @@ int tel_get_sms_count(TapiHandle *handle, tapi_response_cb callback, void* user_
  * @return The return type (int)
  *         #TAPI_API_SUCCESS indicates that the operation is completed successfully,
  *         else it will return failure and an error code (Refer #TapiResult_t)
+ * @post callback will be invoked and data is NULL.
  */
-int tel_set_sms_cb_config(TapiHandle *handle, const TelSmsCbConfig_t *pCBConfig, tapi_response_cb callback, void* user_data);
+int tel_set_sms_cb_config(TapiHandle *handle, const TelSmsCbConfig_t *pCBConfig, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Retrieves the SMS CB configuration parameters from the EFcbmi file in the SIM.
  *
  * @details <b> Sync (or) Async: </b> This is an Asynchronous API.
  *
- * <b> Prospective Clients: </b>  External Apps.
+ * <b> Prospective Clients: </b> External Apps.
  *
  * @since_tizen 2.3
  * @privlevel public
@@ -223,8 +229,9 @@ int tel_set_sms_cb_config(TapiHandle *handle, const TelSmsCbConfig_t *pCBConfig,
  * @return The return type (int)
  *         #TAPI_API_SUCCESS indicates that the operation is completed successfully,
  *         else it will return failure and an error code (Refer #TapiResult_t)
+ * @post callback will be invoked and #TelSmsCbConfig_t will be stored in data on success case.
  */
-int tel_get_sms_cb_config(TapiHandle *handle, tapi_response_cb callback, void* user_data);
+int tel_get_sms_cb_config(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Gets the SMS parameters for a particular SMS (sent/received)
@@ -248,8 +255,9 @@ int tel_get_sms_cb_config(TapiHandle *handle, tapi_response_cb callback, void* u
  * @return The return type (int)
  *         #TAPI_API_SUCCESS indicates that the operation is completed successfully,
  *         else it will return failure and an error code (Refer #TapiResult_t)
+ * @post callback will be invoked and #TelSmsParams_t will be stored in data on success case.
  */
-int tel_get_sms_parameters(TapiHandle *handle, int get_index, tapi_response_cb callback, void* user_data);
+int tel_get_sms_parameters(TapiHandle *handle, int get_index, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Sets the short message service header parameters which are used in the origination of MO messages.
@@ -277,8 +285,9 @@ int tel_get_sms_parameters(TapiHandle *handle, int get_index, tapi_response_cb c
  * @return The return type (int)
  *         #TAPI_API_SUCCESS indicates that the operation is completed successfully,
  *         else it will return failure and an error code (Refer #TapiResult_t)
+ * @post callback will be invoked and data is NULL.
  */
-int tel_set_sms_parameters(TapiHandle *handle, const TelSmsParams_t *pSmsSetParameters, tapi_response_cb callback, void* user_data);
+int tel_set_sms_parameters(TapiHandle *handle, const TelSmsParams_t *pSmsSetParameters, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Sends a delivery report for the received incoming SMS to the network.
@@ -304,8 +313,9 @@ int tel_set_sms_parameters(TapiHandle *handle, const TelSmsParams_t *pSmsSetPara
  *         else it will return failure and an error code (Refer #TapiResult_t)
  *
  * @pre The SMS-DELIVER-REPORT message structure should be in the TPDU format as specified by 3GPP TS 23.040 SMS TPDU.
+ * @post callback will be invoked and data is NULL.
  */
-int tel_send_sms_deliver_report(TapiHandle *handle, const TelSmsDatapackageInfo_t *pDataPackage, TelSmsResponse_t RPCause, tapi_response_cb callback, void* user_data);
+int tel_send_sms_deliver_report(TapiHandle *handle, const TelSmsDatapackageInfo_t *pDataPackage, TelSmsResponse_t RPCause, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Sets SMS Service Centre Address information in order to send the SMS.
@@ -331,8 +341,9 @@ int tel_send_sms_deliver_report(TapiHandle *handle, const TelSmsDatapackageInfo_
  * @return The return type (int)
  *         #TAPI_API_SUCCESS indicates that the operation is completed successfully,
  *         else it will return failure and an error code (Refer #TapiResult_t)
+ * @post callback will be invoked and data is NULL.
  */
-int tel_set_sms_sca(TapiHandle *handle, const TelSmsAddressInfo_t *pSCA, int sca_index, tapi_response_cb callback, void* user_data);
+int tel_set_sms_sca(TapiHandle *handle, const TelSmsAddressInfo_t *pSCA, int sca_index, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Gets current SMS Service Centre Address information.
@@ -355,8 +366,9 @@ int tel_set_sms_sca(TapiHandle *handle, const TelSmsAddressInfo_t *pSCA, int sca
  * @return The return type (int)
  *         #TAPI_API_SUCCESS indicates that the operation is completed successfully,
  *         else it will return failure and an error code (Refer #TapiResult_t)
+ * @post callback will be invoked and #TelSmsAddressInfo_t will be stored in data on success case.
  */
-int tel_get_sms_sca(TapiHandle *handle, int sca_index, tapi_response_cb callback, void* user_data);
+int tel_get_sms_sca(TapiHandle *handle, int sca_index, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Informs a modem about the memory status of the PDA (whether FULL or AVAILABLE) so that the modem can inform the network.
@@ -379,8 +391,9 @@ int tel_get_sms_sca(TapiHandle *handle, int sca_index, tapi_response_cb callback
  * @return The return type (int)
  *         #TAPI_API_SUCCESS indicates that the operation is completed successfully,
  *         else it will return failure and an error code (Refer #TapiResult_t)
+ * @post callback will be invoked and data is NULL.
  */
-int tel_set_sms_memory_status(TapiHandle *handle, int memoryStatus, tapi_response_cb callback, void* user_data);
+int tel_set_sms_memory_status(TapiHandle *handle, int memoryStatus, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Sets the message status in the SIM EF.
@@ -404,8 +417,9 @@ int tel_set_sms_memory_status(TapiHandle *handle, int memoryStatus, tapi_respons
  * @return The return type (int)
  *         #TAPI_API_SUCCESS indicates that the operation is completed successfully,
  *         else it will return failure and an error code (Refer #TapiResult_t)
+ * @post callback will be invoked and data is NULL.
  */
-int tel_set_sms_message_status(TapiHandle *handle, int set_index, TelSmsMsgStatus_t msgStatus, tapi_response_cb callback, void* user_data);
+int tel_set_sms_message_status(TapiHandle *handle, int set_index, TelSmsMsgStatus_t msgStatus, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Gets the count of the SMS parameter records stored in the SIM EF.
@@ -427,8 +441,9 @@ int tel_set_sms_message_status(TapiHandle *handle, int set_index, TelSmsMsgStatu
  * @return The return type (int)
  *         #TAPI_API_SUCCESS indicates that the operation is completed successfully,
  *         else it will return failure and an error code (Refer #TapiResult_t)
+ * @post callback will be invoked and Record count(int) will be stored in data on success case.
  */
-int tel_get_sms_parameter_count(TapiHandle *handle, tapi_response_cb callback, void* user_data);
+int tel_get_sms_parameter_count(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Checks the SMS ready status (whether ready or not).
@@ -447,6 +462,7 @@ int tel_get_sms_parameter_count(TapiHandle *handle, tapi_response_cb callback, v
  * @return The return type (int)
  *         #TAPI_API_SUCCESS indicates that the operation is completed successfully,
  *         else it will return failure and an error code (Refer #TapiResult_t)
+ * @post 1(Ready) or 0(Not Ready) will be stored in pReadyStatus.
  */
 int tel_check_sms_device_status(TapiHandle *handle, int *pReadyStatus);
 

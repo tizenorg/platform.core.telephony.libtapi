@@ -74,7 +74,7 @@ extern "C"
  *         Refer #TapiResult_t for failure and error code.
  *
  * @pre Initialize the Dbus connection with #tel_init.
- *
+ * @post callback will be invoked and #TelSsBarringResp_t will be stored in data on success case.
  * @see tel_get_ss_barring_status()
  * @see tel_change_ss_barring_password()
  */
@@ -115,7 +115,7 @@ int tel_set_ss_barring(TapiHandle *handle, TelSsBarringInfo_t *info, tapi_respon
  *         Refer #TapiResult_t for failure and error code.
  *
  * @pre Initialize the Dbus connection with #tel_init.
- *
+ * @post callback will be invoked and #TelSsBarringResp_t will be stored in data on success case.
  * @see tel_set_ss_barring()
  * @asee tel_change_ss_barring_password()
  */
@@ -166,6 +166,7 @@ int tel_get_ss_barring_status(TapiHandle *handle, TelSsClass_t ss_class, TelSsBa
  *
  * @pre Initialize the Dbus connection with #tel_init.
  *      An event loop runs to listen to events.
+ * @post callback will be invoked and data is NULL.
  */
 int tel_change_ss_barring_password(TapiHandle *handle,
 		const char *old_password,
@@ -215,7 +216,7 @@ int tel_change_ss_barring_password(TapiHandle *handle,
  *         Refer #TapiResult_t for failure and error code.
  *
  * @pre Initialize the Dbus connection with #tel_init.
- *
+ * @post callback will be invoked and #TelSsForwardResp_t will be stored in data on success case.
  * @see tel_get_ss_forward_status()
  */
 int tel_set_ss_forward(TapiHandle *handle, const TelSsForwardInfo_t *info, tapi_response_cb callback, void *user_data);
@@ -262,7 +263,7 @@ int tel_set_ss_forward(TapiHandle *handle, const TelSsForwardInfo_t *info, tapi_
  *         Refer #TapiResult_t for failure and error code.
  *
  * @pre Initialize the Dbus connection with #tel_init.
- *
+ * @post callback will be invoked and #TelSsForwardResp_t will be stored in data on success case.
  * @see tel_set_ss_forward()
  */
 int tel_get_ss_forward_status(TapiHandle *handle, TelSsClass_t ss_class, TelSsForwardWhen_t condition, tapi_response_cb callback, void *user_data);
@@ -302,7 +303,7 @@ int tel_get_ss_forward_status(TapiHandle *handle, TelSsClass_t ss_class, TelSsFo
  *         Refer #TapiResult_t for failure and error code
  *
  * @pre Initialize the Dbus connection with #tel_init.
- *
+ * @post callback will be invoked and #TelSsWaitingResp_t will be stored in data on success case.
  * @see tel_get_ss_waiting_status()
  */
 int tel_set_ss_waiting(TapiHandle *handle, const TelSsWaitingInfo_t *info, tapi_response_cb callback, void *user_data);
@@ -340,7 +341,7 @@ int tel_set_ss_waiting(TapiHandle *handle, const TelSsWaitingInfo_t *info, tapi_
  *         Refer #TapiResult_t for failure and error code
  *
  * @pre Initialize the Dbus connection with #tel_init.
- *
+ * @post callback will be invoked and #TelSsWaitingResp_t will be stored in data on success case.
  * @see tel_set_ss_waiting()
  */
 int tel_get_ss_waiting_status(TapiHandle *handle, const TelSsClass_t ss_class, tapi_response_cb callback, void *user_data);
@@ -398,8 +399,8 @@ int tel_get_ss_waiting_status(TapiHandle *handle, const TelSsClass_t ss_class, t
  * @return The return type (int) \n
  *         #TAPI_API_SUCCESS - indicates that the operation is completed successfully. \n
  *         Refer #TapiResult_t for failure and error code
- *
  * @pre Initialize the Dbus connection with #tel_init.
+ * @post callback will be invoked and data is NULL.
  */
 int tel_set_ss_cli_status(TapiHandle *handle, TelSsCliType_t type, TelSsCliStatus_t status, tapi_response_cb callback, void *user_data);
 
@@ -454,8 +455,8 @@ int tel_set_ss_cli_status(TapiHandle *handle, TelSsCliType_t type, TelSsCliStatu
  * @return The return type (int) \n
  *         #TAPI_API_SUCCESS - indicates that the operation is completed successfully. \n
  *         Refer #TapiResult_t for failure and error code
- *
  * @pre Initialize the Dbus connection with #tel_init.
+ * @post callback will be invoked and #TelSsCliResp_t will be stored in data on success case.
  */
 int tel_get_ss_cli_status(TapiHandle *handle, TelSsCliType_t type, tapi_response_cb callback, void *user_data);
 
@@ -505,7 +506,7 @@ int tel_get_ss_cli_status(TapiHandle *handle, TelSsCliType_t type, tapi_response
  *      Register the telephony event to be listend with #tel_register_noti_event.\n
  *      An event loop runs to listen to events.
  *      No SS and USSD transaction should be ongoing. If there is an ongoing transaction, a new USSD request will be returned to the application with an error (USSD_BUSY).
- *
+ * @post callback will be invoked and #TelSsUssdResp_t will be stored in data on success case.
  */
 int tel_send_ss_ussd_request(TapiHandle *handle, const TelSsUssdMsgInfo_t *info, tapi_response_cb callback, void *user_data);
 

@@ -78,7 +78,7 @@ extern "C"
  * @pre Initialize the Dbus connection with #tel_init.\n
  *      Register the telephony event to be listened with #tel_register_noti_event.\n
  *      An event loop runs to listen to events.
- *
+ * @post callback will be invoked and data is NULL.
  * @see #tel_answer_call #tel_end_call
  */
 int tel_dial_call(TapiHandle *handle, const TelCallDial_t *pParams, tapi_response_cb callback, void *user_data);
@@ -119,7 +119,7 @@ int tel_dial_call(TapiHandle *handle, const TelCallDial_t *pParams, tapi_respons
  *      An event loop runs to listen to events.\n
  *      Call associated with the call handle should be in the #TAPI_CALL_STATE_INCOM state otherwise the API fails and there can be a
  *      a maximum of 1 existing call.
- *
+ * @post callback will be invoked and #TelCallAnswerCnf_t will be stored in data on success case.
  * @see tel_dial_call()
  * @see tel_end_call()
  */
@@ -161,7 +161,7 @@ int tel_answer_call(TapiHandle *handle, unsigned int CallHandle, TelCallAnswerTy
  *      Register the telephony event to be listened with #tel_register_noti_event.\n
  *      An event loop runs to listen to events.\n
  *      The call handle should be valid and there should be an existing call in the active/hold state.
- *
+ * @post callback will be invoked and #TelCallEndCnf_t will be stored in data on success case.
  * @see tel_dial_call()
  * @see tel_answer_call()
  */
@@ -199,7 +199,7 @@ int tel_end_call(TapiHandle *handle, unsigned int CallHandle, TelCallEndType_t E
  *      Register the telephony event to be listened with #tel_register_noti_event.\n
  *      An event loop runs to listen to events.\n
  *      The call identified by the call handle should be in the active state.
- *
+ * @post callback will be invoked and #TelCallHoldCnf_t will be stored in data on success case.
  * @see tel_retrieve_call()
  */
 int tel_hold_call(TapiHandle *handle, unsigned int CallHandle, tapi_response_cb callback, void *user_data);
@@ -238,6 +238,7 @@ int tel_hold_call(TapiHandle *handle, unsigned int CallHandle, tapi_response_cb 
  *      Register the telephony event to be listened with #tel_register_noti_event.\n
  *      An event loop runs to listen to events.\n
  *      Call should be in the held state in order to retrieve it into the active state unless no active call is present.
+ * @post callback will be invoked and #TelCallActiveCnf_t will be stored in data on success case.
  */
 int tel_active_call(TapiHandle *handle, unsigned int CallHandle, tapi_response_cb callback, void *user_data);
 
@@ -278,6 +279,7 @@ int tel_active_call(TapiHandle *handle, unsigned int CallHandle, tapi_response_c
  * @pre Initialize the Dbus connection with #tel_init.\n
  *      Register the telephony event to be listened with #tel_register_noti_event.\n
  *      An event loop runs to listen to events.
+ * @post callback will be invoked and #TelCallSwapCnf_t will be stored in data on success case.
  */
 int tel_swap_call(TapiHandle *handle, unsigned int CallHandle1, unsigned int CallHandle2, tapi_response_cb callback, void *user_data);
 
@@ -327,6 +329,7 @@ int tel_swap_call(TapiHandle *handle, unsigned int CallHandle1, unsigned int Cal
  *
  * @pre Initialize the Dbus connection with #tel_init.\n
  *      An active call should be present.
+ * @post callback will be invoked and data is NULL.
  */
 int tel_start_call_cont_dtmf(TapiHandle *handle, unsigned char dtmf_digit, tapi_response_cb callback, void *user_data);
 
@@ -374,6 +377,7 @@ int tel_start_call_cont_dtmf(TapiHandle *handle, unsigned char dtmf_digit, tapi_
  * @pre Initialize the Dbus connection with #tel_init.\n
  *      An active call should be present.\n
  *      Start a continuous DTMF request should be sent already.
+ * @post callback will be invoked and data is NULL.
  */
 int tel_stop_call_cont_dtmf(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
@@ -415,6 +419,7 @@ int tel_stop_call_cont_dtmf(TapiHandle *handle, tapi_response_cb callback, void 
  *
  * @pre Initialize the Dbus connection with #tel_init.\n
  *      An active call should be present.
+ * @post callback will be invoked and data is NULL.
  */
 int tel_send_call_burst_dtmf(TapiHandle *handle, const TelCallBurstDtmf_t *info, tapi_response_cb callback, void *user_data);
 
@@ -454,6 +459,7 @@ int tel_send_call_burst_dtmf(TapiHandle *handle, const TelCallBurstDtmf_t *info,
  *      An event loop runs to listen to events.\n
  *      For a Multiparty call or for joining two calls into conference, there should be one call in the active state and another call
  *      in the held state.
+ * @post callback will be invoked and #TelCallJoinCnf_t will be stored in data on success case.
  *
  * @see tel_split_call()
  */
@@ -498,6 +504,7 @@ int tel_join_call(TapiHandle *handle, unsigned int CallHandle1, unsigned int Cal
  *      The call should be in a multiparty conference call.
  *
  * @post The split call will be the active call and the conference call will be the held call.
+ * @post callback will be invoked and #TelCallSplitCnf_t will be stored in data on success case.
  *
  * @see tel_join_call()
  */
@@ -548,6 +555,7 @@ int tel_split_call(TapiHandle *handle, unsigned int CallHandle, tapi_response_cb
  *      in the held state.
  *
  * @post When the request has been completed successfully, a call end indication will be sent to both the calls (active and held).
+ * @post callback will be invoked and #TelCallTransferCnf_t will be stored in data on success case.
  */
 int tel_transfer_call(TapiHandle *handle, unsigned int CallHandle, tapi_response_cb callback, void *user_data);
 
@@ -580,7 +588,7 @@ int tel_transfer_call(TapiHandle *handle, unsigned int CallHandle, tapi_response
  *
  * @pre Initialize the Dbus connection with #tel_init.
  */
-int tel_get_call_status(TapiHandle *handle, int call_id, TelCallStatus_t *out );
+int tel_get_call_status(TapiHandle *handle, int call_id, TelCallStatus_t *out);
 
 /**
  * @brief Gets the status all of the current call
@@ -593,6 +601,7 @@ int tel_get_call_status(TapiHandle *handle, int call_id, TelCallStatus_t *out );
  * @privlevel public
  * @privilege %http://tizen.org/privilege/telephony
  *
+ * @post TelCallStatusCallback() will be invoked before return of this API as much as the number of call.
  * @see tel_get_call_status()
  */
 int tel_get_call_status_all(TapiHandle *handle, TelCallStatusCallback cb, void *user_data);
@@ -629,6 +638,7 @@ int tel_get_call_status_all(TapiHandle *handle, TelCallStatusCallback cb, void *
  * @pre Initialize the Dbus connection with #tel_init.\n
  *      Register the telephony event to be listened with #tel_register_noti_event.\n
  *      An event loop runs to listen to events.
+ * @post callback will be invoked and data is NULL.
  */
 int tel_deflect_call(TapiHandle *handle, unsigned int CallHandle, const TelCallDeflectDstInfo_t *deflect_info, tapi_response_cb callback, void *user_data);
 
@@ -660,8 +670,9 @@ int tel_deflect_call(TapiHandle *handle, unsigned int CallHandle, const TelCallD
  * @return The return type (int)
  *         @c 0 indicates that the operation is completed successfully,
  *         else it will return failure and an error code (Refer Doxygen doc or #TapiResult_t)
+ * @post callback will be invoked and #TelCallGetVolumeInfoResp_t will be stored in data on success case.
  */
-int tel_get_call_volume_info(TapiHandle *handle, TelSoundDevice_t device, TelSoundType_t type, tapi_response_cb callback, void *user_data );
+int tel_get_call_volume_info(TapiHandle *handle, TelSoundDevice_t device, TelSoundType_t type, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Sets the call volume.
@@ -689,8 +700,9 @@ int tel_get_call_volume_info(TapiHandle *handle, TelSoundDevice_t device, TelSou
  * @return The return type (int)
  *         @c 0 indicates that the operation has completed successfully,
  *         else it will return failure and an error code (Refer Doxygen doc or #TapiResult_t)
+ * @post callback will be invoked and data is NULL.
  */
-int tel_set_call_volume_info(TapiHandle *handle, TelCallVolumeInfo_t *info, tapi_response_cb callback, void *user_data );
+int tel_set_call_volume_info(TapiHandle *handle, TelCallVolumeInfo_t *info, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Sets the call sound path.
@@ -718,8 +730,9 @@ int tel_set_call_volume_info(TapiHandle *handle, TelCallVolumeInfo_t *info, tapi
  * @return The return type (int)
  *         @c 0 indicates that the operation is completed successfully,
  *         else it will return failure and an error code (Refer Doxygen doc or #TapiResult_t)
+ * @post callback will be invoked and data is NULL.
  */
-int tel_set_call_sound_path(TapiHandle *handle, TelCallSoundPathInfo_t *path, tapi_response_cb callback, void *user_data );
+int tel_set_call_sound_path(TapiHandle *handle, TelCallSoundPathInfo_t *path, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Sets the call mute state.
@@ -747,8 +760,9 @@ int tel_set_call_sound_path(TapiHandle *handle, TelCallSoundPathInfo_t *path, ta
  * @return The return type (int)
  *         @c 0 indicating that the operation has completed successfully,
  *         else it will return failure and an error code (Refer Doxygen doc or #TapiResult_t)
+ * @post callback will be invoked and data is NULL.
  */
-int tel_set_call_mute_status(TapiHandle *handle, TelSoundMuteStatus_t mute, TelSoundMutePath_t path, tapi_response_cb callback, void *user_data );
+int tel_set_call_mute_status(TapiHandle *handle, TelSoundMuteStatus_t mute, TelSoundMutePath_t path, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Gets the call mute state.
@@ -774,8 +788,9 @@ int tel_set_call_mute_status(TapiHandle *handle, TelSoundMuteStatus_t mute, TelS
  * @return The return type (int)
  *         @c 0 indicates that the operation is completed successfully,
  *         else it will return failure and an error code (Refer Doxygen doc or #TapiResult_t)
+ * @post callback will be invoked and #TelCallGetMuteStatusResp_t will be stored in data on success case.
  */
-int tel_get_call_mute_status(TapiHandle *handle, tapi_response_cb callback, void *user_data );
+int tel_get_call_mute_status(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Gets the voice privacy option mode in the phone. (3GPP2 specific)
@@ -805,6 +820,7 @@ int tel_get_call_mute_status(TapiHandle *handle, tapi_response_cb callback, void
  * @pre Initialize the Dbus connection with #tel_init.\n
  *      Register the telephony event to be listened with #tel_register_noti_event.\n
  *      An event loop runs to listen to events.
+ * @post callback will be invoked and #TelCallGetPrivacyModeResp_t will be stored in data on success case.
  */
 int tel_get_call_privacy_mode(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
@@ -838,6 +854,7 @@ int tel_get_call_privacy_mode(TapiHandle *handle, tapi_response_cb callback, voi
  * @pre Initialize the Dbus connection with #tel_init.\n
  *      Register the telephony event to be listened with #tel_register_noti_event.\n
  *      An event loop runs to listen to events.
+ * @post callback will be invoked and data is NULL.
  */
 int tel_set_call_privacy_mode(TapiHandle *handle, TelCallPrivacyMode_t PrivacyMode, tapi_response_cb callback, void *user_data);
 
@@ -861,15 +878,13 @@ int tel_set_call_privacy_mode(TapiHandle *handle, TelCallPrivacyMode_t PrivacyMo
  * @param [in] user_data
  * - user_data for user specification.
  *
- * @post
- *  - None.
- *
  * @return Return Type (int) \n
  * - TAPI_API_SUCCESS - indicating that the operation has completed successfully. \n
  * - Refer #TapiResult_t for failure and error code
  *
  * @par Prospective Clients:
  * External Apps.
+ * @post callback will be invoked and data is NULL.
  */
 int tel_set_call_preferred_voice_subscription(TapiHandle *handle, TelCallPreferredVoiceSubs_t preferred_subscription,
 	tapi_response_cb callback, void *user_data);

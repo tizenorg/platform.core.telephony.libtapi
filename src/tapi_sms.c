@@ -42,18 +42,15 @@ static void on_response_default(GObject *source_object, GAsyncResult *res, gpoin
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	dbg("on_response_default type_format(%s)", g_variant_get_type_string(dbus_result));
 
 	g_variant_get(dbus_result, "(i)", &result);
 
-	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn)
-			evt_cb_data->cb_fn(evt_cb_data->handle, result, &data, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &data);
 
-		g_free(evt_cb_data);
-	}
+	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
 }
 
@@ -74,7 +71,7 @@ static void on_response_read_msg(GObject *source_object, GAsyncResult *res, gpoi
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	dbg("on_response_read_msg type_format(%s)", g_variant_get_type_string(dbus_result));
 
@@ -109,12 +106,9 @@ static void on_response_read_msg(GObject *source_object, GAsyncResult *res, gpoi
 	g_variant_unref(tpdu);
 	g_variant_unref(inner_gv);
 
-	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn)
-			evt_cb_data->cb_fn(evt_cb_data->handle, result, &readMsg, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &readMsg);
 
-		g_free(evt_cb_data);
-	}
+	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
 }
 
@@ -130,18 +124,15 @@ static void on_response_write_msg(GObject *source_object, GAsyncResult *res, gpo
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	dbg("on_response_write_msg type_format(%s)", g_variant_get_type_string(dbus_result));
 
 	g_variant_get(dbus_result, "(ii)", &result, &sms_index);
 
-	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn)
-			evt_cb_data->cb_fn(evt_cb_data->handle, result, &sms_index, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &sms_index);
 
-		g_free(evt_cb_data);
-	}
+	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
 }
 
@@ -157,18 +148,15 @@ static void on_response_delete_msg(GObject *source_object, GAsyncResult *res, gp
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	dbg("on_response_delete_msg type_format(%s)", g_variant_get_type_string(dbus_result));
 
 	g_variant_get(dbus_result, "(ii)", &result, &del_index);
 
-	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn)
-			evt_cb_data->cb_fn(evt_cb_data->handle, result, &del_index, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &del_index);
 
-		g_free(evt_cb_data);
-	}
+	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
 }
 
@@ -187,7 +175,7 @@ static void on_response_get_msg_count(GObject *source_object, GAsyncResult *res,
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	dbg("on_response_get_msg_count type_format(%s)", g_variant_get_type_string(dbus_result));
 
@@ -206,12 +194,9 @@ static void on_response_get_msg_count(GObject *source_object, GAsyncResult *res,
 
 	g_variant_iter_free(iter);
 
-	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn)
-			evt_cb_data->cb_fn(evt_cb_data->handle, result, &storedMsgCnt, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &storedMsgCnt);
 
-		g_free(evt_cb_data);
-	}
+	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
 }
 
@@ -233,7 +218,7 @@ static void on_response_get_sca(GObject *source_object, GAsyncResult *res, gpoin
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	dbg("on_response_get_sca type_format(%s)", g_variant_get_type_string(dbus_result));
 
@@ -254,12 +239,9 @@ static void on_response_get_sca(GObject *source_object, GAsyncResult *res, gpoin
 	g_variant_unref(num);
 	g_variant_unref(inner_gv);
 
-	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn)
-			evt_cb_data->cb_fn(evt_cb_data->handle, result, &scaInfo, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &scaInfo);
 
-		g_free(evt_cb_data);
-	}
+	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
 }
 
@@ -280,7 +262,7 @@ static void on_response_get_cb_config(GObject *source_object, GAsyncResult *res,
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	dbg("on_response_get_cb_config type_format(%s)", g_variant_get_type_string(dbus_result));
 
@@ -310,12 +292,9 @@ static void on_response_get_cb_config(GObject *source_object, GAsyncResult *res,
 	}
 	g_variant_iter_free(iter);
 
-	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn)
-			evt_cb_data->cb_fn(evt_cb_data->handle, result, &cbConfig, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &cbConfig);
 
-		g_free(evt_cb_data);
-	}
+	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
 }
 
@@ -336,27 +315,27 @@ static void on_response_get_sms_params(GObject *source_object, GAsyncResult *res
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	dbg("on_response_get_sms_params type_format(%s)", g_variant_get_type_string(dbus_result));
 
 	g_variant_get(dbus_result, "(iiii@viiii@viii@viii)", &result,
-								&paramInfo.RecordIndex,
-								&paramInfo.RecordLen,
-								&paramInfo.AlphaIdLen,
-								&alphaId,
-								&paramInfo.ParamIndicator,
-								&paramInfo.TpDestAddr.DialNumLen,
-								&paramInfo.TpDestAddr.Ton,
-								&paramInfo.TpDestAddr.Npi,
-								&destDialNum,
-								&paramInfo.TpSvcCntrAddr.DialNumLen,
-								&paramInfo.TpSvcCntrAddr.Ton,
-								&paramInfo.TpSvcCntrAddr.Npi,
-								&scaDialNum,
-								&paramInfo.TpProtocolId,
-								&paramInfo.TpDataCodingScheme,
-								&paramInfo.TpValidityPeriod);
+		&paramInfo.RecordIndex,
+		&paramInfo.RecordLen,
+		&paramInfo.AlphaIdLen,
+		&alphaId,
+		&paramInfo.ParamIndicator,
+		&paramInfo.TpDestAddr.DialNumLen,
+		&paramInfo.TpDestAddr.Ton,
+		&paramInfo.TpDestAddr.Npi,
+		&destDialNum,
+		&paramInfo.TpSvcCntrAddr.DialNumLen,
+		&paramInfo.TpSvcCntrAddr.Ton,
+		&paramInfo.TpSvcCntrAddr.Npi,
+		&scaDialNum,
+		&paramInfo.TpProtocolId,
+		&paramInfo.TpDataCodingScheme,
+		&paramInfo.TpValidityPeriod);
 
 	inner_gv = g_variant_get_variant(alphaId);
 	g_variant_get(inner_gv, "ay", &iter);
@@ -394,12 +373,9 @@ static void on_response_get_sms_params(GObject *source_object, GAsyncResult *res
 	g_variant_unref(scaDialNum);
 	g_variant_unref(inner_gv);
 
-	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn)
-			evt_cb_data->cb_fn(evt_cb_data->handle, result, &paramInfo, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &paramInfo);
 
-		g_free(evt_cb_data);
-	}
+	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
 }
 
@@ -415,19 +391,16 @@ static void on_response_get_sms_param_cnt(GObject *source_object, GAsyncResult *
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	dbg("on_response_get_sms_param_cnt type_format(%s)", g_variant_get_type_string(dbus_result));
 
 	g_variant_get(dbus_result, "(ii)", &result,
 			&recordCount);
 
-	if (evt_cb_data) {
-		if (evt_cb_data->cb_fn)
-			evt_cb_data->cb_fn(evt_cb_data->handle, result, &recordCount, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &recordCount);
 
-		g_free(evt_cb_data);
-	}
+	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
 }
 
@@ -454,7 +427,7 @@ EXPORT_API int tel_send_sms(struct tapi_handle *handle,
 		return TAPI_API_INVALID_INPUT;
 	}
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_variant_builder_init(&b, G_VARIANT_TYPE("ay"));
 	for (i = 0; i < TAPI_SIM_SMSP_ADDRESS_LEN; i++)
@@ -496,7 +469,7 @@ EXPORT_API int tel_read_sms_in_sim(struct tapi_handle *handle, int read_index, t
 		return TAPI_API_INVALID_INPUT;
 	}
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", read_index);
 
@@ -524,7 +497,7 @@ EXPORT_API int tel_write_sms_in_sim(struct tapi_handle *handle, const TelSmsData
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pWriteData, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	 g_variant_builder_init(&b, G_VARIANT_TYPE("ay"));
 	for (i = 0; i < TAPI_SIM_SMSP_ADDRESS_LEN; i++)
@@ -568,7 +541,7 @@ EXPORT_API int tel_delete_sms_in_sim(struct tapi_handle *handle, int del_index, 
 		return TAPI_API_INVALID_INPUT;
 	}
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", del_index);
 
@@ -590,7 +563,7 @@ EXPORT_API int tel_get_sms_count(struct tapi_handle *handle, tapi_response_cb ca
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_dbus_connection_call(handle->dbus_connection,
 		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,
@@ -616,7 +589,7 @@ EXPORT_API int tel_get_sms_sca(struct tapi_handle *handle, int sca_index, tapi_r
 		return TAPI_API_INVALID_INPUT;
 	}
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", sca_index);
 
@@ -647,7 +620,7 @@ EXPORT_API int tel_set_sms_sca(struct tapi_handle *handle, const TelSmsAddressIn
 		return TAPI_API_INVALID_INPUT;
 	}
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	 g_variant_builder_init(&b, G_VARIANT_TYPE("ay"));
 	for (i = 0; i < TAPI_SIM_SMSP_ADDRESS_LEN + 1; i++)
@@ -679,7 +652,7 @@ EXPORT_API int tel_get_sms_cb_config(struct tapi_handle *handle, tapi_response_c
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_dbus_connection_call(handle->dbus_connection,
 		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,
@@ -710,7 +683,7 @@ EXPORT_API int tel_set_sms_cb_config(struct tapi_handle *handle, const TelSmsCbC
 		return TAPI_API_INVALID_INPUT;
 	}
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_variant_builder_init(&b, G_VARIANT_TYPE("aa{sv}"));
 
@@ -762,7 +735,7 @@ EXPORT_API int tel_set_sms_memory_status(struct tapi_handle *handle, int memoryS
 		return TAPI_API_INVALID_INPUT;
 	}
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", memoryStatus);
 
@@ -791,7 +764,7 @@ EXPORT_API int tel_send_sms_deliver_report(struct tapi_handle *handle,
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pDataPackage, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	encoded_sca = g_base64_encode((const guchar*)(pDataPackage->Sca), TAPI_SIM_SMSP_ADDRESS_LEN);
 	if (NULL == encoded_sca) {
@@ -840,7 +813,7 @@ EXPORT_API int tel_set_sms_message_status(struct tapi_handle *handle, int set_in
 		return TAPI_API_INVALID_INPUT;
 	}
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(ii)", set_index, msgStatus);
 
@@ -868,7 +841,7 @@ EXPORT_API int tel_get_sms_parameters(struct tapi_handle *handle, int get_index,
 		return TAPI_API_INVALID_INPUT;
 	}
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", get_index);
 
@@ -896,7 +869,7 @@ EXPORT_API int tel_set_sms_parameters(struct tapi_handle *handle, const TelSmsPa
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pSmsSetParameters, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	 g_variant_builder_init(&b, G_VARIANT_TYPE("ay"));
 	for (i = 0; i < TAPI_SIM_SMSP_ALPHA_ID_LEN_MAX + 1; i++)
@@ -951,7 +924,7 @@ EXPORT_API int tel_get_sms_parameter_count(struct tapi_handle *handle, tapi_resp
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_dbus_connection_call(handle->dbus_connection,
 		DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_SMS_INTERFACE,

@@ -49,73 +49,31 @@
 	dbg("Func Enterance. cp_name[%s]", handle->cp_name); \
 }
 
-#define TAPI_SIM_RESP_CB_ENTER(evt_cb_data) { \
-	if (evt_cb_data && evt_cb_data->handle) \
-		dbg("Func Enterance. cp_name[%s]", evt_cb_data->handle->cp_name); \
-}
-
-#define TAPI_SIM_CHECK_TAPI_STATE() { \
+#define TAPI_SIM_CHECK_TAPI_STATE() do { \
 	TAPI_SIM_FUNCTION_ENTER(handle); \
 	if (_tel_check_tapi_state() != 0) \
 		return TAPI_API_SERVICE_NOT_READY; \
-}
+} while (0)
 
-#define TAPI_SIM_CHECK_ERR_MSG(error) { \
+#define TAPI_SIM_CHECK_ERR_MSG(error) do { \
 		TapiResult_t ret = TAPI_API_OPERATION_FAILED; \
 		if (error) { \
 			ret = __check_err_msg(error->message); \
 			g_error_free(error); \
 		} \
 		return ret; \
-}
-
-#define TAPI_SIM_CALL_CBFUNC(evtcbdata, result, data) { \
-		if (evtcbdata->cb_fn) { \
-			evtcbdata->cb_fn(evtcbdata->handle, result, data, evtcbdata->user_data); \
-		} \
-}
-
-#define TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evtcbdata) do { \
-		TapiResult_t ret = TAPI_API_OPERATION_FAILED; \
-		if (error) { \
-			ret = __check_err_msg(error->message); \
-			g_error_free(error); \
-		} \
-		TAPI_SIM_CALL_CBFUNC(evtcbdata, ret, NULL); \
-		g_free(evtcbdata); \
-		return; \
 } while (0)
 
-#define SIM_CHECK_ERROR(error, evt_cb_data) \
+#define TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evtcbdata) do { \
+	TapiResult_t ret = TAPI_API_OPERATION_FAILED; \
 	if (error) { \
-		warn("(%s) dbus error = %d (%s)", evt_cb_data->handle->cp_name, error->code, error->message); \
-		if (error->code == G_IO_ERROR_CANCELLED \
-				&& error->domain == G_IO_ERROR) { \
-			/* Do not invoke callback in case of deinit TapiHandle */ \
-			g_error_free(error); \
-			g_free(evt_cb_data); \
-			return; \
-		} else if (strstr(error->message, "No access rights")) { \
-			err("Access denied"); \
-			if (evt_cb_data->cb_fn) \
-				evt_cb_data->cb_fn(evt_cb_data->handle, TAPI_ERROR_ACCESS_DENIED, NULL, evt_cb_data->user_data); \
-			g_error_free(error); \
-			g_free(evt_cb_data); \
-			return; \
-		} else if (strstr(error->message, "Operation not supported")) { \
-			err("Operation not supported"); \
-			if (evt_cb_data->cb_fn) \
-				evt_cb_data->cb_fn(evt_cb_data->handle, TAPI_ERROR_OPERATION_NOT_SUPPORTED, NULL, evt_cb_data->user_data); \
-			g_error_free(error); \
-			g_free(evt_cb_data); \
-			return; \
-		} \
-	}
-
-struct tapi_sim_resp_data {
-	struct tapi_resp_data tapi_resp;
-	TapiHandle *handle;
-};
+		ret = __check_err_msg(error->message); \
+		g_error_free(error); \
+	} \
+	TAPI_INVOKE_RESP_CALLBACK(evtcbdata, ret, NULL); \
+	g_free(evtcbdata); \
+	return; \
+} while (0)
 
 static TapiResult_t __check_err_msg(gchar *err_msg)
 {
@@ -169,12 +127,11 @@ static void on_response_get_sim_iccid(GObject *source_object, GAsyncResult *res,
 	TelSimIccIdInfo_t iccid_info;
 	gchar *iccid = NULL;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	memset(&iccid_info, 0, sizeof(TelSimIccIdInfo_t));
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -188,7 +145,147 @@ static void on_response_get_sim_iccid(GObject *source_object, GAsyncResult *res,
 	memcpy(iccid_info.icc_num, iccid, iccid_info.icc_length);
 	g_free(iccid);
 
-	TAPI_SIM_CALL_CBFUNC(evt_cb_data, result, &iccid_info);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &iccid_info);
+	g_free(evt_cb_data);
+	g_variant_unref(dbus_result);
+}
+
+static void on_response_get_sim_impi(GObject *source_object, GAsyncResult *res, gpointer user_data)
+{
+	GError *error = NULL;
+	GDBusConnection *conn = NULL;
+	GVariant *dbus_result;
+	struct tapi_resp_data *evt_cb_data = user_data;
+	TelSimAccessResult_t result;
+	TelSimImpi_t impi_info = {0,};
+
+	conn = G_DBUS_CONNECTION(source_object);
+	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
+
+	if (dbus_result == NULL)
+		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
+
+	g_variant_get(dbus_result, "(is)", &result, &impi_info.impi);
+
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &impi_info);
+	g_free(impi_info.impi);
+	g_free(evt_cb_data);
+	g_variant_unref(dbus_result);
+}
+
+static void on_response_get_sim_impu(GObject *source_object, GAsyncResult *res, gpointer user_data)
+{
+	GError *error = NULL;
+	GDBusConnection *conn = NULL;
+	GVariant *dbus_result;
+	struct tapi_resp_data *evt_cb_data = user_data;
+	GVariantIter *iter = NULL;
+	GVariantIter *iter_row = NULL;
+	const gchar *key = NULL;
+	GVariant *value = NULL;
+	TelSimAccessResult_t result;
+	TelSimImpuList_t impu_list = {0,};
+	unsigned int i = 0;
+
+	conn = G_DBUS_CONNECTION(source_object);
+	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
+
+	if (dbus_result == NULL)
+		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
+
+	g_variant_get(dbus_result, "(iaa{sv})", &result, &iter);
+
+	impu_list.count = g_variant_iter_n_children(iter);
+	impu_list.list = g_malloc0(sizeof(TelSimImpu_t) * impu_list.count);
+
+	while (g_variant_iter_next(iter, "a{sv}", &iter_row)) {
+		while (g_variant_iter_loop(iter_row, "{sv}", &key, &value)) {
+			if (!g_strcmp0(key, "impu"))
+				impu_list.list[i].impu = g_strdup(g_variant_get_string(value, NULL));
+		}
+		i++;
+		g_variant_iter_free(iter_row);
+	}
+	g_variant_iter_free(iter);
+
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &impu_list);
+	for (i = 0; i < impu_list.count; i++)
+		g_free(impu_list.list[i].impu);
+
+	g_free(impu_list.list);
+	g_free(evt_cb_data);
+	g_variant_unref(dbus_result);
+}
+
+static void on_response_get_sim_domain(GObject *source_object, GAsyncResult *res, gpointer user_data)
+{
+	GError *error = NULL;
+	GDBusConnection *conn = NULL;
+	GVariant *dbus_result;
+	struct tapi_resp_data *evt_cb_data = user_data;
+	TelSimAccessResult_t result;
+	TelSimDomain_t domain_info = {0,};
+
+	conn = G_DBUS_CONNECTION(source_object);
+	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
+
+	if (dbus_result == NULL)
+		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
+
+	g_variant_get(dbus_result, "(is)", &result, &domain_info.domain);
+
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &domain_info);
+	g_free(domain_info.domain);
+	g_free(evt_cb_data);
+	g_variant_unref(dbus_result);
+}
+
+static void on_response_get_sim_pcscf(GObject *source_object, GAsyncResult *res, gpointer user_data)
+{
+	GError *error = NULL;
+	GDBusConnection *conn = NULL;
+	GVariant *dbus_result;
+	struct tapi_resp_data *evt_cb_data = user_data;
+	GVariantIter *iter = NULL;
+	GVariantIter *iter_row = NULL;
+	const gchar *key = NULL;
+	GVariant *value = NULL;
+	TelSimAccessResult_t result;
+	TelSimPcscfList_t pcscf_list = {0,};
+	unsigned int i = 0;
+
+	conn = G_DBUS_CONNECTION(source_object);
+	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
+
+	if (dbus_result == NULL)
+		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
+
+	g_variant_get(dbus_result, "(iaa{sv})", &result, &iter);
+
+	pcscf_list.count = g_variant_iter_n_children(iter);
+	pcscf_list.list = g_malloc0(sizeof(TelSimPcscf_t) * pcscf_list.count);
+
+	while (g_variant_iter_next(iter, "a{sv}", &iter_row)) {
+		while (g_variant_iter_loop(iter_row, "{sv}", &key, &value)) {
+			if (!g_strcmp0(key, "type"))
+				pcscf_list.list[i].type = g_variant_get_int32(value);
+			else if (!g_strcmp0(key, "pcscf"))
+				pcscf_list.list[i].pcscf = g_strdup(g_variant_get_string(value, NULL));
+		}
+		i++;
+		g_variant_iter_free(iter_row);
+	}
+	g_variant_iter_free(iter);
+
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &pcscf_list);
+	for (i = 0; i < pcscf_list.count; i++)
+		g_free(pcscf_list.list[i].pcscf);
+
+	g_free(pcscf_list.list);
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
 }
@@ -204,10 +301,9 @@ static void on_response_get_sim_language(GObject *source_object, GAsyncResult *r
 	TelSimLanguagePreferenceCode_t lang = TAPI_SIM_LP_LANG_UNSPECIFIED;
 	TelSimAccessResult_t result = TAPI_SIM_ACCESS_SUCCESS;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -231,10 +327,9 @@ static void on_response_set_sim_language(GObject *source_object, GAsyncResult *r
 	struct tapi_resp_data *evt_cb_data = user_data;
 	TelSimAccessResult_t result = TAPI_SIM_ACCESS_SUCCESS;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -265,12 +360,11 @@ static void on_response_get_sim_callforwarding_info(GObject *source_object, GAsy
 	TelSimCallForwardingResp_t cf;
 	int i = 0;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	memset(&cf, 0, sizeof(TelSimCallForwardingResp_t));
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -336,10 +430,9 @@ static void on_response_set_sim_callforwarding_info(GObject *source_object, GAsy
 	struct tapi_resp_data *evt_cb_data = user_data;
 	TelSimAccessResult_t result = TAPI_SIM_ACCESS_SUCCESS;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -370,12 +463,11 @@ static void on_response_get_sim_messagewaiting_info(GObject *source_object, GAsy
 	TelSimMessageWaitingResp_t mw;
 	int i = 0;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	memset(&mw, 0, sizeof(TelSimMessageWaitingResp_t));
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -441,10 +533,9 @@ static void on_response_set_sim_messagewaiting_info(GObject *source_object, GAsy
 	struct tapi_resp_data *evt_cb_data = user_data;
 	TelSimAccessResult_t result = TAPI_SIM_ACCESS_SUCCESS;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -475,12 +566,11 @@ static void on_response_get_sim_mailbox_info(GObject *source_object, GAsyncResul
 	int i = 0;
 	gboolean b_cphs = 0;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	memset(&list, 0, sizeof(TelSimMailboxList_t));
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -540,10 +630,9 @@ static void on_response_set_sim_mailbox_info(GObject *source_object, GAsyncResul
 	struct tapi_resp_data *evt_cb_data = user_data;
 	TelSimAccessResult_t result = TAPI_SIM_ACCESS_SUCCESS;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -568,12 +657,11 @@ static void on_response_get_sim_cphs_info(GObject *source_object, GAsyncResult *
 	TelSimAccessResult_t result = TAPI_SIM_ACCESS_SUCCESS;
 	TelSimCphsInfo_t cphs;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	memset(&cphs, 0, sizeof(TelSimCphsInfo_t));
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -609,12 +697,11 @@ static void on_response_get_sim_service_table(GObject *source_object, GAsyncResu
 	TelSimAccessResult_t result = TAPI_SIM_ACCESS_SUCCESS;
 	TelSimServiceTable_t svct;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	memset(&svct, 0, sizeof(TelSimServiceTable_t));
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -684,12 +771,11 @@ static void on_response_get_sim_msisdn(GObject *source_object, GAsyncResult *res
 	TelSimMsisdnList_t list;
 	int i = 0;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	memset(&list, 0, sizeof(TelSimMsisdnList_t));
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -730,7 +816,7 @@ static void on_response_get_sim_msisdn(GObject *source_object, GAsyncResult *res
 	for (i = 0; i < list.count; i++)
 		dbg("msisdn[%d]-name[%s]number[%s]", i, list.list[i].name, list.list[i].num);
 
-	TAPI_SIM_CALL_CBFUNC(evt_cb_data, result, &list);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &list);
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
 }
@@ -751,12 +837,11 @@ static void on_response_get_sim_oplmnwact(GObject *source_object, GAsyncResult *
 	TelSimOplmnwactList_t list;
 	int i = 0;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	memset(&list, 0, sizeof(TelSimOplmnwactList_t));
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -801,12 +886,11 @@ static void on_response_get_sim_spn(GObject *source_object, GAsyncResult *res,
 	gchar *spn = NULL;
 	guchar dc = 0;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	memset(&spn_info, 0, sizeof(TelSimSpn_t));
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -821,7 +905,7 @@ static void on_response_get_sim_spn(GObject *source_object, GAsyncResult *res,
 	}
 	g_free(spn);
 
-	TAPI_SIM_CALL_CBFUNC(evt_cb_data, result, &spn_info);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &spn_info);
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
 }
@@ -839,12 +923,11 @@ static void on_response_get_sim_cphs_netname(GObject *source_object, GAsyncResul
 	gchar *full_name = NULL;
 	gchar *short_name = NULL;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	memset(&cphs_net, 0, sizeof(TelSimCphsNetName_t));
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -890,12 +973,11 @@ static void on_response_req_sim_authentication(GObject *source_object, GAsyncRes
 	TelSimAccessResult_t result = TAPI_SIM_ACCESS_SUCCESS;
 	TelSimAuthenticationResponse_t auth_resp;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	memset(&auth_resp, 0, sizeof(TelSimAuthenticationResponse_t));
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -962,12 +1044,11 @@ static void on_response_verify_sim_pins(GObject *source_object, GAsyncResult *re
 	TelSimPinOperationResult_t result = TAPI_SIM_PIN_OPERATION_SUCCESS;
 	TelSimSecResult_t sec_rt;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	memset(&sec_rt, 0, sizeof(TelSimSecResult_t));
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -992,12 +1073,11 @@ static void on_response_verify_sim_puks(GObject *source_object, GAsyncResult *re
 	TelSimPinOperationResult_t result = TAPI_SIM_PIN_OPERATION_SUCCESS;
 	TelSimSecResult_t sec_rt;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	memset(&sec_rt, 0, sizeof(TelSimSecResult_t));
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -1022,12 +1102,11 @@ static void on_response_change_sim_pins(GObject *source_object, GAsyncResult *re
 	TelSimPinOperationResult_t result = TAPI_SIM_PIN_OPERATION_SUCCESS;
 	TelSimSecResult_t sec_rt;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	memset(&sec_rt, 0, sizeof(TelSimSecResult_t));
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -1052,19 +1131,18 @@ static void on_response_disable_sim_facility(GObject *source_object, GAsyncResul
 	TelSimPinOperationResult_t result = TAPI_SIM_PIN_OPERATION_SUCCESS;
 	TelSimFacilityResult_t f_rt;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	memset(&f_rt, 0, sizeof(TelSimFacilityResult_t));
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(iii)", &result, &f_rt.type, &f_rt.retry_count);
 
-	TAPI_SIM_CALL_CBFUNC(evt_cb_data, result, &f_rt);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &f_rt);
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
 }
@@ -1080,19 +1158,18 @@ static void on_response_enable_sim_facility(GObject *source_object, GAsyncResult
 	TelSimPinOperationResult_t result = TAPI_SIM_PIN_OPERATION_SUCCESS;
 	TelSimFacilityResult_t f_rt;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	memset(&f_rt, 0, sizeof(TelSimFacilityResult_t));
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(iii)", &result, &f_rt.type, &f_rt.retry_count);
 
-	TAPI_SIM_CALL_CBFUNC(evt_cb_data, result, &f_rt);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &f_rt);
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
 }
@@ -1108,19 +1185,18 @@ static void on_response_get_sim_facility(GObject *source_object, GAsyncResult *r
 	TelSimPinOperationResult_t result = TAPI_SIM_PIN_OPERATION_SUCCESS;
 	TelSimFacilityInfo_t fi;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	memset(&fi, 0, sizeof(TelSimFacilityInfo_t));
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(iii)", &result, &fi.type, &fi.f_status);
 
-	TAPI_SIM_CALL_CBFUNC(evt_cb_data, result, &fi);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &fi);
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
 }
@@ -1136,12 +1212,11 @@ static void on_response_get_sim_lock_info(GObject *source_object, GAsyncResult *
 	TelSimPinOperationResult_t result = TAPI_SIM_PIN_OPERATION_SUCCESS;
 	TelSimLockInfo_t lock;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	memset(&lock, 0, sizeof(TelSimLockInfo_t));
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -1173,12 +1248,11 @@ static void on_response_req_sim_apdu(GObject *source_object, GAsyncResult *res,
 	TelSimAccessResult_t result = TAPI_SIM_ACCESS_SUCCESS;
 	TelSimApduResp_t r_apdu;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	memset(&r_apdu, 0, sizeof(TelSimApduResp_t));
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -1224,12 +1298,11 @@ static void on_response_req_sim_atr(GObject *source_object, GAsyncResult *res,
 	TelSimAccessResult_t result = TAPI_SIM_ACCESS_SUCCESS;
 	TelSimAtrResp_t r_atr;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	memset(&r_atr, 0, sizeof(TelSimAtrResp_t));
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -1266,10 +1339,9 @@ static void on_response_set_sim_power_state(GObject *source_object, GAsyncResult
 	struct tapi_resp_data *evt_cb_data = user_data;
 	TelSimPowerSetResult_t result = TAPI_SIM_POWER_SET_SUCCESS;
 
-	TAPI_SIM_RESP_CB_ENTER(evt_cb_data);
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	SIM_CHECK_ERROR(error, evt_cb_data);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	if (!dbus_result)
 		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
@@ -1278,6 +1350,44 @@ static void on_response_set_sim_power_state(GObject *source_object, GAsyncResult
 
 	if (evt_cb_data->cb_fn)
 		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
+
+	g_free(evt_cb_data);
+	g_variant_unref(dbus_result);
+}
+
+static void on_response_get_sim_isim_service_table(GObject *source_object,
+		GAsyncResult *res, gpointer user_data)
+{
+	GError *error = NULL;
+	GDBusConnection *conn = NULL;
+	GVariant *dbus_result;
+	struct tapi_resp_data *evt_cb_data = user_data;
+	GVariantIter *iter = NULL;
+	GVariant *param_gv = NULL;
+	GVariant *inner_gv = NULL;
+	TelSimAccessResult_t result = TAPI_SIM_ACCESS_SUCCESS;
+	TelSimIST_t ist;
+	guchar value;
+	int i = 0;
+
+	conn = G_DBUS_CONNECTION(source_object);
+	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
+
+	if (!dbus_result)
+		TAPI_SIM_CHECK_ERR_MSG_AND_CALL_NULL_CBFUNC(error, evt_cb_data);
+
+	g_variant_get(dbus_result, "(i@v)", &result, &param_gv);
+	inner_gv = g_variant_get_variant(param_gv);
+
+	g_variant_get(inner_gv, "ay", &iter);
+	while (g_variant_iter_loop(iter, "y", &value)) {
+		ist.service[i] = value;
+		i++;
+	}
+
+	if (evt_cb_data->cb_fn)
+		evt_cb_data->cb_fn(evt_cb_data->handle, result, &ist, evt_cb_data->user_data);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -1442,7 +1552,7 @@ EXPORT_API int tel_get_sim_iccid(TapiHandle *handle, tapi_response_cb callback, 
 
 	TAPI_SIM_CHECK_TAPI_STATE();
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE, handle->path,
 			DBUS_TELEPHONY_SIM_INTERFACE, "GetICCID", NULL, NULL, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca,
@@ -1459,7 +1569,7 @@ EXPORT_API int tel_get_sim_language(TapiHandle *handle, tapi_response_cb callbac
 
 	TAPI_SIM_CHECK_TAPI_STATE();
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE, handle->path,
 			DBUS_TELEPHONY_SIM_INTERFACE, "GetLanguage", NULL, NULL, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT,
@@ -1478,7 +1588,7 @@ EXPORT_API int tel_set_sim_language(TapiHandle *handle, TelSimLanguagePreference
 
 	TAPI_SIM_CHECK_TAPI_STATE();
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", language);
 
@@ -1498,7 +1608,7 @@ EXPORT_API int tel_get_sim_callforwarding_info(TapiHandle *handle, tapi_response
 
 	TAPI_SIM_CHECK_TAPI_STATE();
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE, handle->path,
 			DBUS_TELEPHONY_SIM_INTERFACE, "GetCallForwarding", NULL, NULL, G_DBUS_CALL_FLAGS_NONE,
@@ -1519,7 +1629,7 @@ EXPORT_API int tel_set_sim_callforwarding_info(TapiHandle *handle, TelSimCallFor
 
 	TAPI_SIM_CHECK_TAPI_STATE();
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_number = calloc(1, strlen((const char *)&req_cf->cf_data_u.cf.cfu_num)+1);
 	if (!g_number) {
@@ -1563,7 +1673,7 @@ EXPORT_API int tel_get_sim_messagewaiting_info(TapiHandle *handle, tapi_response
 
 	TAPI_SIM_CHECK_TAPI_STATE();
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE, handle->path,
 			DBUS_TELEPHONY_SIM_INTERFACE, "GetMessageWaiting", NULL, NULL, G_DBUS_CALL_FLAGS_NONE,
@@ -1583,7 +1693,7 @@ EXPORT_API int tel_set_sim_messagewaiting_info(TapiHandle *handle, TelSimMessage
 
 	TAPI_SIM_CHECK_TAPI_STATE();
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	dbg("b_cphs[%d], rec_index[%d], indicator_status[0x%x], voice_count[%d], fax_count[%d], " \
 		"email_count[%d], other_count[%d], video_count[%d], b_voice1[%d], b_voice2[%d], b_fax[%d], b_data[%d]",
@@ -1630,7 +1740,7 @@ EXPORT_API int tel_get_sim_mailbox_info(TapiHandle *handle, tapi_response_cb cal
 
 	TAPI_SIM_CHECK_TAPI_STATE();
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE, handle->path,
 			DBUS_TELEPHONY_SIM_INTERFACE, "GetMailbox", NULL, NULL, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT,
@@ -1652,7 +1762,7 @@ EXPORT_API int tel_set_sim_mailbox_info(TapiHandle *handle, TelSimMailBoxNumber_
 
 	TAPI_SIM_CHECK_TAPI_STATE();
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_alpha = calloc(1, strlen((const char *)&req_mb->alpha_id)+1);
 	if (!g_alpha) {
@@ -1721,7 +1831,7 @@ EXPORT_API int tel_get_sim_cphs_info(TapiHandle *handle, tapi_response_cb callba
 
 	TAPI_SIM_CHECK_TAPI_STATE();
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE, handle->path,
 			DBUS_TELEPHONY_SIM_INTERFACE, "GetCPHSInfo", NULL, NULL, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca,
@@ -1739,7 +1849,7 @@ EXPORT_API int tel_get_sim_service_table(TapiHandle *handle, tapi_response_cb ca
 
 	TAPI_SIM_CHECK_TAPI_STATE();
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE, handle->path,
 			DBUS_TELEPHONY_SIM_INTERFACE, "GetServiceTable", NULL, NULL, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca,
@@ -1756,7 +1866,7 @@ EXPORT_API int tel_get_sim_msisdn(TapiHandle *handle, tapi_response_cb callback,
 
 	TAPI_SIM_CHECK_TAPI_STATE();
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE, handle->path,
 			DBUS_TELEPHONY_SIM_INTERFACE, "GetMSISDN", NULL, NULL, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca,
@@ -1774,7 +1884,7 @@ EXPORT_API int tel_get_sim_oplmnwact(TapiHandle *handle, tapi_response_cb callba
 
 	TAPI_SIM_CHECK_TAPI_STATE();
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE, handle->path,
 			DBUS_TELEPHONY_SIM_INTERFACE, "GetOplmnwact", NULL, NULL, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT,
@@ -1792,7 +1902,7 @@ EXPORT_API int tel_get_sim_spn(TapiHandle *handle, tapi_response_cb callback,
 
 	TAPI_SIM_CHECK_TAPI_STATE();
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE, handle->path,
 			DBUS_TELEPHONY_SIM_INTERFACE, "GetSpn", NULL, NULL, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT,
@@ -1810,7 +1920,7 @@ EXPORT_API int tel_get_sim_cphs_netname(TapiHandle *handle, tapi_response_cb cal
 
 	TAPI_SIM_CHECK_TAPI_STATE();
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE, handle->path,
 			DBUS_TELEPHONY_SIM_INTERFACE, "GetCphsNetName", NULL, NULL, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT,
@@ -1844,7 +1954,7 @@ EXPORT_API int tel_req_sim_authentication(TapiHandle *handle,
 			&& authentication_data->autn_length == 0)
 		return TAPI_API_INVALID_INPUT;
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_variant_builder_init(&builder, G_VARIANT_TYPE("ay"));
 	for (i = 0; i < authentication_data->rand_length; i++) {
@@ -1872,6 +1982,12 @@ EXPORT_API int tel_req_sim_authentication(TapiHandle *handle,
 EXPORT_API int tel_verifiy_sim_pins(TapiHandle *handle, const TelSimSecPw_t *pin_data,
 		tapi_response_cb callback, void *user_data)
 {
+	return tel_verify_sim_pins(handle, pin_data, callback, user_data);
+}
+
+EXPORT_API int tel_verify_sim_pins(TapiHandle *handle, const TelSimSecPw_t *pin_data,
+		tapi_response_cb callback, void *user_data)
+{
 	struct tapi_resp_data *evt_cb_data = NULL;
 	GVariant *param = NULL;
 	gchar *gpw = NULL;
@@ -1890,7 +2006,7 @@ EXPORT_API int tel_verifiy_sim_pins(TapiHandle *handle, const TelSimSecPw_t *pin
 	if ((pin_data->pw_len < 4) || (pin_data->pw_len > 8))
 		return TAPI_API_INVALID_INPUT;
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	gpw = calloc(1, pin_data->pw_len+1);
 	if (!gpw) {
@@ -1939,7 +2055,7 @@ EXPORT_API int tel_verify_sim_puks(TapiHandle *handle, const TelSimSecPw_t *puk_
 			|| (new_pin_data->pw_len > 8))
 		return TAPI_API_INVALID_INPUT;
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	gpin = calloc(1, new_pin_data->pw_len+1);
 	if (!gpin) {
@@ -2000,7 +2116,7 @@ EXPORT_API int tel_change_sim_pins(TapiHandle *handle, const TelSimSecPw_t *old_
 	if ((new_pin->pw_len < 4) || (new_pin->pw_len > 8))
 		return TAPI_API_INVALID_INPUT;
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	gpin_o = calloc(1, old_pin->pw_len+1);
 	if (!gpin_o) {
@@ -2055,7 +2171,7 @@ EXPORT_API int tel_disable_sim_facility(TapiHandle *handle, TelSimFacilityPw_t *
 	if ((pw->lock_type > TAPI_SIM_LOCK_FD) && (pw->pw_len < 6))
 		return TAPI_API_INVALID_INPUT;
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	gpw = calloc(1, pw->pw_len+1);
 	if (!gpw) {
@@ -2098,7 +2214,7 @@ EXPORT_API int tel_enable_sim_facility(TapiHandle *handle, TelSimFacilityPw_t *p
 	if ((pw->lock_type > TAPI_SIM_LOCK_FD) && (pw->pw_len < 6))
 		return TAPI_API_INVALID_INPUT;
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	gpw = calloc(1, pw->pw_len+1);
 	if (!gpw) {
@@ -2134,7 +2250,7 @@ EXPORT_API int tel_get_sim_facility(TapiHandle *handle, TelSimLockType_t type,
 	if (type < TAPI_SIM_LOCK_PS || type > TAPI_SIM_LOCK_PC)
 		return TAPI_API_INVALID_INPUT;
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", type);
 
@@ -2159,7 +2275,7 @@ EXPORT_API int tel_get_sim_lock_info(TapiHandle *handle, TelSimLockType_t type,
 	if (type < TAPI_SIM_LOCK_PS || type > TAPI_SIM_LOCK_PC)
 		return TAPI_API_INVALID_INPUT;
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", type);
 
@@ -2183,7 +2299,7 @@ EXPORT_API int tel_set_sim_power_state(TapiHandle *handle, TelSimPowerState_t st
 	if (state >= TAPI_SIM_POWER_UNSPECIFIED)
 		return TAPI_API_INVALID_INPUT;
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", state);
 
@@ -2209,7 +2325,7 @@ EXPORT_API int tel_req_sim_apdu(TapiHandle *handle, TelSimApdu_t* apdu_data,
 
 	TAPI_SIM_CHECK_TAPI_STATE();
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_variant_builder_init(&builder, G_VARIANT_TYPE("ay"));
 	for (i = 0; i < apdu_data->apdu_len; i++)
@@ -2232,11 +2348,87 @@ EXPORT_API int tel_req_sim_atr(TapiHandle *handle, tapi_response_cb callback, vo
 
 	TAPI_SIM_CHECK_TAPI_STATE();
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE, handle->path,
 			DBUS_TELEPHONY_SIM_INTERFACE, "GetATR", NULL, NULL, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca,
 			on_response_req_sim_atr, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+}
+
+EXPORT_API int tel_get_sim_impi(TapiHandle *handle, tapi_response_cb callback, void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data;
+
+	dbg("Func Entrance");
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
+
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE,
+		handle->path, DBUS_TELEPHONY_SIM_INTERFACE,
+		"GetImpi", NULL, NULL, G_DBUS_CALL_FLAGS_NONE,
+		TAPI_DEFAULT_TIMEOUT, handle->ca,
+		on_response_get_sim_impi, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+}
+
+EXPORT_API int tel_get_sim_impu(TapiHandle *handle, tapi_response_cb callback, void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data;
+
+	dbg("Func Entrance");
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
+
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE,
+		handle->path, DBUS_TELEPHONY_SIM_INTERFACE,
+		"GetImpu", NULL, NULL, G_DBUS_CALL_FLAGS_NONE,
+		TAPI_DEFAULT_TIMEOUT, handle->ca,
+		on_response_get_sim_impu, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+}
+
+EXPORT_API int tel_get_sim_domain(TapiHandle *handle, tapi_response_cb callback, void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data;
+
+	dbg("Func Entrance");
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
+
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE,
+		handle->path, DBUS_TELEPHONY_SIM_INTERFACE,
+		"GetDomain", NULL, NULL, G_DBUS_CALL_FLAGS_NONE,
+		TAPI_DEFAULT_TIMEOUT, handle->ca,
+		on_response_get_sim_domain, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+}
+
+EXPORT_API int tel_get_sim_pcscf(TapiHandle *handle, tapi_response_cb callback, void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data;
+
+	dbg("Func Entrance");
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
+
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE,
+		handle->path, DBUS_TELEPHONY_SIM_INTERFACE,
+		"GetPcscf", NULL, NULL, G_DBUS_CALL_FLAGS_NONE,
+		TAPI_DEFAULT_TIMEOUT, handle->ca,
+		on_response_get_sim_pcscf, evt_cb_data);
 
 	return TAPI_API_SUCCESS;
 }
@@ -2265,3 +2457,22 @@ EXPORT_API int tel_get_sim_application_list(TapiHandle *handle, unsigned char *a
 	return TAPI_API_SUCCESS;
 }
 
+EXPORT_API int tel_get_sim_isim_service_table(TapiHandle *handle,
+		tapi_response_cb callback, void *user_data)
+{
+	struct tapi_resp_data *evt_cb_data;
+
+	dbg("Func Entrance");
+
+	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
+
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+
+	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE,
+		handle->path, DBUS_TELEPHONY_SIM_INTERFACE,
+		"GetIsimServiceTable", NULL, NULL, G_DBUS_CALL_FLAGS_NONE,
+		TAPI_DEFAULT_TIMEOUT, handle->ca,
+		on_response_get_sim_isim_service_table, evt_cb_data);
+
+	return TAPI_API_SUCCESS;
+}

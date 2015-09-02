@@ -41,12 +41,11 @@ static void on_response_call_dial(GObject *source_object, GAsyncResult *res, gpo
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(i)", &result);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, 0, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, NULL);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -64,12 +63,11 @@ static void on_response_call_answer(GObject *source_object, GAsyncResult *res, g
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(ii)", &result, &data.id);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &data, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &data);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -87,12 +85,11 @@ static void on_response_call_end(GObject *source_object, GAsyncResult *res, gpoi
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(iii)", &result, &data.id, &data.type);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &data, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &data);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -110,12 +107,11 @@ static void on_response_call_hold(GObject *source_object, GAsyncResult *res, gpo
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(ii)", &result, &data.id);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &data, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &data);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -133,12 +129,11 @@ static void on_response_call_active(GObject *source_object, GAsyncResult *res, g
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(ii)", &result, &data.id);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &data, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &data);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -156,12 +151,11 @@ static void on_response_call_swap(GObject *source_object, GAsyncResult *res, gpo
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(ii)", &result, &data.id);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &data, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &data);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -179,12 +173,11 @@ static void on_response_call_join(GObject *source_object, GAsyncResult *res, gpo
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(ii)", &result, &data.id);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &data, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &data);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -202,12 +195,11 @@ static void on_response_call_split(GObject *source_object, GAsyncResult *res, gp
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(ii)", &result, &data.id);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &data, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &data);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -225,12 +217,11 @@ static void on_response_call_transfer(GObject *source_object, GAsyncResult *res,
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(ii)", &result, &data.id);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &data, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &data);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -247,12 +238,11 @@ static void on_response_call_dtmf(GObject *source_object, GAsyncResult *res, gpo
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(i)", &result);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, 0, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, NULL);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -269,12 +259,11 @@ static void on_response_call_deflect(GObject *source_object, GAsyncResult *res, 
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(i)", &result);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, 0, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, NULL);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -292,12 +281,11 @@ static void on_response_get_call_privacy_mode(GObject *source_object, GAsyncResu
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(ii)", &result, &data.mode);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &data, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &data);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -314,12 +302,11 @@ static void on_response_set_call_privacy_mode(GObject *source_object, GAsyncResu
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(i)", &result);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, 0, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, NULL);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -342,7 +329,7 @@ static void on_response_get_call_volume_info(GObject *source_object, GAsyncResul
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(aa{sv}i)", &iter, &result);
 
@@ -364,8 +351,7 @@ static void on_response_get_call_volume_info(GObject *source_object, GAsyncResul
 	}
 	g_variant_iter_free(iter);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &resp, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &resp);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -382,12 +368,11 @@ static void on_response_set_call_volume_info(GObject *source_object, GAsyncResul
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(i)", &result);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, 0, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, NULL);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -404,12 +389,11 @@ static void on_response_set_call_sound_path(GObject *source_object, GAsyncResult
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(i)", &result);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, 0, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, NULL);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -426,12 +410,11 @@ static void on_response_set_call_mute_status(GObject *source_object, GAsyncResul
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(i)", &result);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, 0, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, NULL);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -449,12 +432,11 @@ static void on_response_get_call_mute_status(GObject *source_object, GAsyncResul
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(iii)", &result, &resp.path, &resp.status);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &resp, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &resp);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -471,12 +453,11 @@ static void on_response_set_preferred_voice_subscription(GObject *source_object,
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(i)", &result);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, 0, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, NULL);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -491,7 +472,7 @@ EXPORT_API int tel_dial_call(TapiHandle *handle, const TelCallDial_t *pParams, t
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pParams, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(iis)", pParams->CallType, pParams->Ecc, pParams->szNumber);
 
@@ -517,7 +498,7 @@ EXPORT_API int tel_answer_call(TapiHandle *handle, unsigned int CallHandle, TelC
 	if (AnsType > TAPI_CALL_ANSWER_HOLD_AND_ACCEPT)
 		return TAPI_API_INVALID_INPUT;
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(ii)", CallHandle, AnsType);
 
@@ -542,7 +523,7 @@ EXPORT_API int tel_end_call(TapiHandle *handle, unsigned int CallHandle, TelCall
 	if (EndType > TAPI_CALL_END_HOLD_ALL)
 		return TAPI_API_INVALID_INPUT;
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(ii)", CallHandle, EndType);
 
@@ -564,7 +545,7 @@ EXPORT_API int tel_hold_call(TapiHandle *handle, unsigned int CallHandle, tapi_r
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", CallHandle);
 
@@ -586,7 +567,7 @@ EXPORT_API int tel_active_call(TapiHandle *handle, unsigned int CallHandle, tapi
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", CallHandle);
 
@@ -608,7 +589,7 @@ EXPORT_API int tel_swap_call(TapiHandle *handle, unsigned int CallHandle1, unsig
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", CallHandle1);
 
@@ -630,7 +611,7 @@ EXPORT_API int tel_join_call(TapiHandle *handle, unsigned int CallHandle1, unsig
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", CallHandle1);
 
@@ -652,7 +633,7 @@ EXPORT_API int tel_split_call(TapiHandle *handle, unsigned int CallHandle, tapi_
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", CallHandle);
 
@@ -674,7 +655,7 @@ EXPORT_API int tel_transfer_call(TapiHandle *handle, unsigned int CallHandle, ta
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", CallHandle);
 
@@ -696,7 +677,7 @@ EXPORT_API int tel_start_call_cont_dtmf(TapiHandle *handle, unsigned char dtmf_d
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(y)", dtmf_digit);
 
@@ -717,7 +698,7 @@ EXPORT_API int tel_stop_call_cont_dtmf(TapiHandle *handle, tapi_response_cb call
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	msg("[%s] Stop cont DTMF", handle->cp_name);
 
@@ -738,7 +719,7 @@ EXPORT_API int tel_send_call_burst_dtmf(TapiHandle *handle, const TelCallBurstDt
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(info, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(sii)", info->dtmf_string, info->pulse_width, info->inter_digit_interval);
 
@@ -761,7 +742,7 @@ EXPORT_API int tel_deflect_call(TapiHandle *handle, unsigned int CallHandle, con
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pInfo, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(is)", CallHandle, pInfo->number);
 
@@ -891,7 +872,7 @@ EXPORT_API int tel_get_call_privacy_mode(TapiHandle *handle, tapi_response_cb ca
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	dbg("[%s] Func Entrance ", handle->cp_name);
 
@@ -911,7 +892,7 @@ EXPORT_API int tel_set_call_privacy_mode(TapiHandle *handle, TelCallPrivacyMode_
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	pParam = g_variant_new("(i)", privacy_mode);
 
@@ -933,7 +914,7 @@ EXPORT_API int tel_get_call_volume_info(TapiHandle *handle, TelSoundDevice_t dev
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(ii)", device, type);
 
@@ -956,7 +937,7 @@ EXPORT_API int tel_set_call_volume_info(TapiHandle *handle, TelCallVolumeInfo_t 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(info, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(iii)", info->device, info->type, info->volume);
 
@@ -980,7 +961,7 @@ EXPORT_API int tel_set_call_sound_path(TapiHandle *handle, TelCallSoundPathInfo_
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(info, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(ib)", info->path, info->ex_volume);
 
@@ -1002,7 +983,7 @@ EXPORT_API int tel_set_call_mute_status(TapiHandle *handle, TelSoundMuteStatus_t
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(ii)", mute, path);
 
@@ -1024,7 +1005,7 @@ EXPORT_API int tel_get_call_mute_status(TapiHandle *handle, tapi_response_cb cal
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	dbg("[%s] Func Entrance ", handle->cp_name);
 
@@ -1046,7 +1027,7 @@ EXPORT_API int tel_set_call_preferred_voice_subscription(TapiHandle *handle, Tel
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", preferred_subscription);
 

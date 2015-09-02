@@ -851,7 +851,7 @@ void __util_hex_dump(const char *pad, int size, const void *data)
 				memset(buf, 0, 255);
 				snprintf(buf, 255, "%s%04X: ", pad, i + 1);
 			} else {
-				strcat(buf, "  ");
+				strncat(buf, "  ", strlen("  "));
 			}
 		}
 	}

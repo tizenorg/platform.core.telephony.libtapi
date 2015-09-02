@@ -158,6 +158,47 @@ int tel_get_property_int(TapiHandle *handle, const char *property, int *result);
  */
 int tel_get_property_string(TapiHandle *handle, const char *property, char **result);
 
+/**
+ * @brief Gets the state value if tapi is ready.
+ *
+ * @details <b> Sync (or) Async: </b> Synchronous API.
+ *
+ * @since_tizen 2.4
+ *
+ * @param[out] state The state value in integer format - 0 is False and 1 is True
+ *
+ * @return #TapiResult_t
+ */
+int tel_get_ready_state(int *state);
+
+/**
+ * @brief Registers a state change callback for tapi ready state.
+ *
+ * @details <b> Sync (or) Async: </b> Synchronous API.
+ *
+ * @since_tizen 2.4
+ *
+ * @param[in] callback #tapi_state_cb - The notification callback that will be invoked on the event
+ *
+ * @param[in] user_data The user data passed into callback function.
+ *
+ * @return #TapiResult_t
+ */
+int tel_register_ready_state_cb(tapi_state_cb callback, void *user_data);
+
+/**
+ * @brief Deregisters a state change callback for tapi ready state.
+ *
+ * @details <b> Sync (or) Async: </b> Synchronous API.
+ *
+ * @since_tizen 2.4
+ *
+ * @param[in] callback The #tapi_state_cb callback function to deregister notification.
+ *
+ * @return #TapiResult_t
+ */
+int tel_deregister_ready_state_cb(tapi_state_cb callback);
+
 #ifdef __cplusplus
 }
 #endif

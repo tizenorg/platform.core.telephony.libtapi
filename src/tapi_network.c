@@ -162,7 +162,7 @@ static void on_signal_registration_status(TapiHandle *handle, GVariant *param,
 
 	g_variant_get(param, "(iiib)", &noti.cs, &noti.ps, &noti.type, &noti.is_roaming);
 
-	CALLBACK_CALL(&noti);
+	TAPI_INVOKE_NOTI_CALLBACK(&noti);
 }
 
 static void on_signal_strength(TapiHandle *handle, GVariant *param,
@@ -172,7 +172,7 @@ static void on_signal_strength(TapiHandle *handle, GVariant *param,
 
 	g_variant_get(param, "(i)", &noti.dbm);
 
-	CALLBACK_CALL(&noti);
+	TAPI_INVOKE_NOTI_CALLBACK(&noti);
 }
 
 static void on_signal_cell_info(TapiHandle *handle, GVariant *param,
@@ -183,7 +183,7 @@ static void on_signal_cell_info(TapiHandle *handle, GVariant *param,
 	memset(&noti, 0, sizeof(struct tel_noti_network_cell_info));
 	g_variant_get(param, "(ii)", &noti.lac, &noti.cell_id);
 
-	CALLBACK_CALL(&noti);
+	TAPI_INVOKE_NOTI_CALLBACK(&noti);
 }
 
 static void on_signal_change(TapiHandle *handle, GVariant *param,
@@ -203,7 +203,7 @@ static void on_signal_change(TapiHandle *handle, GVariant *param,
 		g_free(plmn);
 	}
 
-	CALLBACK_CALL(&noti);
+	TAPI_INVOKE_NOTI_CALLBACK(&noti);
 }
 
 static void on_signal_time_info(TapiHandle *handle, GVariant *param,
@@ -223,7 +223,7 @@ static void on_signal_time_info(TapiHandle *handle, GVariant *param,
 		g_free(plmn);
 	}
 
-	CALLBACK_CALL(&noti);
+	TAPI_INVOKE_NOTI_CALLBACK(&noti);
 }
 
 static void on_signal_identity(TapiHandle *handle, GVariant *param,
@@ -249,7 +249,7 @@ static void on_signal_identity(TapiHandle *handle, GVariant *param,
 		g_free(f_name);
 	}
 
-	CALLBACK_CALL(&noti);
+	TAPI_INVOKE_NOTI_CALLBACK(&noti);
 }
 
 static void on_emergency_callback_mode(TapiHandle *handle, GVariant *param,
@@ -261,7 +261,7 @@ static void on_emergency_callback_mode(TapiHandle *handle, GVariant *param,
 
 	g_variant_get(param, "(i)", &noti.mode);
 
-	CALLBACK_CALL(&noti);
+	TAPI_INVOKE_NOTI_CALLBACK(&noti);
 }
 
 static void on_signal_default_data_subscription(TapiHandle *handle, GVariant *param,
@@ -273,7 +273,7 @@ static void on_signal_default_data_subscription(TapiHandle *handle, GVariant *pa
 
 	g_variant_get(param, "(i)", &noti.default_subs);
 
-	CALLBACK_CALL(&noti);
+	TAPI_INVOKE_NOTI_CALLBACK(&noti);
 }
 
 static void on_signal_default_subscription(TapiHandle *handle, GVariant *param,
@@ -285,7 +285,7 @@ static void on_signal_default_subscription(TapiHandle *handle, GVariant *param,
 
 	g_variant_get(param, "(i)", &noti.default_subs);
 
-	CALLBACK_CALL(&noti);
+	TAPI_INVOKE_NOTI_CALLBACK(&noti);
 }
 
 
@@ -439,7 +439,7 @@ static void on_response_search_network(GObject *source_object,
 	memset(&list, 0, sizeof(TelNetworkPlmnList_t));
 
 	dbus_result = g_dbus_connection_call_finish(G_DBUS_CONNECTION(source_object), res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(aa{sv}i)", &iter, &result);
 
@@ -464,8 +464,7 @@ static void on_response_search_network(GObject *source_object,
 	}
 	g_variant_iter_free(iter);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &list, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &list);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -482,12 +481,11 @@ static void on_response_get_network_selection_mode(GObject *source_object,
 	int mode = 0;
 
 	dbus_result = g_dbus_connection_call_finish(G_DBUS_CONNECTION(source_object), res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(ii)", &mode, &result);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &mode, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &mode);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -503,12 +501,11 @@ static void on_response_default_set(GObject *source_object, GAsyncResult *res,
 	GVariant *dbus_result;
 
 	dbus_result = g_dbus_connection_call_finish(G_DBUS_CONNECTION(source_object), res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(i)", &result);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, NULL);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -533,7 +530,7 @@ static void on_response_get_network_preferred_plmn(GObject *source_object,
 	memset(&list, 0, sizeof(TelNetworkPreferredPlmnList_t));
 
 	dbus_result = g_dbus_connection_call_finish(G_DBUS_CONNECTION(source_object), res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(aa{sv}i)", &iter, &result);
 
@@ -565,8 +562,7 @@ static void on_response_get_network_preferred_plmn(GObject *source_object,
 	}
 	g_variant_iter_free(iter);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &list, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &list);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -583,12 +579,11 @@ static void on_response_get_network_mode(GObject *source_object,
 	int mode = 0;
 
 	dbus_result = g_dbus_connection_call_finish(G_DBUS_CONNECTION(source_object), res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(ii)", &mode, &result);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &mode, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &mode);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -614,7 +609,7 @@ static void on_response_get_network_serving(GObject *source_object,
 	memset(&data, 0, sizeof(TelNetworkServing_t));
 
 	dbus_result = g_dbus_connection_call_finish(G_DBUS_CONNECTION(source_object), res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(a{sv}i)", &iter, &result);
 
@@ -643,8 +638,7 @@ static void on_response_get_network_serving(GObject *source_object,
 	}
 	g_variant_iter_free(iter);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &data, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &data);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -670,7 +664,7 @@ static void on_response_get_neighboring_cell_info(GObject *source_object,
 	memset(&list, 0, sizeof(TelNetworkNeighboringCellInfo_t));
 
 	dbus_result = g_dbus_connection_call_finish(G_DBUS_CONNECTION(source_object), res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(aa{sv}i)", &iter, &result);
 
@@ -736,8 +730,7 @@ static void on_response_get_neighboring_cell_info(GObject *source_object,
 	list.umts_list_count = umts_index;
 	dbg("act=%d, count(geran:%d, umts:%d)", list.serving.act, geran_index, umts_index);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &list, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &list);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -752,7 +745,7 @@ static void on_response_select_network(GObject *source_object, GAsyncResult *res
 	GVariant *dbus_result;
 
 	dbus_result = g_dbus_connection_call_finish(G_DBUS_CONNECTION(source_object), res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 	g_variant_get(dbus_result, "(i)", &result);
 
 	/* Map result received from libtcore to TapiResult_t */
@@ -774,8 +767,7 @@ static void on_response_select_network(GObject *source_object, GAsyncResult *res
 		}
 	}
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, NULL);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -792,12 +784,11 @@ static void on_response_get_network_roaming_preference(GObject *source_object,
 	TelNetworkPrefNetType_t roam_pref;
 
 	dbus_result = g_dbus_connection_call_finish(G_DBUS_CONNECTION(source_object), res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(ii)", &roam_pref, &result);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &roam_pref, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &roam_pref);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -809,7 +800,7 @@ EXPORT_API int tel_search_network(TapiHandle *handle, tapi_response_cb callback,
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL && callback != NULL, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	msg("[%s] network_search requested", handle->cp_name);
 
@@ -830,7 +821,7 @@ EXPORT_API int tel_get_network_selection_mode(struct tapi_handle *handle, tapi_r
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL && callback != NULL, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_dbus_connection_call(handle->dbus_connection,
 			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_NETWORK_INTERFACE,
@@ -848,7 +839,7 @@ EXPORT_API int tel_select_network_automatic(struct tapi_handle *handle, tapi_res
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(isi)",
 			0, /* Automatic */
@@ -873,7 +864,7 @@ EXPORT_API int tel_select_network_manual(struct tapi_handle *handle, const char 
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL && _check_plmn(plmn), TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(isi)",
 			1, /* Manual */
@@ -908,7 +899,7 @@ EXPORT_API int tel_set_network_preferred_plmn(
 
 	dbg("Func Entrance");
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	switch (info->SystemType) {
 	case TAPI_NETWORK_SYSTEM_GSM:
@@ -959,7 +950,7 @@ EXPORT_API int tel_get_network_preferred_plmn(TapiHandle *handle, tapi_response_
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL && callback != NULL, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_dbus_connection_call(handle->dbus_connection,
 			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_NETWORK_INTERFACE,
@@ -978,7 +969,7 @@ EXPORT_API int tel_set_network_mode(TapiHandle *handle, int mode, tapi_response_
 	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL &&
 								_check_network_mode(mode), TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)",
 			mode);
@@ -1000,7 +991,7 @@ EXPORT_API int tel_get_network_mode(TapiHandle *handle, tapi_response_cb callbac
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL && callback != NULL, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	dbg("[%s] Func Entrance", handle->cp_name);
 
@@ -1019,7 +1010,7 @@ EXPORT_API int tel_cancel_network_manual_search(TapiHandle *handle, tapi_respons
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	msg("[%s] network search cancel requested", handle->cp_name);
 
@@ -1038,7 +1029,7 @@ EXPORT_API int tel_get_network_serving(TapiHandle *handle, tapi_response_cb call
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL && callback != NULL, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	dbg("[%s] Func Entrance", handle->cp_name);
 
@@ -1057,7 +1048,7 @@ EXPORT_API int tel_get_network_neighboring_cell_info(TapiHandle *handle, tapi_re
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL && callback != NULL, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	dbg("[%s] Func Entrance", handle->cp_name);
 
@@ -1077,7 +1068,7 @@ EXPORT_API int tel_set_network_default_data_subscription(TapiHandle *handle, tap
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	msg("[%s] Func Entrance", handle->cp_name);
 
@@ -1099,7 +1090,7 @@ EXPORT_API int tel_set_network_emergency_callback_mode(TapiHandle *handle, TelNe
 	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL &&
 								_check_emergency_callback_mode(mode), TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", mode);
 
@@ -1122,7 +1113,7 @@ EXPORT_API int tel_set_network_roaming_preference(TapiHandle *handle, TelNetwork
 	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL &&
 								_check_roaming_preference(roam_pref), TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", roam_pref);
 
@@ -1144,7 +1135,7 @@ EXPORT_API int tel_get_network_roaming_preference(TapiHandle *handle, tapi_respo
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle != NULL && callback != NULL, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	dbg("[%s] Func Entrance", handle->cp_name);
 
@@ -1201,7 +1192,7 @@ EXPORT_API int tel_set_network_default_subscription(TapiHandle *handle, tapi_res
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	dbg("[%s] Set 'default' Subscription (for CS)", handle->cp_name);
 

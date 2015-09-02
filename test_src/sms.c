@@ -1157,6 +1157,7 @@ static void on_resp_read_msg(TapiHandle *handle, int result, void *data,
 	}
 
 	sim_data = (TelSmsData_t *)data;
+	msg("SIM Index [%d]", sim_data->SimIndex);
 
 	if (sim_data->MsgStatus == TAPI_NETTEXT_STATUS_UNREAD)
 		msg("Msg Staus : received unread msg");
@@ -1276,6 +1277,14 @@ static void on_resp_set_mem_status(TapiHandle *handle, int result, void *data,
 {
 	msg("");
 	msgb("tel_set_sms_mem_status() response receive");
+	msg(" - result = 0x%x", result);
+}
+
+static void on_resp_set_msg_status(TapiHandle *handle, int result, void *data,
+		void *user_data)
+{
+	msg("");
+	msgb("tel_set_sms_message_status() response receive");
 	msg(" - result = 0x%x", result);
 }
 
@@ -1446,54 +1455,43 @@ static int SendMessage(MManager *mm, struct menu_data *menu)
 {
 	int ret;
 	int msg_len = 0;
-	char buf[SMS_ADDRESS_LEN_MAX];
-	char message[512];
-	char diallingNum[SMS_ADDRESS_LEN_MAX];
+	char message[512] = { 0, };
+	char diallingNum[SMS_ADDRESS_LEN_MAX + 1] = { 0, };
 	int diallingNum_len = 0;
 
-	memset(buf, 0, sizeof(buf));
-	memset(diallingNum, 0, sizeof(diallingNum));
-	diallingNum_len = 0;
-
-	msg("Enter destination Number: ");
-
-	ret = read(0, buf, sizeof(buf));
+	printf("\n");
+	printf("Enter destination Number:\n>> ");
+	fflush(stdout);
+	ret = read(0, diallingNum, sizeof(diallingNum) - 1);
 	if (ret < 0) {
 		if (errno == EINTR)
 			perror("read(1)");
 		return -1;
-	} else if (ret == 0)
-		return ret;
-
-	buf[SMS_ADDRESS_LEN_MAX - 1] = '\0';
-	diallingNum_len = strlen(diallingNum);
-	memcpy(&diallingNum[diallingNum_len], buf, strlen(buf));
-
-	diallingNum_len = strlen(diallingNum); /* recalculate */
-	msg("dialling num %s and dialling num len is %d", diallingNum,
-			diallingNum_len);
-	diallingNum[diallingNum_len] = 0;
-	diallingNum_len = diallingNum_len - 1;
-
-	msg("Enter Message: ");
-	memset(message, 0, sizeof(message));
-
-	ret = read(0, message, sizeof(message) - 1);
-
-	if (ret <= 0) {
-		msg(" NULL msg can NOT be sent ");
+	} else if (ret == 0) {
+		printf("No destination Number!!\n");
 		return -1;
 	}
-	message[sizeof(message) - 1] = '\0';
+	diallingNum_len = ret - 1;
+	diallingNum[diallingNum_len] = '\0';
 
-	msg_len = strlen(message);
-	message[--msg_len] = 0;
+	printf("Enter Message\n>> ");
+	fflush(stdout);
+	ret = read(0, message, sizeof(message) - 1);
+	if (ret < 0) {
+		if (errno == EINTR)
+			perror("read(1)");
+		return -1;
+	} else if (ret == 0) {
+		printf("No Message!!\n");
+		return -1;
+	}
+	msg_len = ret - 1;
+	message[msg_len] = '\0';
 
-	msg("==========================");
-	msg("To :%s", diallingNum);
-	msg("Message: %sMsg Length:%d", message, msg_len);
-	msg("Dialling number Length : %d", diallingNum_len);
-	msg("==========================\n");
+	printf("===========================\n");
+	printf("To: [%s] (len: %d)\n", diallingNum, diallingNum_len);
+	printf("Message: [%s]\nMsg Length: [%d]\n", message, msg_len);
+	printf("===========================\n\n");
 
 	EncodeSmsSubmitTpdu(mm, diallingNum, diallingNum_len, message, msg_len);
 	return 1;
@@ -1504,42 +1502,38 @@ static int SendMessageCDMA(MManager *mm, struct menu_data *menu)
 {
 	int ret;
 	int msg_len = 0;
-	char buf[512] ;
-	char message[512];
+	char message[512] = { 0, };
 	char diallingNum[SMS_ADDRESS_LEN_MAX + 1] = { 0, };
 	int diallingNum_len = 0;
 
 	printf("\n");
 	printf("Enter destination Number:\n>> ");
 	fflush(stdout);
-
-	memset(buf, 0x0, sizeof(buf));
-	ret = read(0, buf, sizeof(buf));
+	ret = read(0, diallingNum, sizeof(diallingNum) - 1);
 	if (ret < 0) {
 		if (errno == EINTR)
 			perror("read(1)");
 		return -1;
-	} else if (ret == 0)
-		return ret;
-
-
-	buf[strlen(buf)] = '\0';
-	memcpy(diallingNum, buf, strlen(buf)+1);
-	diallingNum_len = strlen(diallingNum);
-
-	printf("dialling num [%s], dialling num len [%d]\n", diallingNum, diallingNum_len);
-	printf("Enter Message\n>> ");
-	fflush(stdout);
-
-	memset(message, 0x0, sizeof(message));
-	ret = read(0, message, sizeof(message) - 1);
-	if (ret <= 0) {
-		printf(" NULL msg can NOT be sent \n");
+	} else if (ret == 0) {
+		printf("No destination Number!!\n");
 		return -1;
 	}
-	message[strlen(message) - 1] = '\0';
+	diallingNum_len = ret - 1;
+	diallingNum[diallingNum_len] = '\0';
 
-	msg_len = strlen(message);
+	printf("Enter Message\n>> ");
+	fflush(stdout);
+	ret = read(0, message, sizeof(message) - 1);
+	if (ret < 0) {
+		if (errno == EINTR)
+			perror("read(1)");
+		return -1;
+	} else if (ret == 0) {
+		printf("No Message!!\n");
+		return -1;
+	}
+	msg_len = ret - 1;
+	message[msg_len] = '\0';
 
 	printf("===========================\n");
 	printf("To: [%s] (len: %d)\n", diallingNum, diallingNum_len);
@@ -1829,6 +1823,8 @@ static int Setting(MManager *mm, struct menu_data *menu)
 	int i;
 
 	char MemoryStatus[255] = {0, };
+	char msg_status[10] = {0, };
+	char index[10] = {0, };
 
 	TelSmsCbConfig_t *pCBConfig;
 
@@ -1994,7 +1990,31 @@ RETRY:
 	break;
 
 	case 7: { /* Set Stored MsgStaus */
-		msg("Not suppored in this Test App !!!");
+		printf("Enter Message index to bet set:\n>> ");
+		fflush(stdout);
+		ret = read(0, index, sizeof(index) - 1);
+		if (ret < 0) {
+			if (errno == EINTR)
+				perror("read(1)");
+			return -1;
+		} else if (ret == 0) {
+			printf("No index!!!\n");
+		}
+
+		printf("Enter Message status to bet set (0:Read, 1:Unread, "
+			"2:Sent, 3:Unsent, 4:Delivered, 5:Delivery Unconfirmed, 6:Message Replaced):\n>> ");
+		fflush(stdout);
+		ret = read(0, msg_status, sizeof(msg_status) - 1);
+		if (ret < 0) {
+			if (errno == EINTR)
+				perror("read(1)");
+			return -1;
+		} else if (ret == 0) {
+			printf("No msg_status!!!\n");
+		}
+
+		msg("Message status set!!! index[%d] msg_status[%d]", atoi(index), atoi(msg_status));
+		tel_set_sms_message_status(handle, atoi(index), atoi(msg_status), on_resp_set_msg_status, NULL);
 	}
 	break;
 
@@ -2084,10 +2104,10 @@ static struct menu_data menu_cdma_sms_getting[] = {
 static struct menu_data menu_sms_setting[] = {
 		{ "1", "Set Service Center Number", NULL, Setting, NULL},
 		{ "2", "Set Preferred Bearer Type", NULL, Setting, NULL},
-		{ "3", "Set CB Enable/Disable", NULL, Setting, NULL},
-		{ "4", "Set SMS Parameters", NULL, Setting, NULL},
-		{ "5", "Set Memory Status", NULL, Setting, NULL},
-		{ "6", "Set Message Status", NULL, Setting, NULL}, { NULL, NULL , }, };
+		{ "4", "Set CB Enable/Disable", NULL, Setting, NULL},
+		{ "5", "Set SMS Parameters", NULL, Setting, NULL},
+		{ "6", "Set Memory Status", NULL, Setting, NULL},
+		{ "7", "Set Message Status", NULL, Setting, NULL}, { NULL, NULL , }, };
 
 static struct menu_data menu_cdma_sms_setting[] = {
 		{ "1", "Set PreferredBearer Type", NULL, CdmaSetting, NULL },

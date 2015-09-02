@@ -64,6 +64,7 @@ extern "C"
  *         Refer #TapiResult_t for failure and an error code.
  *
  * @pre Initialize the Dbus connection with #tel_init.
+ * @post callback will be invoked and data is NULL.
  */
 int tel_select_network_automatic(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
@@ -97,6 +98,7 @@ int tel_select_network_automatic(TapiHandle *handle, tapi_response_cb callback, 
  *         Refer #TapiResult_t for failure and an error code.
  *
  * @pre Initialize the Dbus connection with #tel_init.
+ * @post callback will be invoked and data is NULL.
  */
 int tel_select_network_manual(TapiHandle *handle, const char *plmn, int act, tapi_response_cb callback, void *user_data);
 
@@ -126,7 +128,7 @@ int tel_select_network_manual(TapiHandle *handle, const char *plmn, int act, tap
  *         Refer #TapiResult_t for failure and an error code.
  *
  * @pre Initialize the Dbus connection with #tel_init.
- *
+ * @post callback will be invoked and #TelNetworkPlmnList_t will be stored in data on success case.
  * @post In the available network list, the user can select one of the networks successfully.
  */
 int tel_search_network(TapiHandle *handle, tapi_response_cb callback, void *user_data);
@@ -157,6 +159,7 @@ int tel_search_network(TapiHandle *handle, tapi_response_cb callback, void *user
  *         Refer #TapiResult_t for failure and an error code.
  *
  * @pre Initialize the Dbus connection with #tel_init.
+ * @post callback will be invoked and #TelNetworkSelectionMode_t will be stored in data on success case.
  */
 int tel_get_network_selection_mode(struct tapi_handle *handle, tapi_response_cb callback, void *user_data);
 
@@ -190,6 +193,7 @@ int tel_get_network_selection_mode(struct tapi_handle *handle, tapi_response_cb 
  *         Refer #TapiResult_t for failure and an error code.
  *
  * @pre Initialize the Dbus connection with #tel_init.
+ * @post callback will be invoked and data is NULL.
  */
 int tel_set_network_preferred_plmn(TapiHandle *handle, TelNetworkPreferredPlmnOp_t operation,
 		TelNetworkPreferredPlmnInfo_t *info, tapi_response_cb callback, void *user_data);
@@ -220,6 +224,7 @@ int tel_set_network_preferred_plmn(TapiHandle *handle, TelNetworkPreferredPlmnOp
  *         Refer #TapiResult_t for failure and an error code.
  *
  * @pre Initialize the Dbus connection with #tel_init.
+ * @post callback will be invoked and #TelNetworkPreferredPlmnList_t will be stored in data on success case.
  */
 int tel_get_network_preferred_plmn(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
@@ -243,6 +248,7 @@ int tel_get_network_preferred_plmn(TapiHandle *handle, tapi_response_cb callback
  * @return The return type (int)\n
  *         #TAPI_API_SUCCESS indicates that the operation is completed successfully\n
  *         Refer #TapiResult_t for failure and an error code.
+ * @post callback will be invoked and data is NULL.
  */
 int tel_cancel_network_manual_search(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
@@ -266,6 +272,7 @@ int tel_cancel_network_manual_search(TapiHandle *handle, tapi_response_cb callba
  * @return The return type (int)\n
  *         #TAPI_API_SUCCESS indicates that the operation is completed successfully\n
  *         Refer #TapiResult_t for failure and an error code.
+ * @post callback will be invoked and #TelNetworkServing_t will be stored in data on success case.
  */
 int tel_get_network_serving(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
@@ -291,6 +298,7 @@ int tel_get_network_serving(TapiHandle *handle, tapi_response_cb callback, void 
  * @return The return type (int)\n
  *         #TAPI_API_SUCCESS - indicates that the operation is completed successfully\n
  *         Refer #TapiResult_t for failure and an error code.
+ * @post callback will be invoked and data is NULL.
  */
 int tel_set_network_mode(TapiHandle *handle, int mode, tapi_response_cb callback, void *user_data);
 
@@ -314,6 +322,14 @@ int tel_set_network_mode(TapiHandle *handle, int mode, tapi_response_cb callback
  * @return The return type (int)\n
  *         #TAPI_API_SUCCESS indicates that the operation is completed successfully\n
  *         Refer #TapiResult_t for failure and an error code.
+ * @post callback will be invoked and TAPI_NETWORK_MODE_XXX will be masked in data on success case.
+ * @see #TAPI_NETWORK_MODE_AUTO
+ * @see #TAPI_NETWORK_MODE_GSM
+ * @see #TAPI_NETWORK_MODE_WCDMA
+ * @see #TAPI_NETWORK_MODE_1XRTT
+ * @see #TAPI_NETWORK_MODE_LTE
+ * @see #TAPI_NETWORK_MODE_EVDO
+ * @see #TAPI_NETWORK_MODE_CDMA
  */
 int tel_get_network_mode(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
@@ -337,6 +353,7 @@ int tel_get_network_mode(TapiHandle *handle, tapi_response_cb callback, void *us
  * @return The return type (int)\n
  *         #TAPI_API_SUCCESS indicates that the operation is completed successfully\n
  *         Refer #TapiResult_t for failure and an error code.
+ * @post callback will be invoked and #TelNetworkNeighboringCellInfo_t will be stored in data on success case.
  */
 int tel_get_network_neighboring_cell_info(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
@@ -362,6 +379,7 @@ int tel_get_network_neighboring_cell_info(TapiHandle *handle, tapi_response_cb c
  * @return The return type (int)\n
  *         #TAPI_API_SUCCESS indicates that the operation is completed successfully\n
  *         Refer #TapiResult_t for failure and an error code.
+ * @post callback will be invoked and data is NULL.
  */
 int tel_set_network_emergency_callback_mode(TapiHandle *handle, TelNetworkEmergencyCallbackMode_t mode,
 		tapi_response_cb callback, void *user_data);
@@ -388,6 +406,7 @@ int tel_set_network_emergency_callback_mode(TapiHandle *handle, TelNetworkEmerge
  * @return The return type (int)\n
  *         #TAPI_API_SUCCESS indicates that the operation is completed successfully\n
  *         Refer #TapiResult_t for failure and an error code.
+ * @post callback will be invoked and data is NULL.
  */
 int tel_set_network_roaming_preference(TapiHandle *handle, TelNetworkPrefNetType_t roam_pref, tapi_response_cb callback, void *user_data);
 
@@ -411,11 +430,16 @@ int tel_set_network_roaming_preference(TapiHandle *handle, TelNetworkPrefNetType
  * @return The return type (int)\n
  *         #TAPI_API_SUCCESS indicates that the operation is completed successfully\n
  *         Refer #TapiResult_t for failure and an error code.
+ * @post callback will be invoked and #TelNetworkPrefNetType_t will be stored in data on success case.
  */
 int tel_get_network_roaming_preference(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Sets the Subscription (related to #TapiHandle) as 'default' Data Subscription.
+ *
+ * @details <b> Sync (or) Async: </b> This is an Asynchronous API. \n
+ *
+ *          <b> Prospective Clients: </b> External Apps.
  *
  * @since_tizen 2.3
  * @privlevel platform
@@ -427,18 +451,19 @@ int tel_get_network_roaming_preference(TapiHandle *handle, tapi_response_cb call
  *
  * @param[in] user_data The user data for user specification
  *
- * @post None.
- *
  * @return The return type (int)\n
  *         #TAPI_API_SUCCESS indicates that the operation has completed successfully\n
  *         Refer #TapiResult_t for failure and an error code.
- *
- * @par Prospective Clients: External Apps.
+ * @post callback will be invoked and data is NULL.
  */
 int tel_set_network_default_data_subscription(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Gets the Subscription which is configured as 'default' Data Subscription.
+ *
+ * @details <b> Sync (or) Async: </b> This is an Asynchronous API. \n
+ *
+ *          <b> Prospective Clients: </b> External Apps.
  *
  * @since_tizen 2.3
  * @privlevel public
@@ -450,18 +475,18 @@ int tel_set_network_default_data_subscription(TapiHandle *handle, tapi_response_
  *             - 'default' Data Subscription.
  *             - Refer #TelNetworkDefaultDataSubs_t for Subscription details.
  *
- * @post None.
- *
  * @return The return type (int)\n
  *         #TAPI_API_SUCCESS indicates that the operation has completed successfully\n
  *         Refer #TapiResult_t for failure and an error code.
- *
- * @par Prospective Clients: External Apps.
  */
 int tel_get_network_default_data_subscription(TapiHandle *handle, TelNetworkDefaultDataSubs_t *default_subscription);
 
 /**
  * @brief This function is called to set the Subscription (related to #TapiHandle) as 'default' Subscription for CS (Voice).
+ *
+ * @details <b> Sync (or) Async: </b> This is an Asynchronous API. \n
+ *
+ *          <b> Prospective Clients: </b> External Apps.
  *
  * @since_tizen 2.3
  * @privlevel platform
@@ -476,20 +501,19 @@ int tel_get_network_default_data_subscription(TapiHandle *handle, TelNetworkDefa
  * @param [in] user_data
  * - user_data for user specification.
  *
- * @post
- *  - None.
- *
  * @return Return Type (int) \n
  * - TAPI_API_SUCCESS - indicating that the operation has completed successfully. \n
  * - Refer #TapiResult_t for failure and error code
- *
- * @par Prospective Clients:
- * External Apps.
+ * @post callback will be invoked and data is NULL.
  */
 int tel_set_network_default_subscription(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief This function is called to get the Subscription which is configured as 'default' Subscription for CS (Voice).
+ *
+ * @details <b> Sync (or) Async: </b> This is an Asynchronous API. \n
+ *
+ *          <b> Prospective Clients: </b> External Apps.
  *
  * @since_tizen 2.3
  * @privlevel public
@@ -502,15 +526,9 @@ int tel_set_network_default_subscription(TapiHandle *handle, tapi_response_cb ca
  * - 'default' Subscription for CS (Voice).
  * - Refer #TelNetworkDefaultSubs_t for Subscription details
  *
- * @post
- *  - None.
- *
  * @return Return Type (int) \n
  * - TAPI_API_SUCCESS - indicating that the operation has completed successfully. \n
  * - Refer #TapiResult_t for failure and error code
- *
- * @par Prospective Clients:
- * External Apps.
  */
 int tel_get_network_default_subscription(TapiHandle *handle, TelNetworkDefaultSubs_t *default_subscription);
 

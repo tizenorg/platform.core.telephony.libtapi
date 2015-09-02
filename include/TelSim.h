@@ -27,8 +27,8 @@
  * @{
  */
 
-#ifndef _TELSIM_H_
-#define _TELSIM_H_
+#ifndef _TEL_SIM_H_
+#define _TEL_SIM_H_
 
 #ifdef __cplusplus
 extern "C"
@@ -114,35 +114,94 @@ extern "C"
  */
 #define TAPI_SIM_SAP_ATR_DATA	256
 
+/**
+ * @brief Definition for the maximum length of network full name.
+ * @since_tizen 2.3
+ */
 #define TAPI_SIM_NET_FULL_NAME_MAX_LEN 40
 
+/**
+ * @brief Definition for the maximum length of network short name.
+ * @since_tizen 2.3
+ */
 #define TAPI_SIM_NET_SHORT_NAME_MAX_LEN 10
 
+/**
+ * @brief Definition for the maximum count of MSP(Multiple Subscriber Profile)
+ * @since_tizen 2.3
+ */
 #define	TAPI_SIM_MSP_CNT_MAX 2
 
+/**
+ * @brief Definition for the operation timeout value
+ * @since_tizen 2.3
+ */
 #define TAPI_SIM_OPERATION_TIMEOUT 1234
 
+/**
+ * @brief Definition for the maximum count of SIM service table.
+ * @since_tizen 2.3
+ */
 #define TAPI_SIM_SST_SERVICE_CNT_MAX 56
 
+/**
+ * @brief Definition for the maximum count of USIM service table.
+ * @since_tizen 2.3
+ */
 #define TAPI_SIM_UST_SERVICE_CNT_MAX 64
 
+/**
+ * @brief Definition for the maximum count of ISIM service table.
+ * @since_tizen 2.3
+ */
 #define TAPI_SIM_IST_SERVICE_CNT_MAX 11
 
+/**
+ * @brief Definition for the maximum count of CDMA service table.
+ * @since_tizen 2.3
+ */
 #define TAPI_SIM_CDMA_ST_SERVICE_CNT_MAX 47
 
+/**
+ * @brief Definition for the maximum count of CSIM service table.
+ * @since_tizen 2.3
+ */
 #define TAPI_SIM_CSIM_ST_SERVICE_CNT_MAX 41
 
 /**
- * @brief Definition for the type of application on UICC
+ * @brief Definition for the type of SIM application
  * @since_tizen 2.4
  */
 #define TAPI_SIM_APP_TYPE_SIM 0x01
+
+/**
+ * @brief Definition for the type of USIM application
+ * @since_tizen 2.4
+ */
 #define TAPI_SIM_APP_TYPE_USIM 0x02
+
+/**
+ * @brief Definition for the type of CSIM application
+ * @since_tizen 2.4
+ */
 #define TAPI_SIM_APP_TYPE_CSIM 0x04
+
+/**
+ * @brief Definition for the type of ISIM application
+ * @since_tizen 2.4
+ */
 #define TAPI_SIM_APP_TYPE_ISIM 0x08
 
+/**
+ * @brief Definition for the maximum length of group identifier
+ * @since_tizen 2.4
+ */
 #define TAPI_SIM_GROUP_IDENTIFIER_LEN_MAX 10
 
+/**
+ * @brief Definition for the maximum length of OPLMNwACT
+ * @since_tizen 2.4
+ */
 #define TAPI_SIM_OPLMNWACT_LEN_MAX 100
 
 /**
@@ -209,16 +268,16 @@ typedef enum {
 	/* Invalid File ID, All the file IDs are less than this Value */
 	TAPI_SIM_EF_INVALID = 0xFFFF, /**< Invalid file */
 	TAPI_SIM_EF_OTHERS, /**< Element to indicate an unknown file */
-}TelSimFileID_t;
+} TelSimFileID_t;
 
 /**
  * @brief Enumeration for the PIN status.
  * @since_tizen 2.3
  */
 typedef enum {
-	TAPI_SIM_FACILITY_DISABLED = 0x00,	/**< TBD */
-	TAPI_SIM_FACILITY_ENABLED = 0x01,	/**< TBD */
-	TAPI_SIM_FACILITY_UNKNOWN = 0xFF	/**< TBD */
+	TAPI_SIM_FACILITY_DISABLED = 0x00,	/**< Facility disabled */
+	TAPI_SIM_FACILITY_ENABLED = 0x01,	/**< Facility enabled */
+	TAPI_SIM_FACILITY_UNKNOWN = 0xFF	/**< Facility unknown */
 } TelSimFacilityStatus_t;
 
 /**
@@ -336,6 +395,7 @@ typedef enum {
 /**
  * @brief Enumeration for the language preference code.
  * @since_tizen 2.3
+ * @see tel_get_sim_language()
  */
 typedef enum {
 	TAPI_SIM_LP_GERMAN = 0x00, /**< German */
@@ -389,8 +449,8 @@ typedef enum {
  * @since_tizen 2.3
  */
 typedef struct {
-	TelSimCardStatus_t card_status;	/**< TBD */
-	unsigned char b_is_changed;	/**< TBD */
+	TelSimCardStatus_t card_status;	/**< SIM card status */
+	unsigned char b_is_changed;	/**< SIM changed or not */
 } TelSimInitInfo_t;
 
 /**
@@ -481,7 +541,7 @@ typedef enum {
 	TAPI_SIM_AUTH_RUIM_MIPRRQ, /**< CDMA MIPRRQ Authentication */
 	TAPI_SIM_AUTH_RUIM_MNAAA, /**< CDMA MNAAA Authentication */
 	TAPI_SIM_AUTH_RUIM_HRPD,	/**< CDMA HRPD Authentication */
-	TAPI_SIM_AUTH_TYPE_MAX /**< TBD */
+	TAPI_SIM_AUTH_TYPE_MAX /**< MAX value */
 } TelSimAuthenticationType_t;
 
 /**
@@ -497,7 +557,7 @@ typedef enum {
 	TAPI_SIM_AUTH_SQN_FAILURE, /**< Status - SQN(SeQuenceNumber) failure */
 	TAPI_SIM_AUTH_SYNCH_FAILURE, /**< Status - synch failure */
 	TAPI_SIM_AUTH_UNSUPPORTED_CONTEXT, /**< Status - unsupported context */
-	TAPI_SIM_AUTH_MAX /**< TBD */
+	TAPI_SIM_AUTH_MAX /**< MAX value */
 } TelSimAuthenticationResult_t;
 
 /**
@@ -958,6 +1018,10 @@ typedef enum {
 	TAPI_SIM_CSIM_ST_IPV6 = 40,		/**< IPv6 */
 } TelSimCsimService_t;
 
+/**
+ * @brief Enumeration for the list of IST services in the ISIM Service Table. (ISIM)
+ * @since_tizen 2.4
+ */
 typedef enum {
 	TAPI_SIM_IST_PCSCF_ADDR = 0,		/**< P-CSCF address */
 	TAPI_SIM_IST_GBA,			/**< Generic Bootstrapping Architecture */
@@ -973,45 +1037,76 @@ typedef enum {
 	TAPI_SIM_IST_URI_SUPPORT,		/**< URI support by UICC */
 } TelSimIsimService_t;
 
+/**
+ * @brief Enumeration for CDMA service table.
+ * @since_tizen 2.3
+ */
 typedef enum {
-	TAPI_SIM_CDMA_SVC_TABLE = 0,
-	TAPI_SIM_CSIM_SVC_TABLE,
-	TAPI_SIM_MAX_SVC_TABLE
+	TAPI_SIM_CDMA_SVC_TABLE = 0, /**< CDMA service table */
+	TAPI_SIM_CSIM_SVC_TABLE, /**< CSIM service table */
+	TAPI_SIM_MAX_SVC_TABLE /**< MAX value */
 } TelSimCdmaSvcTable_t;
 
+/**
+ * @brief Enumeration for P-CSCF type.
+ * @since_tizen 2.4
+ */
 typedef enum {
 	TAPI_SIM_PCSCF_TYPE_FQDN, /**< Fully Qualified Domain Name */
 	TAPI_SIM_PCSCF_TYPE_IPV4, /**< IPv4 */
 	TAPI_SIM_PCSCF_TYPE_IPV6, /**< IPv6 */
 } TelSimPcscfType;
 
+/**
+ * @brief The structure type for SIM service table.
+ * @since_tizen 2.4
+ */
 typedef struct {
-	char service[TAPI_SIM_SST_SERVICE_CNT_MAX];	/**< TBD */	// should access with 'enum TelSimSSTService_t' as index
+	char service[TAPI_SIM_SST_SERVICE_CNT_MAX];	/**< should access with 'enum TelSimSSTService_t' as index */
 } TelSimSST_t;
 
+/**
+ * @brief The structure type for USIM service table.
+ * @since_tizen 2.4
+ */
 typedef struct {
-	char service[TAPI_SIM_UST_SERVICE_CNT_MAX];	/**< TBD */	// should access with 'enum TelSimUSTService_t' as index
+	char service[TAPI_SIM_UST_SERVICE_CNT_MAX];	/**< should access with 'enum TelSimUSTService_t' as index */
 } TelSimUST_t;
 
+/**
+ * @brief The structure type for CSIM service table.
+ * @since_tizen 2.4
+ */
 typedef struct {
 	TelSimCdmaSvcTable_t cdma_svc_table;	/* Member of service union is accessed based on the corresponding value of TelSimCdmaSvcTable_t */
 	union {
-		char cdma_service[TAPI_SIM_CDMA_ST_SERVICE_CNT_MAX];	// should access with 'enum TelSimCdmaService_t' as index
-		char csim_service[TAPI_SIM_CSIM_ST_SERVICE_CNT_MAX];	// should access with 'enum TelSimCsimService_t' as index
+		char cdma_service[TAPI_SIM_CDMA_ST_SERVICE_CNT_MAX];	/**< should access with 'enum TelSimCdmaService_t' as index */
+		char csim_service[TAPI_SIM_CSIM_ST_SERVICE_CNT_MAX];	/**< should access with 'enum TelSimCsimService_t' as index */
 	} service;
 } TelSimCST_t;
 
+/**
+ * @brief The structure type for ISIM service table.
+ * @since_tizen 2.4
+ * @remarks '#TelSimIsimService_t' will be stored.
+ * @see tel_get_sim_isim_service_table()
+ */
 typedef struct {
 	char service[TAPI_SIM_IST_SERVICE_CNT_MAX];
 } TelSimIST_t;
 
+/**
+ * @brief The structure type for service table.
+ * @since_tizen 2.3
+ * @see tel_get_sim_service_table()
+ */
 typedef struct {
-	TelSimCardType_t sim_type;	/**< TBD */
+	TelSimCardType_t sim_type;	/**< SIM card type */
 	union {
-		TelSimSST_t sst;	/**< TBD */
-		TelSimUST_t ust;	/**< TBD */
-		TelSimCST_t cst;
-	} table;	/**< TBD */
+		TelSimSST_t sst;	/**< SIM service table */
+		TelSimUST_t ust;	/**< USIM service table */
+		TelSimCST_t cst;	/**< CSIM service table */
+	} table;
 } TelSimServiceTable_t;
 
 /**
@@ -1032,23 +1127,37 @@ typedef struct {
 	char name[30+1]; /**< Applicable only for USIM(3G) SIM */
 	char number[6+1];
 	TelSimEccEmergencyServiceInfo_t category;/**< Applicable only for USIM(3G) SIM */
-}TelSimEcc_t;
+} TelSimEcc_t;
 
+/**
+ * @brief The structure type for ECC information list.
+ * @since_tizen 2.3
+ * @see tel_get_sim_ecc()
+ */
 typedef struct {
-	int ecc_count;	/**< TBD */
-	TelSimEcc_t list[15];	/**< TBD */
-}TelSimEccList_t;
+	int ecc_count;	/**< ECC count */
+	TelSimEcc_t list[15];	/**< List of ECC */
+} TelSimEccList_t;
 
+/**
+ * @brief The structure type for ICCID(Integrated Circuit Card Identifier).
+ * @since_tizen 2.3
+ * @see tel_get_sim_iccid()
+ */
 typedef struct {
 	int icc_length; /**< Integrated Circuit Card number length */
 	char icc_num[TAPI_SIM_ICCID_LEN_MAX]; /**< Integrated Circuit Card number */
 } TelSimIccIdInfo_t;
 
+/**
+ * @brief The structure type for mailbox dialing number data.
+ * @since_tizen 2.3
+ */
 typedef struct {
-	int b_cphs;	/**< TBD */
+	int b_cphs;	/**< CPHS or not */
 	int rec_index; /**< Index which stands for the location where the record is saved in SIM */
 	int profile_num; /**< SIM profile index */
-	TelSimMailboxType_t mb_type;	/**< TBD */
+	TelSimMailboxType_t mb_type;	/**< Mailbox type */
 	int alpha_id_max_len; /**< Alpha max length in SIM - READ ONLY */
 	char alpha_id[TAPI_SIM_XDN_ALPHA_ID_MAX_LEN + 1]; /**< Alpha Identifier */
 	TelSimTypeOfNum_t ton; /**< Type Of Number */
@@ -1056,15 +1165,24 @@ typedef struct {
 	char num[TAPI_SIM_XDN_DIALING_NUMBER_LEN + 1]; /**< Dialing Number/SSC String */
 	unsigned char cc_id; /**< Capability/Configuration Identifier */
 	unsigned char ext1_id; /**< Extension 1 Record Identifier */
-}TelSimMailBoxNumber_t;
+} TelSimMailBoxNumber_t;
 
+/**
+ * @brief The structure type for mailbox dialing number list.
+ * @since_tizen 2.3
+ * @see tel_get_sim_mailbox_info()
+ */
 typedef struct {
-	int count;	/**< TBD */
-	TelSimMailBoxNumber_t list[TAPI_SIM_MSP_CNT_MAX*5];	/**< TBD */ //max is 10
-}TelSimMailboxList_t;
+	int count;	/**< Mailbox count */
+	TelSimMailBoxNumber_t list[TAPI_SIM_MSP_CNT_MAX * 5];	/**< List of mailbox */
+} TelSimMailboxList_t;
 
+/**
+ * @brief The structure type for call forwarding indication status data.
+ * @since_tizen 2.3
+ */
 typedef struct {
-	int rec_index;	/**< TBD */
+	int rec_index;	/**< Record index */
 	unsigned char msp_num; /**< MSP number*/
 	unsigned char cfu_status; /**< Call forwarding unconditional indication status */
 	TelSimTypeOfNum_t ton; /**< TON */
@@ -1072,69 +1190,107 @@ typedef struct {
 	char cfu_num[TAPI_SIM_XDN_DIALING_NUMBER_LEN + 1];/**< Dialing Number/SSC String */
 	unsigned char cc2_id; /**< Capability/Configuration 2 Record Identifier */
 	unsigned char ext7_id; /**< Extension 7 Record Identifier */
-}TelSimCfis_t;
+} TelSimCfis_t;
 
+/**
+ * @brief The structure type for call forwarding indication status list.
+ * @since_tizen 2.3
+ */
 typedef struct {
-	int profile_count;	/**< TBD */
-	TelSimCfis_t cf[TAPI_SIM_MSP_CNT_MAX];	/**< TBD */
-}TelSimCfisList_t;
+	int profile_count;	/**< Profile count */
+	TelSimCfis_t cf[TAPI_SIM_MSP_CNT_MAX];	/**< List of CFIS */
+} TelSimCfisList_t;
 
+/**
+ * @brief The structure type for CPHS call forwarding status data.
+ * @since_tizen 2.3
+ */
 typedef struct {
 	int b_line1; /**< CallForwardUnconditionalLine 1 */
 	int b_line2; /**< CallForwardUnconditionalLine 2 */
 	int b_fax; /**< CallForwardUnconditional FAX */
 	int b_data; /**< CallForwardUnconditional data */
-}TelSimCphsCf_t;
+} TelSimCphsCf_t;
 
+/**
+ * @brief The structure type for call forwarding response.
+ * @since_tizen 2.3
+ * @see tel_get_sim_callforwarding_info()
+ */
 typedef struct {
-	int b_cphs;	/**< TBD */
-	TelSimCfisList_t cf_list;	/**< TBD */
-	TelSimCphsCf_t cphs_cf;	/**< TBD */
-}TelSimCallForwardingResp_t;
+	int b_cphs;	/**< CPHS or not */
+	TelSimCfisList_t cf_list;	/**< List of CFIS */
+	TelSimCphsCf_t cphs_cf;	/**< CPHS CF */
+} TelSimCallForwardingResp_t;
 
+/**
+ * @brief The structure type for call forwarding request.
+ * @since_tizen 2.3
+ */
 typedef struct {
-	int b_cphs;	/**< TBD */
+	int b_cphs;	/**< CPHS or not */
 	union {
-		TelSimCfis_t cf;	/**< TBD */
-		TelSimCphsCf_t cphs_cf;	/**< TBD */
-	} cf_data_u;	/**< TBD */
-}TelSimCallForwardingReq_t;
+		TelSimCfis_t cf;	/**< CFIS */
+		TelSimCphsCf_t cphs_cf;	/**< CPHS CF */
+	} cf_data_u;
+} TelSimCallForwardingReq_t;
 
+/**
+ * @brief The structure type for message waiting indication status data.
+ * @since_tizen 2.3
+ */
 typedef struct {
-	int rec_index;	/**< TBD */
+	int rec_index;	/**< Record index */
 	unsigned char indicator_status; /**< Indicator Type */
 	int voice_count; /**< VoiceMail Count */
 	int fax_count; /**< FAX Count */
 	int email_count; /**< Email Count */
 	int other_count; /**< Other Count */
 	int video_count; /**< VideoMail Count */
-}TelSimMwis_t;
+} TelSimMwis_t;
 
+/**
+ * @brief The structure type for message waiting indication status list.
+ * @since_tizen 2.3
+ */
 typedef struct {
-	int profile_count;	/**< TBD */
-	TelSimMwis_t mw[TAPI_SIM_MSP_CNT_MAX];	/**< TBD */
-}TelSimMwisList_t;
+	int profile_count;	/**< Profile count */
+	TelSimMwis_t mw[TAPI_SIM_MSP_CNT_MAX];	/**< List of MWIS */
+} TelSimMwisList_t;
 
+/**
+ * @brief The structure type for CPHS message waiting status data.
+ * @since_tizen 2.3
+ */
 typedef struct {
 	int b_voice1; /**< VoiceMsgLine1 message waiting flag */
 	int b_voice2; /**< VoiceMsgLine2 message waiting flag */
 	int b_fax; /**< FAX message waiting flag */
 	int b_data; /**< Data message waiting flag */
-}TelSimCphsMw_t;
+} TelSimCphsMw_t;
 
+/**
+ * @brief The structure type for message waiting reponse.
+ * @since_tizen 2.3
+ * @see tel_get_sim_messagewaiting_info()
+ */
 typedef struct {
-	int b_cphs;	/**< TBD */
-	TelSimMwisList_t mw_list;	/**< TBD */
-	TelSimCphsMw_t cphs_mw;	/**< TBD */
-}TelSimMessageWaitingResp_t;
+	int b_cphs;	/**< CPHS or not */
+	TelSimMwisList_t mw_list;	/**< List of MWIS */
+	TelSimCphsMw_t cphs_mw;	/**< CPHS MW */
+} TelSimMessageWaitingResp_t;
 
+/**
+ * @brief The structure type for message waiting request.
+ * @since_tizen 2.3
+ */
 typedef struct {
-	int b_cphs;	/**< TBD */
+	int b_cphs;	/**< CPHS or not */
 	union {
-		TelSimMwis_t mw;	/**< TBD */
-		TelSimCphsMw_t cphs_mw;	/**< TBD */
-	} mw_data_u;	/**< TBD */
-}TelSimMessageWaitingReq_t;
+		TelSimMwis_t mw;	/**< MWIS */
+		TelSimCphsMw_t cphs_mw;	/**< CPHS MW */
+	} mw_data_u;
+} TelSimMessageWaitingReq_t;
 
 /**
  * @brief The structure type for MSISDN information of the GSM/CDMA SIM.
@@ -1145,36 +1301,64 @@ typedef struct {
 	char name[TAPI_SIM_XDN_ALPHA_ID_MAX_LEN + 1]; /**< MSISDN name. If it does not exist, a null string will be returned. Not applicable for CDMA */
 } TelSimSubscriberInfo_t;
 
+/**
+ * @brief The structure type for MSISDN list.
+ * @since_tizen 2.3
+ * @see tel_get_sim_msisdn()
+ */
 typedef struct {
-	int count;	/**< TBD */
-	TelSimSubscriberInfo_t list[3];	/**< TBD */ //max is 3
-}TelSimMsisdnList_t;
+	int count;	/**< Count */
+	TelSimSubscriberInfo_t list[3];	/**< List of subscriber info */
+} TelSimMsisdnList_t;
 
+/**
+ * @brief The structure type for OPLMNwACT data.
+ * @since_tizen 2.3
+ */
 typedef struct {
-	char plmn[6+1];	/**< TBD */
-	int b_umts;	/**< TBD */
-	int b_gsm;	/**< TBD */
-}TelSimOplmnwact_t;
+	char plmn[6 + 1];	/**< PLMN */
+	int b_umts;	/**< UMTS or not */
+	int b_gsm;	/**< GSM or not */
+} TelSimOplmnwact_t;
 
+/**
+ * @brief The structure type for OPLMNwACT list.
+ * @since_tizen 2.3
+ * @see tel_get_sim_oplmnwact()
+ */
 typedef struct {
-	int count;	/**< TBD */
-	TelSimOplmnwact_t list[TAPI_SIM_OPLMNWACT_LEN_MAX];	/**< TBD */ //max is 100
-}TelSimOplmnwactList_t;
+	int count;	/**< Count */
+	TelSimOplmnwact_t list[TAPI_SIM_OPLMNWACT_LEN_MAX];	/**< List of OPLMNwACT */
+} TelSimOplmnwactList_t;
 
+/**
+ * @brief The structure type for SPN(Service Provider Name).
+ * @since_tizen 2.3
+ * @see tel_get_sim_spn()
+ */
 typedef struct {
 	unsigned char display_condition; /**< Display condition (1 byte) */
 	unsigned char spn[TAPI_SIM_NET_FULL_NAME_MAX_LEN + 1]; /**< SPN */
-}TelSimSpn_t;
+} TelSimSpn_t;
 
+/**
+ * @brief The structure type for CPHS network name.
+ * @since_tizen 2.3
+ * @see tel_get_sim_cphs_netname()
+ */
 typedef struct {
-	unsigned char full_name[TAPI_SIM_NET_FULL_NAME_MAX_LEN + 1];	/**< TBD */
-	unsigned char short_name[TAPI_SIM_NET_SHORT_NAME_MAX_LEN + 1];	/**< TBD */
-}TelSimCphsNetName_t;
+	unsigned char full_name[TAPI_SIM_NET_FULL_NAME_MAX_LEN + 1];	/**< Full name */
+	unsigned char short_name[TAPI_SIM_NET_SHORT_NAME_MAX_LEN + 1];	/**< Short name */
+} TelSimCphsNetName_t;
 
+/**
+ * @brief The structure type for Groupe Identifier.
+ * @since_tizen 2.3
+ */
 typedef struct {
 	int GroupIdentifierLen;	/**< Group identifier length */
 	unsigned char szGroupIdentifier[TAPI_SIM_GROUP_IDENTIFIER_LEN_MAX]; /**< Group identifier */
-}TelSimGid_t;
+} TelSimGid_t;
 
 /**
  * @details The structure type for authentication request data.
@@ -1191,6 +1375,7 @@ typedef struct {
 /**
  * @details The structure type for authentication result data.
  * @since_tizen 2.3
+ * @see tel_req_sim_authentication()
  */
 typedef struct {
 	TelSimAuthenticationType_t auth_type; /**< Authentication type */
@@ -1205,7 +1390,6 @@ typedef struct {
 	char integrity_data[TAPI_SIM_AUTH_MAX_RESP_DATA_LEN]; /**< Integrity key */
 } TelSimAuthenticationResponse_t;
 
-
 /**
  * @brief The structure type for information about PIN data.
  * @details The SIM PIN data. For PIN handling (Change, UnBlock) & for Type of PIN information.
@@ -1219,6 +1403,9 @@ typedef struct {
 /**
  * @brief The structure type for PIN information.
  * @since_tizen 2.3
+ * @see tel_verify_sim_pins()
+ * @see tel_verify_sim_puks()
+ * @see tel_change_sim_pins()
  */
 typedef struct {
 	TelSimPinType_t type; /**< Specifies the PIN or PUK type */
@@ -1235,19 +1422,31 @@ typedef struct {
 	int pw_len; /**< Password length */
 } TelSimFacilityPw_t;
 
+/**
+ * @brief The structure type for facility result data.
+ * @since_tizen 2.3
+ * @see tel_enable_sim_facility()
+ * @see tel_disable_sim_facility()
+ */
 typedef struct {
 	TelSimLockType_t type; /**< Specifies the PIN or PUK type */
 	int retry_count; /**< Number of attempts remaining for PIN/PUK verification */
 } TelSimFacilityResult_t;
 
+/**
+ * @brief The structure type for facility info data.
+ * @since_tizen 2.3
+ * @see tel_get_sim_facility()
+ */
 typedef struct {
-	TelSimLockType_t type;	/**< TBD */
-	TelSimFacilityStatus_t f_status;	/**< TBD */
-}TelSimFacilityInfo_t;
+	TelSimLockType_t type;	/**< Lock type */
+	TelSimFacilityStatus_t f_status;	/**< Facility status */
+} TelSimFacilityInfo_t;
 
 /**
  * @details The structure type for information about LOCK_TYPE.
  * @since_tizen 2.3
+ * @see tel_get_sim_lock_info()
  */
 typedef struct {
 	TelSimLockType_t lock_type; /**< Lock type */
@@ -1260,26 +1459,28 @@ typedef struct {
  * @since_tizen 2.3
  */
 typedef struct {
-	unsigned short apdu_len;	/**< TBD */
-	unsigned char* apdu;	/**< TBD */
+	unsigned short apdu_len;	/**< Length of APDU */
+	unsigned char *apdu;	/**< APDU */
 } TelSimApdu_t;
 
 /**
  * @brief The structure type for the response of sending APDU.
  * @since_tizen 2.3
+ * @see tel_req_sim_apdu()
  */
 typedef struct {
-	unsigned short apdu_resp_len;	/**< TBD */
-	unsigned char apdu_resp[TAPI_SIM_APDU_MAX_LEN];	/**< TBD */
+	unsigned short apdu_resp_len;	/**< Length of response APDU */
+	unsigned char apdu_resp[TAPI_SIM_APDU_MAX_LEN];	/**< Response APDU */
 } TelSimApduResp_t;
 
 /**
- * @brief The structure type for the response of sending APDU.
+ * @brief The structure type for the response of sending ATR.
  * @since_tizen 2.3
+ * @see tel_req_sim_atr()
  */
 typedef struct {
-	unsigned short atr_resp_len;	/**< TBD */
-	unsigned char atr_resp[TAPI_SIM_APDU_MAX_LEN];	/**< TBD */
+	unsigned short atr_resp_len;	/**< Length of response ATR */
+	unsigned char atr_resp[TAPI_SIM_APDU_MAX_LEN];	/**< Response ATR */
 } TelSimAtrResp_t;
 
 /**
@@ -1325,6 +1526,7 @@ typedef struct {
 /**
  * @brief The structure type for CPHS information data.
  * @since_tizen 2.3
+ * @see tel_get_sim_cphs_info()
  */
 typedef struct {
 	TelSimCphsPhaseType_t CphsPhase; /**< CPHS phase type */
@@ -1551,43 +1753,49 @@ typedef struct {
  * @since_tizen 2.3
  */
 typedef struct {
-	int init_completed;	/**< TBD */
-	TelSimPbList_t pb_list;	/**< TBD */
+	int init_completed;	/**< Init completed or not */
+	TelSimPbList_t pb_list;	/**< List of phonebook */
 } TelSimPbStatus_t;
 
+/**
+ * @brief The structure type for phone book record.
+ * @since_tizen 2.3
+ * @see tel_read_sim_pb_record()
+ */
 typedef struct {
-	TelSimPbType_t phonebook_type;	/**< TBD */
-	unsigned short index;	/**< TBD */
-	unsigned short next_index;	/**< TBD */ //this field is not used in the add/update case
+	TelSimPbType_t phonebook_type; /**< Phonebook type */
+	unsigned short index; /**< Index */
+	unsigned short next_index; /**< Next index (This field is not used in the add/update case) */
 
-	unsigned char name[TAPI_SIM_PB_RECORD_NAME_MAX_LEN+1];	/**< TBD */
-	TelSimTextEncrypt_t dcs;	/**< TBD */
+	unsigned char name[TAPI_SIM_PB_RECORD_NAME_MAX_LEN + 1]; /**< Name */
+	TelSimTextEncrypt_t dcs; /**< DCS */
 
-	unsigned char number[TAPI_SIM_PB_RECORD_NUMBER_MAX_LEN+1];	/**< TBD */
-	TelSimTypeOfNum_t ton;	/**< TBD */
+	unsigned char number[TAPI_SIM_PB_RECORD_NUMBER_MAX_LEN + 1]; /**< Number */
+	TelSimTypeOfNum_t ton; /**< TON */
 
-	/* following field is valid in only USIM*/
-	unsigned char sne[TAPI_SIM_PB_RECORD_NAME_MAX_LEN+1];	/**< TBD */
-	TelSimTextEncrypt_t sne_dcs;	/**< TBD */
-	unsigned char anr1[TAPI_SIM_PB_RECORD_NUMBER_MAX_LEN+1];	/**< TBD */
-	TelSimTypeOfNum_t anr1_ton;	/**< TBD */
-	unsigned char anr2[TAPI_SIM_PB_RECORD_NUMBER_MAX_LEN+1];	/**< TBD */
-	TelSimTypeOfNum_t anr2_ton;	/**< TBD */
-	unsigned char anr3[TAPI_SIM_PB_RECORD_NUMBER_MAX_LEN+1];	/**< TBD */
-	TelSimTypeOfNum_t anr3_ton;	/**< TBD */
+	/* following field is valid in only USIM */
+	unsigned char sne[TAPI_SIM_PB_RECORD_NAME_MAX_LEN + 1]; /**< SNE(Second Name Entry) */
+	TelSimTextEncrypt_t sne_dcs; /**< SNE DCS */
+	unsigned char anr1[TAPI_SIM_PB_RECORD_NUMBER_MAX_LEN + 1]; /**< Additional Number1 */
+	TelSimTypeOfNum_t anr1_ton; /**< ANR TON */
+	unsigned char anr2[TAPI_SIM_PB_RECORD_NUMBER_MAX_LEN + 1]; /**< Additional Number2 */
+	TelSimTypeOfNum_t anr2_ton; /**< ANR2 TON */
+	unsigned char anr3[TAPI_SIM_PB_RECORD_NUMBER_MAX_LEN + 1]; /**< Additional Number3*/
+	TelSimTypeOfNum_t anr3_ton; /**< ANR3 TON */
 
-	unsigned char email1[TAPI_SIM_PB_RECORD_EMAIL_MAX_LEN+1];	/**< TBD */
-	unsigned char email2[TAPI_SIM_PB_RECORD_EMAIL_MAX_LEN+1];	/**< TBD */
-	unsigned char email3[TAPI_SIM_PB_RECORD_EMAIL_MAX_LEN+1];	/**< TBD */
-	unsigned char email4[TAPI_SIM_PB_RECORD_EMAIL_MAX_LEN+1];	/**< TBD */
+	unsigned char email1[TAPI_SIM_PB_RECORD_EMAIL_MAX_LEN + 1]; /**< Email1 */
+	unsigned char email2[TAPI_SIM_PB_RECORD_EMAIL_MAX_LEN + 1]; /**< Email2 */
+	unsigned char email3[TAPI_SIM_PB_RECORD_EMAIL_MAX_LEN + 1]; /**< Email3 */
+	unsigned char email4[TAPI_SIM_PB_RECORD_EMAIL_MAX_LEN + 1]; /**< Email4 */
 
-	unsigned short group_index;	/**< TBD */ //GRP
-	unsigned short pb_control;	/**< TBD */ //PBC
+	unsigned short group_index; /**< Group index */
+	unsigned short pb_control; /**< Phonebook contrl */
 } TelSimPbRecord_t;
 
 /**
  * @brief The structure type for phone book storage count information.
  * @since_tizen 2.3
+ * @see tel_get_sim_pb_count()
  */
 typedef struct {
 	TelSimPbType_t StorageFileType; /**< Storage file type */
@@ -1598,6 +1806,7 @@ typedef struct {
 /**
  * @brief The structure type for phone book entry information.
  * @since_tizen 2.3
+ * @see tel_get_sim_pb_meta_info()
  */
 typedef struct {
 	TelSimPbType_t StorageFileType; /**< Storage file type */
@@ -1623,6 +1832,7 @@ typedef struct {
  * @brief The structure type for SIM PHONEBOOK & ITS CAPABILITIES information.
  * @details It refers to EF_PBR.
  * @since_tizen 2.3
+ * @see tel_get_sim_pb_usim_meta_info()
  */
 typedef struct {
 	unsigned short FileTypeCount; /**< Phonebook file type count */
@@ -1639,8 +1849,6 @@ typedef struct {
 	TelSimPbOp_t operation; /**< Phonebook operation */
 } TelSimPbContactChangeInfo_t;
 
-
-
 /* SAP (SIM Access Profile) related interface structures and enum */
 /**
  * @brief The structure type for SAP ATR response data information.
@@ -1652,7 +1860,6 @@ typedef struct {
 } TelSapAtrInfo_t;
 
 /* SAP transfer APDU request */
-
 /**
  * @brief The structure type for SAP APDU data information.
  * @since_tizen 2.3
@@ -1673,11 +1880,66 @@ typedef enum {
 	TAPI_SIM_POWER_UNSPECIFIED = 0xFF /**< Unspecified */
 } TelSimPowerState_t;
 
+/**
+ * @brief The structure type for ISIM IMPI data.
+ * @since_tizen 2.4
+ * @see tel_get_sim_impi()
+ */
+typedef struct {
+	char *impi; /**< ISIM IMPI data */
+} TelSimImpi_t;
+
+/**
+ * @brief The structure type for ISIM IMPU list data.
+ * @since_tizen 2.4
+ */
+typedef struct {
+	char *impu; /**< ISIM IMPU data */
+} TelSimImpu_t;
+
+/**
+ * @brief The structure type for ISIM IMPU data.
+ * @since_tizen 2.4
+ * @see tel_get_sim_impu()
+ */
+typedef struct {
+	unsigned int count; /**< ISIM IMPU data count */
+	TelSimImpu_t *list; /**< ISIM IMPU list */
+} TelSimImpuList_t;
+
+/**
+ * @brief The structure type for ISIM domain data.
+ * @since_tizen 2.4
+ * @see tel_get_sim_domain()
+ */
+typedef struct {
+	char *domain; /**< ISIM Domain data */
+} TelSimDomain_t;
+
+/**
+ * @brief The structure type for ISIM P-CSCF list data.
+ * @since_tizen 2.4
+ */
+typedef struct {
+	TelSimPcscfType type; /**< ISIM P-CSCF type */
+	char *pcscf; /**< ISIM P-CSCF data */
+} TelSimPcscf_t;
+
+/**
+ * @brief The structure type for ISIM P-CSCF data.
+ * @since_tizen 2.4
+ * @see tel_get_sim_pcscf()
+ */
+typedef struct {
+	unsigned int count; /**< ISIM P-CSCF data count */
+	TelSimPcscf_t *list; /**< ISIM P-CSCF list */
+} TelSimPcscfList_t;
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif // _TELSIM_H_
+#endif /* _TEL_SIM_H_ */
 /**
  * @}
  */

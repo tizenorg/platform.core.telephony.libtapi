@@ -38,6 +38,7 @@
 #include "modem.h"
 #include "call.h"
 #include "ss.h"
+#include "oem.h"
 
 #define SIM_SEL_MENU_KEY_COUNT 2
 
@@ -49,6 +50,7 @@ extern struct menu_data menu_sim[];
 extern struct menu_data menu_phonebook[];
 extern struct menu_data menu_ss[];
 extern struct menu_data menu_call[];
+extern struct menu_data menu_oem[];
 
 TapiHandle *handle = NULL;
 char **cp_list = NULL;
@@ -165,6 +167,30 @@ static int convert_string(MManager *mm, struct menu_data *menu)
 	return 0;
 }
 
+static int get_ready_state(MManager *mm, struct menu_data *menu)
+{
+	int value = 0;
+	int ret;
+
+	msg("call tel_get_ready_state()");
+
+	ret = tel_get_ready_state(&value);
+	if (ret != TAPI_API_SUCCESS)
+		msg("failed. (return = %d)", ret);
+
+	msg(" - result = %s", (value) ? "TRUE" : "FALSE");
+
+	return 0;
+}
+
+static void on_ready_state(int state, void *user_data)
+{
+	msg("");
+	msgb("ready state receive !!");
+
+	msg("state = %s", (state) ? "TRUE" : "FALSE");
+}
+
 static struct menu_data menu_common[] = {
 	{ "1", "tel_get_modem_info", NULL, get_modem_info, NULL},
 	{ "2", "tel_init", NULL, init, NULL},
@@ -176,6 +202,7 @@ static struct menu_data menu_common[] = {
 	{ "6", "tcore_util_convert_string_to_utf8", NULL, convert_string, NULL},
 	{ "6d", " - dcs", NULL, NULL, data_convert_dcs},
 	{ "6s", " - string", NULL, NULL, data_convert_string},
+	{ "7", "tel_get_ready_state", NULL, get_ready_state, NULL},
 	{ NULL, NULL, },
 };
 
@@ -189,6 +216,7 @@ static struct menu_data menu_main[] = {
 	{ "7", "SS", menu_ss, NULL, NULL},
 	{ "8", "SAT", menu_sat, NULL, NULL},
 	{ "9", "Call", menu_call, NULL, NULL},
+	{ "a", "Oem", menu_oem, NULL, NULL},
 	{ NULL, NULL, },
 };
 
@@ -227,6 +255,9 @@ static int __select_handle_register_event(MManager *mm, struct menu_data *menu)
 	register_sms_event(handle);
 	register_call_event(handle);
 	register_ss_event(handle);
+	register_oem_event(handle);
+
+	tel_register_ready_state_cb(on_ready_state, NULL);
 
 	return RET_SUCCESS;
 }
