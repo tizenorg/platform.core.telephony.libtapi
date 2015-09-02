@@ -280,4 +280,37 @@
  * More details on featuring your application can be found from <a href="../org.tizen.mobile.native.appprogramming/html/ide_sdk_tools/feature_element.htm"><b>Feature Element</b>.</a>
  */
 
+/**
+ * @ingroup CAPI_TELEPHONY_SERVICE
+ * @defgroup CAPI_TELEPHONY_SERVICE_OEM OEM Service
+ * @brief
+ *
+ * @section CAPI_TELEPHONY_SERVICE_OEM_HEADER Required Header
+ *   \#include <ITapiOem.h>
+ *
+ * @section CAPI_TELEPHONY_SERVICE_OEM_OVERVIEW Overview
+ * OEM Service APIs allow an application to accomplish the following services:
+ * - Send OEM (proprietary) data to modem
+ * - Receive OEM (proprietary) data to modem (as notification)
+ *
+ * Telephony provides APIs to send OEM (proprietary) data to modem.\n
+ * This service makes it possible for a application to send properitary format of data to modem.\n
+ * The data passed through this API would be by-passed to modem directly.\n
+ * Application can request for either a synchrnous or asynchronous mode of operations.
+ * Telephony provides interface to application receive prorietary data from modem directly.
+ * The data is by-apssed through Telephony framework to applications.\n
+ *
+ * @section CAPI_TELEPHONY_SERVICE_OEM_FEATURE Related Features
+ * This API is related with the following feature:\n
+ * - http://tizen.org/feature/network.telephony
+ *
+ * It is recommended to design feature related codes in your application for reliability.\n
+ *
+ * You can check if a device supports the related features for this API by using @ref CAPI_SYSTEM_SYSTEM_INFO_MODULE, thereby controlling the procedure of your application.\n
+ *
+ * To ensure your application is only running on the device with specific features, please define the features in your manifest file using the manifest editor in the SDK.\n
+ *
+ * More details on featuring your application can be found from <a href="../org.tizen.mobile.native.appprogramming/html/ide_sdk_tools/feature_element.htm"><b>Feature Element</b>.</a>
+ */
+
 #endif /* __TIZEN_TELEPHONY_SERVICE_DOC_H__ */

@@ -224,7 +224,6 @@ typedef struct {
 typedef struct {
 	TelSatCommandDetailInfo_t commandDetail; /**< Command detail info. It includes command number, type, and qualifier */
 	TelSatDeviceIdentitiesInfo_t deviceIdentities; /**<	Device identities info. It includes source and destination devices	*/
-
 } TelSatProvideLocalInfoIndInfo_t;
 
 /**
@@ -235,7 +234,6 @@ typedef struct {
 	TelSatCommandDetailInfo_t commandDetail; /**< Command detail info. It includes command number, type, and qualifier	*/
 	TelSatDeviceIdentitiesInfo_t deviceIdentities; /**<	Device identities info. It includes source and destination devices	*/
 	TelSatEventListInfo_t eventList; /**< Event list structure type containing events which are required by the USIM application */
-
 } TelSatSetupEventListIndInfo_t;
 
 /**
@@ -442,7 +440,7 @@ typedef struct {
  */
 typedef struct {
 	union {
-		TelSatMoreTimeIndInfo_t moreTime;	/**< TBD */
+		TelSatMoreTimeIndInfo_t moreTime;	/**< More Time data */
 		TelSatDisplayTextIndInfo_t displayText; /**< Parsed proactive command info from TLV to Telephony data type - display text */
 		TelSatGetInkeyIndInfo_t getInkey; /**< Parsed proactive command info from TLV to Telephony data type - getInkey	*/
 		TelSatGetInputIndInfo_t getInput; /**< Parsed proactive command info from TLV to Telephony data type - getInput	*/
@@ -483,7 +481,7 @@ typedef struct {
 typedef struct {
 	TelSatResultInfo_t result; /**<	Result that indicates whether the current proactive command request is executed successfully */
 	TelSatTextTypeInfo_t text; /**<	Inserted key info */
-	TelSatDurationInfo_t duration;	/**< TBD */
+	TelSatDurationInfo_t duration;	/**< Duration */
 } TelSatGetInkeyRespInfo_t;
 
 /**
@@ -711,7 +709,7 @@ typedef struct {
 	unsigned char commandNumber; /**< Proactive command number */
 	TelSatCommandType_t commandType; /**< Proactive command type */
 	union {
-		TelSatMoreTimeRespInfo_t moreTime;	/**< TBD */
+		TelSatMoreTimeRespInfo_t moreTime;	/**< More Time data */
 		TelSatDisplayTextRespInfo_t displayText; /**< Terminal response info from the displayText proactive command	*/
 		TelSatGetInkeyRespInfo_t getInkey; /**<	Terminal response info from the getInkey proactive command */
 		TelSatGetInputRespInfo_t getInput; /**<	Terminal response info from the getInput proactive command */
@@ -736,20 +734,27 @@ typedef struct {
 /*
  * SAT Icon Data
  */
-
+/**
+ * @brief The structure type for SAT icon response data.
+ * @since_tizen 2.3
+ */
 typedef struct {
-	unsigned char iconId;	/**< TBD */
-	unsigned char imgType;	/**< TBD */
-	unsigned char imgLen;	/**< TBD */
-	unsigned char imgData[256];	/**< TBD */
+	unsigned char iconId;	/**< Icon ID */
+	unsigned char imgType;	/**< Image Type */
+	unsigned char imgLen;	/**< Image Length */
+	unsigned char imgData[256];	/**< Image Data */
 } TelSatIconDataResp_t;
 
+/**
+ * @brief The structure type for SAT icon data.
+ * @since_tizen 2.3
+ */
 typedef struct {
-	unsigned char iconId;	/**< TBD */
-	unsigned char imgType;	/**< TBD */
-	unsigned char fileId[2];	/**< TBD */
-	unsigned char reqDataLen[2];	/**< TBD */
-	unsigned char offset[2];	/**< TBD */
+	unsigned char iconId;	/**< Icon ID */
+	unsigned char imgType;	/**< Image Type */
+	unsigned char fileId[2];	/**< File ID */
+	unsigned char reqDataLen[2];	/**< Request Data Length */
+	unsigned char offset[2];	/**< Offset */
 } TelsatIconDataGet_t;
 
 #ifdef __cplusplus

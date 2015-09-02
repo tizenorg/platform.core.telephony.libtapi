@@ -57,7 +57,7 @@ static void on_response_get_sim_pb_count(GObject *source_object, GAsyncResult *r
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(iiii)",
 			&result,
@@ -68,8 +68,7 @@ static void on_response_get_sim_pb_count(GObject *source_object, GAsyncResult *r
 	pb_cnt.UsedRecordCount = used;
 	pb_cnt.TotalRecordCount = total;
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &pb_cnt, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &pb_cnt);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -91,7 +90,7 @@ static void on_response_get_sim_pb_meta_info(GObject *source_object, GAsyncResul
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(iiiiiii)",
 			&result,
@@ -108,8 +107,7 @@ static void on_response_get_sim_pb_meta_info(GObject *source_object, GAsyncResul
 	pb_entry.PbTextLenMax = tmax;
 	pb_entry.PbUsedCount = used;
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &pb_entry, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &pb_entry);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -134,7 +132,7 @@ static void on_response_get_sim_pb_usim_meta_info(GObject *source_object, GAsync
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(iaa{sv})", &result, &iter);
 	list.FileTypeCount = g_variant_iter_n_children(iter);
@@ -156,8 +154,7 @@ static void on_response_get_sim_pb_usim_meta_info(GObject *source_object, GAsync
 	}
 	g_variant_iter_free(iter);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &list, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &list);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -189,7 +186,7 @@ static void on_response_read_sim_pb_record(GObject *source_object, GAsyncResult 
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(iiiisisisisisisissssi)",
 			&result,
@@ -243,8 +240,7 @@ static void on_response_read_sim_pb_record(GObject *source_object, GAsyncResult 
 				pb_rec.pb_control);
 	}
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &pb_rec, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &pb_rec);
 
 	g_free(name);
 	g_free(number);
@@ -272,12 +268,11 @@ static void on_response_update_sim_pb_record(GObject *source_object, GAsyncResul
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(i)", &result);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, NULL);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -294,12 +289,11 @@ static void on_response_delete_sim_pb_record(GObject *source_object, GAsyncResul
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(i)", &result);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, NULL);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -356,7 +350,7 @@ EXPORT_API int tel_get_sim_pb_count(TapiHandle *handle, TelSimPbType_t pb_type, 
 			&& (pb_type	!= TAPI_SIM_PB_3GSIM) && (pb_type != TAPI_SIM_PB_AAS) && (pb_type != TAPI_SIM_PB_GAS))
 		return TAPI_API_INVALID_INPUT;
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", pb_type);
 
@@ -383,7 +377,7 @@ EXPORT_API int tel_get_sim_pb_meta_info(TapiHandle *handle, TelSimPbType_t pb_ty
 			&& (pb_type	!= TAPI_SIM_PB_3GSIM) && (pb_type != TAPI_SIM_PB_AAS) && (pb_type != TAPI_SIM_PB_GAS))
 		return TAPI_API_INVALID_INPUT;
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", pb_type);
 
@@ -406,7 +400,7 @@ EXPORT_API int tel_get_sim_pb_usim_meta_info(TapiHandle *handle, tapi_response_c
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_dbus_connection_call(handle->dbus_connection,
 			DBUS_TELEPHONY_SERVICE , handle->path, DBUS_TELEPHONY_PB_INTERFACE,
@@ -434,7 +428,7 @@ EXPORT_API int tel_read_sim_pb_record(TapiHandle *handle, TelSimPbType_t pb_type
 			&& (pb_type	!= TAPI_SIM_PB_3GSIM) && (pb_type != TAPI_SIM_PB_AAS) && (pb_type != TAPI_SIM_PB_GAS))
 		return TAPI_API_INVALID_INPUT;
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(ii)", pb_type, pb_index);
 
@@ -467,7 +461,7 @@ EXPORT_API int tel_update_sim_pb_record(TapiHandle *handle, const TelSimPbRecord
 		return TAPI_API_INVALID_INPUT;
 	}
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	msg("type[%d], index[%d], next_index[%d]", req_data->phonebook_type, req_data->index, req_data->next_index);
 	dbg("name[%s], dcs[%d]", req_data->name, req_data->dcs);
@@ -529,7 +523,7 @@ EXPORT_API int tel_delete_sim_pb_record(TapiHandle *handle, TelSimPbType_t pb_ty
 			&& (pb_type	!= TAPI_SIM_PB_3GSIM) && (pb_type != TAPI_SIM_PB_AAS) && (pb_type != TAPI_SIM_PB_GAS))
 		return TAPI_API_INVALID_INPUT;
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(ii)", pb_type, pb_index);
 

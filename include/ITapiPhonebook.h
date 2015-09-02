@@ -99,6 +99,7 @@ int tel_get_sim_pb_init_info(TapiHandle *handle, int *init_completed, TelSimPbLi
  *         Negative integer - It provides an error code (Refer #TapiResult_t).
  *
  * @pre Initialize the Dbus connection with #tel_init.
+ * @post callback will be invoked and #TelSimPbStorageInfo_t will be stored in data on success case.
  */
 int tel_get_sim_pb_count(TapiHandle *handle, TelSimPbType_t pb_type, tapi_response_cb callback, void *user_data);
 
@@ -135,6 +136,7 @@ int tel_get_sim_pb_count(TapiHandle *handle, TelSimPbType_t pb_type, tapi_respon
  *         Negative integer : It provides an error code (Refer #TapiResult_t).
  *
  * @pre Initialize the Dbus connection with #tel_init.
+ * @post callback will be invoked and #TelSimPbEntryInfo_t will be stored in data on success case.
  */
 int tel_get_sim_pb_meta_info(TapiHandle *handle, TelSimPbType_t pb_type, tapi_response_cb callback, void *user_data);
 
@@ -168,6 +170,7 @@ int tel_get_sim_pb_meta_info(TapiHandle *handle, TelSimPbType_t pb_type, tapi_re
  *         Negative integer : It provides an error code (Refer #TapiResult_t).
  *
  * @pre Initialize Dbus connection with #tel_init\n
+ * @post callback will be invoked and #TelSimPbCapabilityInfo_t will be stored in data on success case.
  */
 int tel_get_sim_pb_usim_meta_info(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
@@ -206,6 +209,7 @@ int tel_get_sim_pb_usim_meta_info(TapiHandle *handle, tapi_response_cb callback,
  *         Negative integer : It provides an error code (Refer #TapiResult_t)
  *
  * @pre Initialize the Dbus connection with #tel_init.
+ * @post callback will be invoked and #TelSimPbRecord_t will be stored in data on success case.
  */
 int tel_read_sim_pb_record(TapiHandle *handle, TelSimPbType_t pb_type, unsigned short pb_index, tapi_response_cb callback, void *user_data);
 
@@ -241,6 +245,7 @@ int tel_read_sim_pb_record(TapiHandle *handle, TelSimPbType_t pb_type, unsigned 
  *         Negative integer : It provides an error code (Refer #TapiResult_t).
  *
  * @pre Initialize the Dbus connection with #tel_init.
+ * @post callback will be invoked and data is NULL.
  */
 int tel_update_sim_pb_record(TapiHandle *handle, const TelSimPbRecord_t *req_data, tapi_response_cb callback, void *user_data);
 
@@ -279,6 +284,7 @@ int tel_update_sim_pb_record(TapiHandle *handle, const TelSimPbRecord_t *req_dat
  *         Negative integer : (It provides an error code (Refer #TapiResult_t).
  *
  * @pre Initialize the Dbus connection with #tel_init.
+ * @post callback will be invoked and data is NULL.
  */
 int tel_delete_sim_pb_record(TapiHandle *handle, TelSimPbType_t pb_type, unsigned short pb_index, tapi_response_cb callback, void *user_data);
 
@@ -289,5 +295,5 @@ int tel_delete_sim_pb_record(TapiHandle *handle, TelSimPbType_t pb_type, unsigne
 #endif	/* _ITAPI_PHONEBOOK_H_ */
 
 /**
-* @}
-*/
+ * @}
+ */

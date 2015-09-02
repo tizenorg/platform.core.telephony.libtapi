@@ -45,12 +45,11 @@ static void on_response_sap_connect(GObject *source_object, GAsyncResult *res, g
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(ii)", &result, &max_msg_size);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, (void *)&max_msg_size, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &max_msg_size);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -65,7 +64,7 @@ EXPORT_API int tel_req_sap_connect(TapiHandle *handle, int max_msg_size, tapi_re
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", max_msg_size);
 	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE,
@@ -91,12 +90,11 @@ static void on_response_sap_disconnect(GObject *source_object, GAsyncResult *res
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(i)", &result);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, NULL);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -110,7 +108,7 @@ EXPORT_API int tel_req_sap_disconnect(TapiHandle *handle, tapi_response_cb callb
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 		g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE,
 			handle->path,
@@ -135,12 +133,11 @@ static void on_response_sap_connection_status(GObject *source_object, GAsyncResu
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(i)", &result);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, NULL);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -154,7 +151,7 @@ EXPORT_API int tel_req_sap_connection_status(TapiHandle *handle, tapi_response_c
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE,
 		handle->path,
@@ -187,7 +184,7 @@ static void on_response_sap_transfer_atr(GObject *source_object, GAsyncResult *r
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	/*	dbg("dbus_result type_format(%s)", g_variant_get_type_string(dbus_result));*/
 	g_variant_get(dbus_result, "(i@v)", &result, &param_gv);
@@ -203,8 +200,7 @@ static void on_response_sap_transfer_atr(GObject *source_object, GAsyncResult *r
 	g_variant_unref(inner_gv);
 	g_variant_unref(param_gv);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, (void *)&r_atr, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &r_atr);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -218,7 +214,7 @@ EXPORT_API int tel_req_sap_transfer_atr(TapiHandle *handle, tapi_response_cb cal
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE,
 		handle->path,
@@ -251,7 +247,7 @@ static void on_response_sap_transfer_apdu(GObject *source_object, GAsyncResult *
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(i@v)", &result, &param_gv);
 	inner_gv = g_variant_get_variant(param_gv);
@@ -266,8 +262,7 @@ static void on_response_sap_transfer_apdu(GObject *source_object, GAsyncResult *
 	g_variant_unref(inner_gv);
 	g_variant_unref(param_gv);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, (void *)&r_apdu, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &r_apdu);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -286,7 +281,7 @@ EXPORT_API int tel_req_sap_transfer_apdu(TapiHandle *handle, TelSapApduData_t *a
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(apdu_data, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_variant_builder_init(&builder, G_VARIANT_TYPE("ay"));
 	for (i = 0; i < apdu_data->apdu_len; i++) {
@@ -319,12 +314,11 @@ static void on_response_sap_transport_protocol(GObject *source_object, GAsyncRes
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(i)", &result);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, NULL);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -340,7 +334,7 @@ EXPORT_API int tel_req_sap_transport_protocol(TapiHandle *handle,
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", protocol);
 	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE,
@@ -366,12 +360,11 @@ static void on_response_sap_power_operation(GObject *source_object, GAsyncResult
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(i)", &result);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, NULL);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -387,7 +380,7 @@ EXPORT_API int tel_req_sap_power_operation(TapiHandle *handle,
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	switch (power_mode) {
 	case TAPI_SIM_SAP_POWER_SIM_ON_REQ:
@@ -432,12 +425,11 @@ static void on_response_sap_cardreader_status(GObject *source_object, GAsyncResu
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(ii)", &result, &reader_status);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, (void *)&reader_status, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &reader_status);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -451,7 +443,7 @@ EXPORT_API int tel_req_sap_cardreader_status(TapiHandle *handle, tapi_response_c
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	g_dbus_connection_call(handle->dbus_connection, DBUS_TELEPHONY_SERVICE,
 		handle->path,

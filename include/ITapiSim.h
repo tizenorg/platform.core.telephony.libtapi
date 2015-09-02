@@ -166,6 +166,7 @@ int tel_get_sim_ecc(TapiHandle *handle, TelSimEccList_t *ecc);
  *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
  *
  * @pre The user can get valid return values or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
+ * @post callback will be invoked and #TelSimIccIdInfo_t will be stored in data on success case.
  */
 int tel_get_sim_iccid(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
@@ -191,6 +192,7 @@ int tel_get_sim_iccid(TapiHandle *handle, tapi_response_cb callback, void *user_
  *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
  *
  * @pre The user can get valid return values or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
+ * @post callback will be invoked and #TelSimLanguagePreferenceCode_t will be stored in data on success case.
  */
 int tel_get_sim_language(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
@@ -223,6 +225,7 @@ int tel_get_sim_language(TapiHandle *handle, tapi_response_cb callback, void *us
  *         Integer '0' ( same with #TAPI_API_SUCCESS & #TAPI_SIM_ACCESS_SUCCESS ) - indicates that the operation has completed successfully
  *         Negative integer : It provides an error code before actual operations (Refer #TapiResult_t)
  *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
+ * @post callback will be invoked and data is NULL.
  */
 int tel_set_sim_language(TapiHandle *handle, TelSimLanguagePreferenceCode_t language, tapi_response_cb callback, void *user_data);
 
@@ -250,6 +253,7 @@ int tel_set_sim_language(TapiHandle *handle, TelSimLanguagePreferenceCode_t lang
  *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
  *
  * @pre The user can get valid return values or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
+ * @post callback will be invoked and #TelSimCallForwardingResp_t will be stored in data on success case.
  */
 int tel_get_sim_callforwarding_info(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
@@ -279,6 +283,7 @@ int tel_get_sim_callforwarding_info(TapiHandle *handle, tapi_response_cb callbac
  *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
  *
  * @pre The user can get valid return values or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
+ * @post callback will be invoked and data is NULL.
  */
 int tel_set_sim_callforwarding_info(TapiHandle *handle, TelSimCallForwardingReq_t *req_cf, tapi_response_cb callback, void *user_data);
 
@@ -306,6 +311,7 @@ int tel_set_sim_callforwarding_info(TapiHandle *handle, TelSimCallForwardingReq_
  *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
  *
  * @pre The user can get valid return values or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
+ * @post callback will be invoked and #TelSimMessageWaitingResp_t will be stored in data on success case.
  */
 int tel_get_sim_messagewaiting_info(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
@@ -335,6 +341,7 @@ int tel_get_sim_messagewaiting_info(TapiHandle *handle, tapi_response_cb callbac
  *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
  *
  * @pre The user can get valid return values or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
+ * @post callback will be invoked and data is NULL.
  */
 int tel_set_sim_messagewaiting_info(TapiHandle *handle, TelSimMessageWaitingReq_t *req_mw, tapi_response_cb callback, void *user_data);
 
@@ -362,6 +369,7 @@ int tel_set_sim_messagewaiting_info(TapiHandle *handle, TelSimMessageWaitingReq_
  *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
  *
  * @pre The user can get valid return values or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
+ * @post callback will be invoked and #TelSimMailboxList_t will be stored in data on success case.
  */
 int tel_get_sim_mailbox_info(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
@@ -391,6 +399,7 @@ int tel_get_sim_mailbox_info(TapiHandle *handle, tapi_response_cb callback, void
  *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
  *
  * @pre The user can get valid return values or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
+ * @post callback will be invoked and data is NULL.
  */
 int tel_set_sim_mailbox_info(TapiHandle *handle, TelSimMailBoxNumber_t *req_mb, tapi_response_cb callback, void *user_data);
 
@@ -418,6 +427,7 @@ int tel_set_sim_mailbox_info(TapiHandle *handle, TelSimMailBoxNumber_t *req_mb, 
  *         Positive integer : it provides an error code during actual operations (Refer #TelSimAccessResult_t)
  *
  * @pre The user can get valid return values or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
+ * @post callback will be invoked and #TelSimCphsInfo_t will be stored in data on success case.
  */
 int tel_get_sim_cphs_info(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
@@ -445,6 +455,7 @@ int tel_get_sim_cphs_info(TapiHandle *handle, tapi_response_cb callback, void *u
  *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
  *
  * @pre The user can get valid return values or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
+ * @post callback will be invoked and #TelSimServiceTable_t will be stored in data on success case.
  */
 int tel_get_sim_service_table(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
@@ -472,6 +483,7 @@ int tel_get_sim_service_table(TapiHandle *handle, tapi_response_cb callback, voi
  *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
  *
  * @pre The user can get valid return values or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
+ * @post callback will be invoked and #TelSimMsisdnList_t will be stored in data on success case.
  */
 int tel_get_sim_msisdn(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
@@ -499,6 +511,7 @@ int tel_get_sim_msisdn(TapiHandle *handle, tapi_response_cb callback, void *user
  *         Positive integer : It provides an error code while actual operations (Refer #TelSimAccessResult_t)
  *
  * @pre The user can get valid return values or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
+ * @post callback will be invoked and #TelSimOplmnwactList_t will be stored in data on success case.
  */
 int tel_get_sim_oplmnwact(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
@@ -526,6 +539,7 @@ int tel_get_sim_oplmnwact(TapiHandle *handle, tapi_response_cb callback, void *u
  *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
  *
  * @pre The user can get valid return value or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
+ * @post callback will be invoked and #TelSimSpn_t will be stored in data on success case.
  */
 int tel_get_sim_spn(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
@@ -551,6 +565,7 @@ int tel_get_sim_spn(TapiHandle *handle, tapi_response_cb callback, void *user_da
  *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
  *
  * @pre The user can get valid return values or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
+ * @post callback will be invoked and #TelSimCphsNetName_t will be stored in data on success case.
  */
 int tel_get_sim_cphs_netname(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
@@ -583,10 +598,12 @@ int tel_get_sim_cphs_netname(TapiHandle *handle, tapi_response_cb callback, void
  *         Integer '0' ( same with #TAPI_API_SUCCESS & #TAPI_SIM_ACCESS_SUCCESS ) - indicates that the operation has completed successfully
  *         Negative integer : It provides an error code before actual operations (Refer #TapiResult_t)
  *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
+ * @post callback will be invoked and #TelSimAuthenticationResponse_t will be stored in data on success case.
  */
 int tel_req_sim_authentication(TapiHandle *handle, TelSimAuthenticationData_t *authentication_data, tapi_response_cb callback, void *user_data);
 
 /**
+ * @deprecated Deprecated Since 2.4. Use tel_verify_sim_pins().
  * @brief Performs PIN1/PIN2/SIM LOCK verification.
  * @details This function performs PIN verification based on the PIN type passed along with @a pin_data:\n
  *          PIN1 code: The SIM card has its own password to check access permissions.\n
@@ -622,8 +639,49 @@ int tel_req_sim_authentication(TapiHandle *handle, TelSimAuthenticationData_t *a
  *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
  *
  * @pre This API is used when #TelSimCardStatus_t is #TAPI_SIM_STATUS_SIM_PIN_REQUIRED or #TAPI_SIM_STATUS_SIM_LOCK_REQUIRED on boot time.
+ * @post callback will be invoked and #TelSimSecResult_t will be stored in data on success case.
  */
 int tel_verifiy_sim_pins(TapiHandle *handle, const TelSimSecPw_t *pin_data, tapi_response_cb callback, void *user_data);
+
+/**
+ * @brief Performs PIN1/PIN2/SIM LOCK verification.
+ * @details This function performs PIN verification based on the PIN type passed along with @a pin_data:\n
+ *          PIN1 code: The SIM card has its own password to check access permissions.\n
+ *          SIM Lock code: Between Device and SIM card using a SIM password is only available on certain handsets to authorize.\n
+ *
+ *          This function makes a Dbus method call to the Telephony Server and returns an immediate value.
+ *          However it just means that the API request has been transfered to the CP successfully.
+ *          The actual operation result is delivered in the corresponding event asynchronously.
+ *
+ * <b> Sync (or) Async: </b> This is an Asynchronous API.
+ *
+ * <b> Prospective Clients: </b> External Apps.
+ *
+ * @since_tizen 2.4
+ * @privlevel platform
+ * @privilege %http://tizen.org/privilege/telephony.admin
+ *
+ * @remarks If the PIN status (PIN/PUK/SIM LOCK) is blocked, an unsolicited event #TAPI_EVENT_SIM_STATUS_IND will be published to Applications on Device boot time.
+ *          If the PIN status is PUK, you should use #tel_verify_sim_puks instead of this API.
+ *
+ * @param[in] handle The handle from tel_init()
+ *
+ * @param[in] pin_data The PIN code, entered by the user \n
+ *                     You should make all the parameters.
+ *
+ * @param[in] callback To register a callback function for result
+ *
+ * @param[in] user_data The user data for user specification
+ *
+ * @return The return type (int)
+ *         Integer '0' ( same with #TAPI_API_SUCCESS & #TAPI_SIM_ACCESS_SUCCESS ) - indicates that the operation is completed successfully
+ *         Negative integer : It provides an error code before actual operations (Refer #TapiResult_t)
+ *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
+ *
+ * @pre This API is used when #TelSimCardStatus_t is #TAPI_SIM_STATUS_SIM_PIN_REQUIRED or #TAPI_SIM_STATUS_SIM_LOCK_REQUIRED on boot time.
+ * @post callback will be invoked and #TelSimSecResult_t will be stored in data on success case.
+ */
+int tel_verify_sim_pins(TapiHandle *handle, const TelSimSecPw_t *pin_data, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Performs PIN1/PIN2 unblocking operation based on PUK information passed along with
@@ -666,6 +724,7 @@ int tel_verifiy_sim_pins(TapiHandle *handle, const TelSimSecPw_t *pin_data, tapi
  *
  * @pre PIN1 or PIN2 status should be #TAPI_SIM_PIN_STATUS_BLOCKED and Card status should be #TAPI_SIM_STATUS_SIM_PUK_REQUIRED on boot time.
  *
+ * @post callback will be invoked and #TelSimSecResult_t will be stored in data on success case.
  * @post After success on unblocking for PIN1 or PIN2, each pin check facility is enabled even if the previous facility is disabled.
  */
 int tel_verify_sim_puks(TapiHandle *handle, const TelSimSecPw_t *puk_data, const TelSimSecPw_t *new_pin_data, tapi_response_cb callback, void *user_data);
@@ -705,6 +764,7 @@ int tel_verify_sim_puks(TapiHandle *handle, const TelSimSecPw_t *puk_data, const
  *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
  *
  * @pre The user can get valid return values or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
+ * @post callback will be invoked and #TelSimSecResult_t will be stored in data on success case.
  */
 int tel_change_sim_pins(TapiHandle *handle, const TelSimSecPw_t *old_pin, const TelSimSecPw_t *new_pin, tapi_response_cb callback, void *user_data);
 
@@ -730,6 +790,7 @@ int tel_change_sim_pins(TapiHandle *handle, const TelSimSecPw_t *old_pin, const 
  *         Integer '0' ( same with #TAPI_API_SUCCESS & #TAPI_SIM_ACCESS_SUCCESS ) - indicates that the operation has completed successfully
  *         Negative integer : It provides an error code before actual operations (Refer #TapiResult_t)
  *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
+ * @post callback will be invoked and #TelSimFacilityResult_t will be stored in data on success case.
  */
 int tel_disable_sim_facility(TapiHandle *handle, TelSimFacilityPw_t *pw, tapi_response_cb callback, void *user_data);
 
@@ -755,6 +816,7 @@ int tel_disable_sim_facility(TapiHandle *handle, TelSimFacilityPw_t *pw, tapi_re
  *         Integer '0' ( same with #TAPI_API_SUCCESS & #TAPI_SIM_ACCESS_SUCCESS ) - indicates that the operation has completed successfully
  *         Negative integer : It provides an error code before actual operations (Refer #TapiResult_t)
  *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
+ * @post callback will be invoked and #TelSimFacilityResult_t will be stored in data on success case.
  */
 int tel_enable_sim_facility(TapiHandle *handle, TelSimFacilityPw_t *pw, tapi_response_cb callback, void *user_data);
 
@@ -780,6 +842,7 @@ int tel_enable_sim_facility(TapiHandle *handle, TelSimFacilityPw_t *pw, tapi_res
  *         Integer '0' ( same with #TAPI_API_SUCCESS & #TAPI_SIM_ACCESS_SUCCESS ) - indicates that the operation has completed successfully
  *         Negative integer : It provides an error code before actual operations (Refer #TapiResult_t)
  *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
+ * @post callback will be invoked and #TelSimFacilityInfo_t will be stored in data on success case.
  */
 int tel_get_sim_facility(TapiHandle *handle, TelSimLockType_t type, tapi_response_cb callback, void *user_data);
 
@@ -805,6 +868,7 @@ int tel_get_sim_facility(TapiHandle *handle, TelSimLockType_t type, tapi_respons
  *         Integer '0' ( same with #TAPI_API_SUCCESS & #TAPI_SIM_ACCESS_SUCCESS ) - indicates that the operation has completed successfully
  *         Negative integer : It provides an error code before actual operations (Refer #TapiResult_t)
  *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
+ * @post callback will be invoked and #TelSimLockInfo_t will be stored in data on success case.
  */
 int tel_get_sim_lock_info(TapiHandle *handle, TelSimLockType_t type, tapi_response_cb callback, void *user_data);
 
@@ -831,9 +895,7 @@ int tel_get_sim_lock_info(TapiHandle *handle, TelSimLockType_t type, tapi_respon
  * @return The return type (int)
  *         Integer '0' ( same with #TAPI_SIM_POWER_SET_SUCCESS ) - indicates that the operation has completed successfully
  *         Positive integer : It provides an error code while actual operations (Refer #TelSimPowerSetResult_t)
- *
- * @par Prospective Clients:
- * External Apps.
+ * @post callback will be invoked and data is NULL.
  */
 int tel_set_sim_power_state(TapiHandle *handle, TelSimPowerState_t state, tapi_response_cb callback, void *user_data);
 
@@ -871,6 +933,7 @@ int tel_set_sim_power_state(TapiHandle *handle, TelSimPowerState_t state, tapi_r
  *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
  *
  * @pre The user can get valid return values or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
+ * @post callback will be invoked and #TelSimApduResp_t will be stored in data on success case.
  */
 int tel_req_sim_apdu(TapiHandle *handle, TelSimApdu_t* apdu_data, tapi_response_cb callback, void *user_data);
 
@@ -901,6 +964,7 @@ int tel_req_sim_apdu(TapiHandle *handle, TelSimApdu_t* apdu_data, tapi_response_
  *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
  *
  * @pre The user can get valid return values or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
+ * @post callback will be invoked and #TelSimAtrResp_t will be stored in data on success case.
  */
 int tel_req_sim_atr(TapiHandle *handle, tapi_response_cb callback, void *user_data);
 
@@ -928,6 +992,129 @@ int tel_req_sim_atr(TapiHandle *handle, tapi_response_cb callback, void *user_da
  * @pre The user can get valid return values or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
  */
 int tel_get_sim_application_list(TapiHandle *handle, unsigned char *app_list);
+
+/**
+ * @breif Gets the IMPI(IMS private user identity). (ISIM only)
+ * @details Private user identity of the user.
+ *
+ * <b> Sync (or) Async: </b> This is Asynchronous API.
+ *
+ * @since_tizen 2.4
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/telephony
+ *
+ * @param[in] handle The handle from tel_init()
+ * @param[in] callback To reigster a callback function for result
+ * @param[in] user_data The user data for user specification
+ *
+ * @return The return type (int)
+ *         Integer '0' ( same with #TAPI_API_SUCCESS & #TAPI_SIM_ACCESS_SUCCESS ) - indicates that the operation has completed successfully
+ *         Negative integer : It provides an error code before actual operations (Refer #TapiResult_t)
+ *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
+ *
+ * @pre The user can get valid return values or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
+ * @post callback will be invoked and #TelSimImpi_t will be stored in data on success case.
+ */
+int tel_get_sim_impi(TapiHandle *handle, tapi_response_cb callback, void *user_data);
+
+/**
+ * @breif Gets the IMPU(IMS public user identity). (ISIM only)
+ * @details SIP URI by which other parties know the subscriber.
+ *
+ * <b> Sync (or) Async: </b> This is Asynchronous API.
+ *
+ * @since_tizen 2.4
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/telephony
+ *
+ * @param[in] handle The handle from tel_init()
+ * @param[in] callback To reigster a callback function for result
+ * @param[in] user_data The user data for user specification
+ *
+ * @return The return type (int)
+ *         Integer '0' ( same with #TAPI_API_SUCCESS & #TAPI_SIM_ACCESS_SUCCESS ) - indicates that the operation has completed successfully
+ *         Negative integer : It provides an error code before actual operations (Refer #TapiResult_t)
+ *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
+ *
+ * @pre The user can get valid return values or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
+ * @post callback will be invoked and #TelSimImpuList_t will be stored in data on success case.
+ */
+int tel_get_sim_impu(TapiHandle *handle, tapi_response_cb callback, void *user_data);
+
+/**
+ * @breif Gets the Domain(Home Network Domain Name). (ISIM only)
+ * @details Home Network Domain Name.
+ *
+ * <b> Sync (or) Async: </b> This is Asynchronous API.
+ *
+ * @since_tizen 2.4
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/telephony
+ *
+ * @param[in] handle The handle from tel_init()
+ * @param[in] callback To reigster a callback function for result
+ * @param[in] user_data The user data for user specification
+ *
+ * @return The return type (int)
+ *         Integer '0' ( same with #TAPI_API_SUCCESS & #TAPI_SIM_ACCESS_SUCCESS ) - indicates that the operation has completed successfully
+ *         Negative integer : It provides an error code before actual operations (Refer #TapiResult_t)
+ *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
+ *
+ * @pre The user can get valid return values or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
+ * @post callback will be invoked and #TelSimDomain_t will be stored in data on success case.
+ */
+int tel_get_sim_domain(TapiHandle *handle, tapi_response_cb callback, void *user_data);
+
+/**
+ * @breif Gets the P-CSCF(Proxy Call Session Control Function). (ISIM only)
+ * @details Address of Proxy Call Session Control Function, in the format of a FQDN, an IPv4 address, or an IPv6 address. \n
+ *          A UE supporting IMS Local Breakout shall use this EF only if EFIST indicates that service n=5 is "available".
+ *
+ * <b> Sync (or) Async: </b> This is Asynchronous API.
+ *
+ * @since_tizen 2.4
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/telephony
+ *
+ * @param[in] handle The handle from tel_init()
+ * @param[in] callback To reigster a callback function for result
+ * @param[in] user_data The user data for user specification
+ *
+ * @return The return type (int)
+ *         Integer '0' ( same with #TAPI_API_SUCCESS & #TAPI_SIM_ACCESS_SUCCESS ) - indicates that the operation has completed successfully
+ *         Negative integer : It provides an error code before actual operations (Refer #TapiResult_t)
+ *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
+ *
+ * @pre The user can get valid return values or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
+ * @post callback will be invoked and #TelSimPcscfList_t will be stored in data on success case.
+ */
+int tel_get_sim_pcscf(TapiHandle *handle, tapi_response_cb callback, void *user_data);
+
+/**
+ * @breif Gets the ISIM service table. (ISIM only)
+ * @details This EF indicates which optional services are available. \n
+ *          If a service is not indicated as available in the ISIM, the ME shall not select this service.
+ *
+ * <b> Sync (or) Async: </b> This is Asynchronous API.
+ *
+ * @since_tizen 2.4
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/telephony
+ *
+ * @param[in] handle The handle from tel_init()
+ * @param[in] callback To reigster a callback function for result
+ * @param[in] user_data The user data for user specification
+ *
+ * @return The return type (int)
+ *         Integer '0' ( same with #TAPI_API_SUCCESS & #TAPI_SIM_ACCESS_SUCCESS ) - indicates that the operation has completed successfully
+ *         Negative integer : It provides an error code before actual operations (Refer #TapiResult_t)
+ *         Positive integer : It provides an error code during actual operations (Refer #TelSimAccessResult_t)
+ *
+ * @pre The user can get valid return values or make operations after SIM init completes(card status is #TAPI_SIM_STATUS_SIM_INIT_COMPLETED).
+ * @post callback will be invoked and #TelSimIST_t will be stored in data on success case.
+ */
+int tel_get_sim_isim_service_table(TapiHandle *handle, tapi_response_cb callback, void *user_data);
+
 #ifdef __cplusplus
 }
 #endif

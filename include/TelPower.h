@@ -49,6 +49,7 @@ typedef enum {
 /**
  * @brief Enumeration for the phone power status values.
  * @since_tizen 2.3
+ * @see tel_check_modem_power_status()
  */
 typedef enum {
 	TAPI_PHONE_POWER_STATUS_UNKNOWN = -1,
@@ -60,38 +61,26 @@ typedef enum {
 } tapi_power_phone_power_status_t;
 
 /**
- * @details Enumeration for flight modes.
+ * @brief Enumeration for flight mode request type.
  * @since_tizen 2.3
  */
 typedef enum {
 	TAPI_POWER_FLIGHT_MODE_ENTER = 0x01, /**< ONLINE OFF */
 	TAPI_POWER_FLIGHT_MODE_LEAVE, /**< ONLINE ON */
-	TAPI_POWER_FLIGHT_MODE_MAX		/**< TBD */
+	TAPI_POWER_FLIGHT_MODE_MAX /**< MAX value */
 } tapi_power_flight_mode_type_t;
 
+/**
+ * @brief Enumeration for flight mode response type.
+ * @since_tizen 2.3
+ * @see tel_set_flight_mode()
+ */
 typedef enum {
 	TAPI_POWER_FLIGHT_MODE_RESP_ON = 0x01, /**< Flight Mode On Success */
 	TAPI_POWER_FLIGHT_MODE_RESP_OFF, /**< Flight Mode Off Success */
 	TAPI_POWER_FLIGHT_MODE_RESP_FAIL, /**< Flight Mode Request Fail */
-	TAPI_POWER_FLIGHT_MODE_RESP_MAX		/**< TBD */
+	TAPI_POWER_FLIGHT_MODE_RESP_MAX /**< MAX value */
 } tapi_power_flight_mode_resp_type_t;
-
-/**
- * @brief Enumeration for the phone battery status levels.
- *
- * @details
- * 0x01 : Power Off Level                     => PhoneLevel = power off
- * 0x02 : Critical-Low Battery Level          => PhoneLevel = 0
- * 0x03 : Low Battery Level                   => PhoneLevel = 1
- * 0x04 : Normal Level                        => PhoneLevel = 2,3,4
- * @since_tizen 2.3
- */
-typedef enum {
-	TAPI_POWER_BATT_STAT_POWER_OFF_LEVEL = 0x01, /**< Power Off Level */
-	TAPI_POWER_BATT_STAT_CRIT_LOW_LEVEL = 0x02, /**< Critical-Low Battery Level */
-	TAPI_POWER_BATT_STAT_LOW_LEVEL = 0x03, /**< Low Battery Level */
-	TAPI_POWER_BATT_STAT_NORMAL_LEVEL = 0x04 /**< Normal Level */
-} tapi_power_battery_status_level_t;
 
 #ifdef __cplusplus
 }

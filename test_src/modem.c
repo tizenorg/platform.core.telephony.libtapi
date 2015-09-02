@@ -53,7 +53,7 @@ static void on_prop_dongle_status(TapiHandle *handle, const char *noti_id, void 
 	int *status = data;
 
 	msg("");
-	msg("property(%s) receive !!", TAPI_PROP_MODEM_DONGLE_STATUS);
+	msgp("property(%s) receive !!", TAPI_PROP_MODEM_DONGLE_STATUS);
 
 	if (!status)
 		return;
@@ -65,7 +65,7 @@ static void on_prop_dongle_login(TapiHandle *handle, const char *noti_id, void *
 	int *status = data;
 
 	msg("");
-	msg("property(%s) receive !!", TAPI_PROP_MODEM_DONGLE_LOGIN);
+	msgp("property(%s) receive !!", TAPI_PROP_MODEM_DONGLE_LOGIN);
 
 	if (!status)
 		return;

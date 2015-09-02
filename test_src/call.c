@@ -53,9 +53,44 @@ static char data_extra_volume_status[MENU_DATA_SIZE + 1] = "0";
 static char data_call_privacy_mode[MENU_DATA_SIZE + 1] = "0";
 static char data_preferred_voice_subscription[MENU_DATA_SIZE + 1] = "0";
 
+static const char *__get_call_state_string(TelCallStates_t state)
+{
+	switch (state) {
+	case TAPI_CALL_STATE_IDLE:
+		return "Idle";
+	case TAPI_CALL_STATE_ACTIVE:
+		return "Active";
+	case TAPI_CALL_STATE_HELD:
+		return "Held";
+	case TAPI_CALL_STATE_DIALING:
+		return "Dialing";
+	case TAPI_CALL_STATE_ALERT:
+		return "Alert";
+	case TAPI_CALL_STATE_INCOMING:
+		return "Incoming";
+	case TAPI_CALL_STATE_WAITING:
+		return "Waiting";
+	default:
+		return "Unknown";
+	}
+}
+
+static void call_status_callback(TelCallStatus_t *status, void *user_data)
+{
+	msg("call_status_callback");
+	msg(" - id = %d", status->CallHandle);
+	msg(" - direction = %d", status->bMoCall);
+	msg(" - number = %s", status->pNumber);
+	msg(" - type = %d", status->CallType);
+	msg(" - state = %d[%s]", status->CallState, __get_call_state_string(status->CallState));
+	msg(" - multiparty = %d", status->bConferenceState);
+
+}
+
 static void on_noti_call_status_idle(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
 	TelCallStatusIdleNoti_t *noti_data = (TelCallStatusIdleNoti_t *)data;
+	int result;
 
 	msg("");
 	msgb("event(%s) receive !!", TAPI_NOTI_VOICE_CALL_STATUS_IDLE);
@@ -65,11 +100,15 @@ static void on_noti_call_status_idle(TapiHandle *handle, const char *noti_id, vo
 
 	msg(" - id = %d", noti_data->id);
 	msg(" - cause = 0x%x", noti_data->cause);
+	result = tel_get_call_status_all(handle, call_status_callback, NULL);
+	if (result != TAPI_API_SUCCESS)
+		msg("failed. (result = %d)", result);
 }
 
 static void on_noti_call_status_active(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
 	TelCallStatusActiveNoti_t *noti_data = (TelCallStatusActiveNoti_t *)data;
+	int result;
 
 	msg("");
 	msgb("event(%s) receive !!", TAPI_NOTI_VOICE_CALL_STATUS_ACTIVE);
@@ -78,11 +117,15 @@ static void on_noti_call_status_active(TapiHandle *handle, const char *noti_id, 
 		return;
 
 	msg(" - id = %d", noti_data->id);
+	result = tel_get_call_status_all(handle, call_status_callback, NULL);
+	if (result != TAPI_API_SUCCESS)
+		msg("failed. (result = %d)", result);
 }
 
 static void on_noti_call_status_held(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
 	TelCallStatusHeldNoti_t *noti_data = (TelCallStatusHeldNoti_t *)data;
+	int result;
 
 	msg("");
 	msgb("event(%s) receive !!", TAPI_NOTI_VOICE_CALL_STATUS_HELD);
@@ -91,6 +134,9 @@ static void on_noti_call_status_held(TapiHandle *handle, const char *noti_id, vo
 		return;
 
 	msg(" - id = %d", noti_data->id);
+	result = tel_get_call_status_all(handle, call_status_callback, NULL);
+	if (result != TAPI_API_SUCCESS)
+		msg("failed. (result = %d)", result);
 }
 
 static void on_noti_call_status_dialing(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
@@ -121,7 +167,7 @@ static void on_noti_call_status_alert(TapiHandle *handle, const char *noti_id, v
 
 static void on_noti_call_status_incoming(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
-	TelCallStatusIncomingNoti_t *noti_data = (TelCallStatusIncomingNoti_t *)data;
+	TelCallIncomingCallInfo_t *noti_data = (TelCallIncomingCallInfo_t *)data;
 
 	msg("");
 	msgb("event(%s) receive !!", TAPI_NOTI_VOICE_CALL_STATUS_INCOMING);
@@ -129,7 +175,13 @@ static void on_noti_call_status_incoming(TapiHandle *handle, const char *noti_id
 	if (!noti_data)
 		return;
 
-	msg(" - id = %d", noti_data->id);
+	msg(" - Handle = %d", noti_data->CallHandle);
+	msg(" - Number = %s", noti_data->szCallingPartyNumber);
+	msg(" - CLI Mode = %d", noti_data->CliMode);
+	msg(" - CLI Cause = %d", noti_data->CliCause);
+	msg(" - Name = %s", noti_data->CallingNameInfo.szNameData);
+	msg(" - Forwarded Call = %d", noti_data->fwded);
+	msg(" - Active Line = %d", noti_data->ActiveLine);
 }
 
 static void on_noti_call_sound_ringback_tone(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
@@ -630,19 +682,6 @@ static int run_call_send_burst_dtmf(MManager *mm, struct menu_data *menu)
 	return result;
 }
 
-
-static void call_status_callback(TelCallStatus_t *status, void *user_data)
-{
-
-	msg(" - id = %d", status->CallHandle);
-	msg(" - direction = %d", status->bMoCall);
-	msg(" - number = %s", status->pNumber);
-	msg(" - type = %d", status->CallType);
-	msg(" - state = %d", status->CallState);
-	msg(" - multiparty = %d", status->bConferenceState);
-
-}
-
 static int run_call_get_status(MManager *mm, struct menu_data *menu)
 {
 	TapiHandle *handle = menu_manager_ref_user_data(mm);
@@ -664,7 +703,7 @@ static int run_call_get_status(MManager *mm, struct menu_data *menu)
 	msg(" - direction = %d", info.bMoCall);
 	msg(" - number = %s", info.pNumber);
 	msg(" - type = %d", info.CallType);
-	msg(" - state = %d", info.CallState);
+	msg(" - state = %d[%s]", info.CallState, __get_call_state_string(info.CallState));
 	msg(" - multiparty = %d", info.bConferenceState);
 
 	return result;

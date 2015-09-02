@@ -14,6 +14,7 @@ SET(tapitest
 	modem.c
 	ss.c
 	call.c
+	oem.c
 )
 
 ##Address-Space Layout Randomization

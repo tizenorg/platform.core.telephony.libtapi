@@ -48,7 +48,7 @@ static void on_response_get_ss_barring_status(GObject *source_object, GAsyncResu
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(aa{sv}i)", &iter, &result);
 
@@ -71,8 +71,7 @@ static void on_response_get_ss_barring_status(GObject *source_object, GAsyncResu
 	}
 	g_variant_iter_free(iter);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &resp, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &resp);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -89,12 +88,11 @@ static void on_response_change_ss_barring_password(GObject *source_object, GAsyn
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(i)",  &result);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, NULL, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, NULL);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -118,7 +116,7 @@ static void on_response_get_ss_forward_status(GObject *source_object, GAsyncResu
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(aa{sv}i)", &iter, &result);
 
@@ -152,8 +150,7 @@ static void on_response_get_ss_forward_status(GObject *source_object, GAsyncResu
 	}
 	g_variant_iter_free(iter);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &resp, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &resp);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -177,7 +174,7 @@ static void on_response_get_ss_waiting_status(GObject *source_object, GAsyncResu
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(aa{sv}i)", &iter, &result);
 
@@ -198,8 +195,7 @@ static void on_response_get_ss_waiting_status(GObject *source_object, GAsyncResu
 	}
 	g_variant_iter_free(iter);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &resp, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &resp);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -217,12 +213,11 @@ static void on_response_set_ss_cli_status(GObject *source_object, GAsyncResult *
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(i)",  &result);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &data, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &data);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -242,13 +237,12 @@ static void on_response_get_ss_cli_status(GObject *source_object, GAsyncResult *
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(iii)",  &result, &resp.Type, &resp.Status);
-
 	msg("Type(%d), Status(%d)", resp.Type, resp.Status);
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &resp, evt_cb_data->user_data);
+
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &resp);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -269,7 +263,7 @@ static void on_response_send_ss_ussd_request(GObject *source_object, GAsyncResul
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(iiiiis)",  &result, &resp.Type, &resp.Status, &resp.Dcs, &resp.Length, &tmp_str);
 
@@ -278,8 +272,7 @@ static void on_response_send_ss_ussd_request(GObject *source_object, GAsyncResul
 		g_free(tmp_str);
 	}
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &resp, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &resp);
 
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
@@ -296,7 +289,7 @@ EXPORT_API int tel_set_ss_barring(TapiHandle *handle, TelSsBarringInfo_t *info, 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(info, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(iis)", info->Class, info->Type, info->szPassword);
 
@@ -329,7 +322,7 @@ EXPORT_API int tel_get_ss_barring_status(TapiHandle *handle, TelSsClass_t class,
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(ii)", class, type);
 
@@ -369,7 +362,7 @@ EXPORT_API int tel_change_ss_barring_password(TapiHandle *handle,
 	TAPI_RET_ERR_NUM_IF_FAIL(new_password, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(new_password_again, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(sss)", old_password, new_password, new_password_again);
 
@@ -402,7 +395,7 @@ EXPORT_API int tel_set_ss_forward(TapiHandle *handle, const TelSsForwardInfo_t *
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(info, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(iiiiis)", info->Class, info->Condition,
 			info->NoReplyConditionTimer, info->Ton, info->Npi, info->szPhoneNumber);
@@ -466,7 +459,7 @@ EXPORT_API int tel_get_ss_forward_status(TapiHandle *handle, TelSsClass_t class,
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(ii)", class, condition);
 
@@ -499,7 +492,7 @@ EXPORT_API int tel_set_ss_waiting(TapiHandle *handle, const TelSsWaitingInfo_t *
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(info, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", info->Class);
 
@@ -540,7 +533,7 @@ EXPORT_API int tel_get_ss_waiting_status(TapiHandle *handle, const TelSsClass_t 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", class);
 
@@ -572,7 +565,7 @@ EXPORT_API int tel_set_ss_cli_status(TapiHandle *handle, TelSsCliType_t type, Te
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(ii)", type, status);
 
@@ -604,7 +597,7 @@ EXPORT_API int tel_get_ss_cli_status(TapiHandle *handle, TelSsCliType_t type, ta
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(i)", type);
 
@@ -635,7 +628,7 @@ EXPORT_API int tel_send_ss_ussd_request(TapiHandle *handle, const TelSsUssdMsgIn
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(info, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	param = g_variant_new("(iiis)", info->Type, info->Dcs, info->Length, info->szString);
 	msg("ussd type:[%d] length:[%d]", info->Type, info->Length);

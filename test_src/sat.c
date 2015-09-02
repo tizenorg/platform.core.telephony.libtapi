@@ -105,6 +105,27 @@ static void on_noti_select_item(TapiHandle *handle, const char *noti_id, void *d
 	}
 }
 
+static void on_noti_setup_call(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
+{
+	TelSatSetupCallIndCallData_t *setup_call = NULL;
+
+	msg("noti id (%s)", noti_id);
+
+	if (!data) {
+		msg("noti data is null");
+		return;
+	}
+
+	setup_call = (TelSatSetupCallIndCallData_t *)data;
+
+	msg("command id (%d)", setup_call->commandId);
+	msg("call type(%d)", setup_call->calltype);
+	msg("dispText (%s)", setup_call->dispText.string);
+	msg("callNumber(%s)", setup_call->callNumber.string);
+	msg("duration (%d)", setup_call->duration);
+}
+
+
 static void on_resp_select_menu(TapiHandle *handle, int result, void *data, void *user_data)
 {
 	msg("");
@@ -192,6 +213,10 @@ void register_sat_event(TapiHandle *handle)
 		msg("event register failed(%d)", ret);
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_SAT_SELECT_ITEM, on_noti_select_item, NULL);
+	if (ret != TAPI_API_SUCCESS)
+		msg("event register failed(%d)", ret);
+
+	ret = tel_register_noti_event(handle, TAPI_NOTI_SAT_SETUP_CALL, on_noti_setup_call, NULL);
 	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
 

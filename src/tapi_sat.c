@@ -253,13 +253,12 @@ static void on_response_menu_selection_envelop(GObject *source_object, GAsyncRes
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(ii)", &result, &envelop_rsp);
 	dbg("menu selection envelop result(%d) envelop response(%d)", result, envelop_rsp);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &envelop_rsp, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &envelop_rsp);
 
 	g_variant_unref(dbus_result);
 	g_free(evt_cb_data);
@@ -278,13 +277,12 @@ static void on_response_download_event_envelop(GObject *source_object, GAsyncRes
 
 	conn = G_DBUS_CONNECTION(source_object);
 	dbus_result = g_dbus_connection_call_finish(conn, res, &error);
-	CHECK_ERROR(error);
+	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(ii)", &result, &envelop_rsp);
 	dbg("download event envelop result(%d) envelop response(%d)", result, envelop_rsp);
 
-	if (evt_cb_data->cb_fn)
-		evt_cb_data->cb_fn(evt_cb_data->handle, result, &envelop_rsp, evt_cb_data->user_data);
+	TAPI_INVOKE_RESP_CALLBACK(evt_cb_data, result, &envelop_rsp);
 
 	g_variant_unref(dbus_result);
 	g_free(evt_cb_data);
@@ -314,7 +312,7 @@ EXPORT_API int tel_select_sat_menu(TapiHandle *handle, const TelSatMenuSelection
 	TAPI_RET_ERR_NUM_IF_FAIL(handle->dbus_connection, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pMenuSelect, TAPI_API_INVALID_PTR);
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	item_id = pMenuSelect->itemIdentifier;
 	help_req = ((pMenuSelect->bIsHelpRequested != 0) ? TRUE : FALSE);
@@ -369,7 +367,7 @@ EXPORT_API int tel_download_sat_event(TapiHandle *handle, const TelSatEventDownl
 		return TAPI_API_SAT_EVENT_NOT_REQUIRED_BY_USIM;
 	}
 
-	MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
+	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	event_download_type = pEventData->eventDownloadType;
 	src_dev = TAPI_SAT_DEVICE_ID_ME;
@@ -408,25 +406,8 @@ EXPORT_API int tel_get_sat_main_menu_info(TapiHandle *handle, TelSatSetupMenuInf
 	gint result, command_id, item_cnt;
 	gboolean b_present, b_helpinfo, b_updated;
 	GVariant *items = NULL;
-#if defined(TIZEN_SUPPORT_SAT_ICON)
-	GVariant *icon_id = NULL;
-	GVariant *icon_list = NULL;
-	int sat_index = 0, icon_index = 0;
-	/* Used to get icon data */
-	GVariant *unbox;
-	gboolean is_exist;
-	gint icon_quali, icon_identifier, width, height, ics, icon_data_len;
-	gchar *icon_data = NULL;
-	/* Used to get icon list data */
-	GVariant *unbox_list, *unbox_list_info ;
-	GVariantIter *iter, *iter2;
-	GVariant *icon_list_info;
-	gboolean is_list_exist;
-	gint icon_list_quali, list_cnt, icon_list_identifier, list_width, list_height, list_ics, icon_list_data_len;
-	gchar *icon_list_data = NULL;
-#else
 	int sat_index = 0;
-#endif
+
 	dbg("Func Entrance ");
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
@@ -447,13 +428,9 @@ EXPORT_API int tel_get_sat_main_menu_info(TapiHandle *handle, TelSatSetupMenuInf
 
 	dbg("menu_info type_format(%s)", g_variant_get_type_string(rst));
 
-#if defined(TIZEN_SUPPORT_SAT_ICON)
-	g_variant_get(rst, "(iibs@vibb@v@v)", &result, &command_id, &b_present, &title, &items, &item_cnt,
-			&b_helpinfo, &b_updated, &icon_id, &icon_list);
-#else
 	g_variant_get(rst, "(iibs@vibb)", &result, &command_id, &b_present, &title, &items, &item_cnt,
 			&b_helpinfo, &b_updated);
-#endif
+
 	g_variant_unref(rst);
 
 	pMainMenu->commandId = command_id;
@@ -493,60 +470,6 @@ EXPORT_API int tel_get_sat_main_menu_info(TapiHandle *handle, TelSatSetupMenuInf
 	pMainMenu->bIsSatMainMenuHelpInfo = (b_helpinfo ? 1 : 0);
 	pMainMenu->bIsUpdatedSatMainMenu = (b_updated ? 1 : 0);
 
-#if defined(TIZEN_SUPPORT_SAT_ICON)
-	if (icon_id) {
-		unbox = g_variant_get_variant(icon_id);
-		g_variant_get(unbox, "a(biiiiiis)", &iter);
-
-		while (g_variant_iter_loop(iter, "(biiiiiis)", &is_exist, &icon_quali, &icon_identifier, &width, &height, &ics, &icon_data_len, &icon_data)) {
-			if (!is_exist)
-				break;
-			pMainMenu->iconId.bIsPresent = is_exist;
-			pMainMenu->iconId.iconQualifier = icon_quali;
-			pMainMenu->iconId.iconIdentifier = icon_identifier;
-			pMainMenu->iconId.iconInfo.width = width;
-			pMainMenu->iconId.iconInfo.height = height;
-			pMainMenu->iconId.iconInfo.ics = ics;
-			if (icon_data_len > 0) {
-				pMainMenu->iconId.iconInfo.iconDataLen = icon_data_len;
-				memcpy(pMainMenu->iconId.iconInfo.iconFile, icon_data, icon_data_len);
-			}
-			dbg("icon exist(%d), icon_quali: (%d), icon_id: (%d), width: (%d), height: (%d), ics: (%d), icon_data_len: (%d)", pMainMenu->iconId.bIsPresent, pMainMenu->iconId.iconQualifier, pMainMenu->iconId.iconIdentifier, pMainMenu->iconId.iconInfo.width,
-				pMainMenu->iconId.iconInfo.height, pMainMenu->iconId.iconInfo.ics, pMainMenu->iconId.iconInfo.iconDataLen);
-		}
-		g_variant_iter_free(iter);
-	}
-
-	if (icon_list) {
-		unbox_list = g_variant_get_variant(icon_list);
-		g_variant_get(unbox_list, "a(biiv)", &iter);
-
-		while (g_variant_iter_loop(iter, "(biiv)", &is_list_exist, &icon_list_quali, &list_cnt, &icon_list_info)) {
-			if (!is_list_exist)
-				break;
-			pMainMenu->iconIdList.bIsPresent = is_list_exist;
-			pMainMenu->iconIdList.iconListQualifier = icon_list_quali;
-			pMainMenu->iconIdList.iconCount = list_cnt;
-
-			unbox_list_info = g_variant_get_variant(icon_list_info);
-			g_variant_get(unbox_list_info, "a(iiiiis)", &iter2);
-
-			while (g_variant_iter_loop(iter2, "(iiiiis)", &icon_list_identifier, &list_width, &list_height, &list_ics, &icon_list_data_len, &icon_list_data)) {
-				pMainMenu->iconIdList.iconIdentifierList[icon_index] = icon_identifier;
-				pMainMenu->iconIdList.iconInfo[icon_index].width = list_width;
-				pMainMenu->iconIdList.iconInfo[icon_index].height = list_height;
-				pMainMenu->iconIdList.iconInfo[icon_index].ics = list_ics;
-				if (icon_list_data_len > 0) {
-					pMainMenu->iconIdList.iconInfo[icon_index].iconDataLen = icon_list_data_len;
-					memcpy(pMainMenu->iconIdList.iconInfo[icon_index].iconFile, icon_list_data, icon_list_data_len);
-				}
-				icon_index++;
-			}
-			g_variant_iter_free(iter2);
-		}
-		g_variant_iter_free(iter);
-	}
-#endif
 	dbg("result (%d)", result);
 	dbg("command id (%d)", pMainMenu->commandId);
 	dbg("menu present (%d)", pMainMenu->bIsMainMenuPresent);

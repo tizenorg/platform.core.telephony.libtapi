@@ -75,10 +75,10 @@ extern "C"
  *         else it will return failure and an error code (Refer #TapiResult_t).
  *
  * @pre This function is supposed to be called after getting the #TAPI_EVENT_SAT_SETUP_MENU_IND event from the telephony server.
- *
+ * @post callback will be invoked and #TelSatEnvelopeResp_t will be stored in data on success case.
  * @see tel_get_sat_main_menu_info()
  */
-int tel_select_sat_menu(TapiHandle *handle, const TelSatMenuSelectionReqInfo_t* pMenuSelect, tapi_response_cb callback, void *user_data);
+int tel_select_sat_menu(TapiHandle *handle, const TelSatMenuSelectionReqInfo_t *pMenuSelect, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Downloads SAT events to the USIM.
@@ -116,8 +116,9 @@ int tel_select_sat_menu(TapiHandle *handle, const TelSatMenuSelectionReqInfo_t* 
  *         else it will return failure and an error code (Refer #TapiResult_t).
  *
  * @pre A SET UP EVENT LIST proactive command supplies a set of events to monitor.
+ * @post callback will be invoked and #TelSatEnvelopeResp_t will be stored in data on success case.
  */
-int tel_download_sat_event(TapiHandle *handle, const TelSatEventDownloadReqInfo_t*  pEventData, tapi_response_cb callback, void *user_data);
+int tel_download_sat_event(TapiHandle *handle, const TelSatEventDownloadReqInfo_t *pEventData, tapi_response_cb callback, void *user_data);
 
 /**
  * @brief Sends the UI display status of the alpha identifier of a specific proactive command to the Telephony Server.

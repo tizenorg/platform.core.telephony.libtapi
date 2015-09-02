@@ -26,6 +26,7 @@
 
 #include <glib.h>
 #include <gio/gio.h>
+#include <vconf.h>
 
 #include "tapi_common.h"
 #include "TapiUtility.h"
@@ -35,11 +36,20 @@
 #include "TelSat.h"
 #include "TelSs.h"
 #include "TelCall.h"
+#include "TelOem.h"
 
 #include "common.h"
 #include "tapi_log.h"
 
 TelSatEventDownloadType_t g_event_list[TAPI_SAT_EVENT_LIST_MAX_COUNT] = {-1};
+static GSList *state_callback_list = NULL;
+static gboolean registered_vconf_cb = FALSE;
+G_LOCK_DEFINE_STATIC(state_mutex);
+
+typedef struct {
+	tapi_state_cb callback;
+	void *user_data;
+} TelReadyStateCallback_t;
 
 static void _process_sms_event(const gchar *sig, GVariant *param,
 	TapiHandle *handle, char *noti_id, struct tapi_evt_cb *evt_cb_data)
@@ -87,7 +97,7 @@ static void _process_sms_event(const gchar *sig, GVariant *param,
 		g_free(decoded_sca);
 		g_free(decoded_tpdu);
 
-		CALLBACK_CALL(&noti);
+		TAPI_INVOKE_NOTI_CALLBACK(&noti);
 	} else if (!g_strcmp0(sig, "IncommingCbMsg")) {
 		struct tel_noti_sms_incomming_cb_msg noti = {0};
 		gchar *cb_msg = NULL;
@@ -116,7 +126,7 @@ static void _process_sms_event(const gchar *sig, GVariant *param,
 		g_free(cb_msg);
 		g_free(decoded_cbmsg);
 
-		CALLBACK_CALL(&noti);
+		TAPI_INVOKE_NOTI_CALLBACK(&noti);
 	} else if (!g_strcmp0(sig, "IncommingEtwsMsg")) {
 		struct tel_noti_sms_incomming_etws_msg noti;
 
@@ -140,17 +150,17 @@ static void _process_sms_event(const gchar *sig, GVariant *param,
 		g_variant_unref(etwsMsg);
 		g_variant_unref(inner_gv);
 
-		CALLBACK_CALL(&noti);
+		TAPI_INVOKE_NOTI_CALLBACK(&noti);
 	} else if (!g_strcmp0(sig, "MemoryStatus")) {
 		int noti = 0;
 
 		g_variant_get(param, "(i)", &noti);
-		CALLBACK_CALL(&noti);
+		TAPI_INVOKE_NOTI_CALLBACK(&noti);
 	} else if (!g_strcmp0(sig, "SmsReady")) {
 		gint noti = 0;
 
 		g_variant_get(param, "(i)", &noti);
-		CALLBACK_CALL(&noti);
+		TAPI_INVOKE_NOTI_CALLBACK(&noti);
 	} else {
 		dbg("not handled Sms noti[%s]", sig);
 	}
@@ -166,27 +176,27 @@ static void _process_call_event(const gchar *sig, GVariant *param,
 		int start_time = 0, end_time = 0;
 		g_variant_get(param, "(iiii)", &data.id, &data.cause, &start_time, &end_time);
 		msg("[ check ] (%s) %s : call_handle(%d), end_cause(0x%x)", handle->cp_name, "Status Idle noti", data.id, data.cause);
-		CALLBACK_CALL(&data);
+		TAPI_INVOKE_NOTI_CALLBACK(&data);
 	} else if (!g_strcmp0(sig, "VoiceCallStatusDialing") || !g_strcmp0(sig, "VideoCallStatusDialing")) {
 		TelCallStatusDialingNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		msg("[ check ] (%s) %s : call_handle(%d)", handle->cp_name, "Status Dialing noti", data.id);
-		CALLBACK_CALL(&data);
+		TAPI_INVOKE_NOTI_CALLBACK(&data);
 	} else if (!g_strcmp0(sig, "VoiceCallStatusAlert") || !g_strcmp0(sig, "VideoCallStatusAlert")) {
 		TelCallStatusAlertNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		msg("[ check ] (%s) %s : call_handle(%d)", handle->cp_name, "Status Alert noti", data.id);
-		CALLBACK_CALL(&data);
+		TAPI_INVOKE_NOTI_CALLBACK(&data);
 	} else if (!g_strcmp0(sig, "VoiceCallStatusActive") || !g_strcmp0(sig, "VideoCallStatusActive")) {
 		TelCallStatusActiveNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		msg("[ check ] (%s) %s : call_handle(%d)", handle->cp_name, "Status Active noti", data.id);
-		CALLBACK_CALL(&data);
+		TAPI_INVOKE_NOTI_CALLBACK(&data);
 	} else if (!g_strcmp0(sig, "VoiceCallStatusHeld")) {
 		TelCallStatusHeldNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		msg("[ check ] (%s) %s : call_handle(%d)", handle->cp_name, "Status Held noti", data.id);
-		CALLBACK_CALL(&data);
+		TAPI_INVOKE_NOTI_CALLBACK(&data);
 	} else if (!g_strcmp0(sig, "VoiceCallStatusIncoming") || !g_strcmp0(sig, "VideoCallStatusIncoming")) {
 		TelCallIncomingCallInfo_t data;
 		gchar *number = NULL;
@@ -217,72 +227,72 @@ static void _process_call_event(const gchar *sig, GVariant *param,
 		msg("[ check ] %s : active_line(%d)", "Status Incoming noti", data.ActiveLine);
 		msg("[ check ] %s : call_name(%s)", "Status Incoming noti", data.CallingNameInfo.szNameData);
 
-		CALLBACK_CALL(&data);
+		TAPI_INVOKE_NOTI_CALLBACK(&data);
 	} else if (!g_strcmp0(sig, "Waiting")) {
 		TelCallInfoWaitingNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		msg("[ check ] (%s) %s : data.id(%d)", handle->cp_name, "Call Info Waiting noti", data.id);
-		CALLBACK_CALL(&data.id);
+		TAPI_INVOKE_NOTI_CALLBACK(&data.id);
 	} else if (!g_strcmp0(sig, "Forwarded")) {
 		TelCallInfoForwardedNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		msg("[ check ] (%s) %s : data.id(%d)", handle->cp_name, "Call Info Forwarded noti", data.id);
-		CALLBACK_CALL(&data.id);
+		TAPI_INVOKE_NOTI_CALLBACK(&data.id);
 	} else if (!g_strcmp0(sig, "ForwardedCall")) {
 		TelCallInfoForwardedCallNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		dbg("[ check ] (%s) %s : data.id(%d)", handle->cp_name, "Call Info Forwarded Call noti", data.id);
-		CALLBACK_CALL(&data.id);
+		TAPI_INVOKE_NOTI_CALLBACK(&data.id);
 	} else if (!g_strcmp0(sig, "BarredIncoming")) {
 		TelCallInfoBarredIncomingNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		msg("[ check ] (%s) %s : data.id(%d)", handle->cp_name, "Call Info Barred Incoming noti", data.id);
-		CALLBACK_CALL(&data.id);
+		TAPI_INVOKE_NOTI_CALLBACK(&data.id);
 	} else if (!g_strcmp0(sig, "BarredOutgoing")) {
 		TelCallInfoBarredOutgoingNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		msg("[ check ] (%s) %s : data.id(%d)", handle->cp_name, "Call Info Barred Outgoing noti", data.id);
-		CALLBACK_CALL(&data.id);
+		TAPI_INVOKE_NOTI_CALLBACK(&data.id);
 	} else if (!g_strcmp0(sig, "ForwardConditional")) {
 		TelCallInfoForwardConditionalNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		msg("[ check ] (%s) %s : data.id(%d)", handle->cp_name, "Call Info Forward Conditional noti", data.id);
-		CALLBACK_CALL(&data.id);
+		TAPI_INVOKE_NOTI_CALLBACK(&data.id);
 	} else if (!g_strcmp0(sig, "ForwardUnconditional")) {
 		TelCallInfoForwardUnconditionalNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		msg("[ check ] (%s) %s : data.id(%d)", handle->cp_name, "Call Info Forward Unconditional noti", data.id);
-		CALLBACK_CALL(&data.id);
+		TAPI_INVOKE_NOTI_CALLBACK(&data.id);
 	} else if (!g_strcmp0(sig, "CallActive")) {
 		TelCallInfoActiveNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		msg("[ check ] (%s) %s : data.id(%d)", handle->cp_name, "Call Info Call Active noti", data.id);
-		CALLBACK_CALL(&data.id);
+		TAPI_INVOKE_NOTI_CALLBACK(&data.id);
 	} else if (!g_strcmp0(sig, "CallHeld")) {
 		TelCallInfoHeldNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		msg("[ check ] (%s) %s : data.id(%d)", handle->cp_name, "Call Info Call Held noti", data.id);
-		CALLBACK_CALL(&data.id);
+		TAPI_INVOKE_NOTI_CALLBACK(&data.id);
 	} else if (!g_strcmp0(sig, "CallJoined")) {
 		TelCallInfoJoinedNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		msg("[ check ] (%s) %s : data.id(%d)", handle->cp_name, "Call Info Call Joined noti", data.id);
-		CALLBACK_CALL(&data.id);
+		TAPI_INVOKE_NOTI_CALLBACK(&data.id);
 	} else if (!g_strcmp0(sig, "CallPrivacyMode")) {
 		TelCallVoicePrivacyNoti_t data;
 		g_variant_get(param, "(i)", &data.privacy_mode);
 		msg("[ check ] %s (%s): data.privacy_mode(%d) ", "Call Privacy Info noti", handle->cp_name, data.privacy_mode);
-		CALLBACK_CALL(&data);
+		TAPI_INVOKE_NOTI_CALLBACK(&data);
 	} else if (!g_strcmp0(sig, "CallOtaspStatus")) {
 		TelCallOtaspStatusNoti_t otasp;
 		g_variant_get(param, "(i)", &otasp.otasp_status);
 		msg("[ check ] %s (%s): otasp_status(%d)", "Call OTASP Status ", handle->cp_name, otasp.otasp_status);
-		CALLBACK_CALL(&otasp);
+		TAPI_INVOKE_NOTI_CALLBACK(&otasp);
 	} else if (!g_strcmp0(sig, "CallOtapaStatus")) {
 		TelCallOtapaStatusNoti_t otapa;
 		g_variant_get(param, "(i)", &otapa.otapa_status);
 		msg("[ check ] %s : otapa_status(%d)", "Call OTAPA Status ", otapa.otapa_status);
-		CALLBACK_CALL(&otapa);
+		TAPI_INVOKE_NOTI_CALLBACK(&otapa);
 	} else if (!g_strcmp0(sig, "CallSignalInfo")) {
 		TelCallSignalInfoNoti_t signal_info;
 		unsigned int signal;
@@ -298,7 +308,7 @@ static void _process_call_event(const gchar *sig, GVariant *param,
 			err("Unknown Signal type");
 			return;
 		}
-		CALLBACK_CALL(&signal_info);
+		TAPI_INVOKE_NOTI_CALLBACK(&signal_info);
 	} else if (!g_strcmp0(sig, "CallInfoRec")) {
 		TelCallRecordInfoNoti_t noti;
 		gchar *data = NULL;
@@ -315,38 +325,38 @@ static void _process_call_event(const gchar *sig, GVariant *param,
 				noti.info.id, noti.info.type, noti.info.data.number);
 		}
 
-		CALLBACK_CALL(&noti);
+		TAPI_INVOKE_NOTI_CALLBACK(&noti);
 		g_free(data);
 	} else if (!g_strcmp0(sig, "CallSoundPath")) {
 		TelCallSoundPathNoti_t data;
 		g_variant_get(param, "(i)", &data.path);
 		msg("[ check ] (%s) %s : path(%d)", handle->cp_name, "Call Sound Path noti", data.path);
-		CALLBACK_CALL(&data);
+		TAPI_INVOKE_NOTI_CALLBACK(&data);
 	} else if (!g_strcmp0(sig, "CallSoundRingbackTone")) {
 		TelCallSoundRingbackToneNoti_t status;
 		g_variant_get(param, "(i)", &status);
 		msg("[ check ] (%s) %s : status(%d)", handle->cp_name, "Call Sound Ringbacktone noti", status);
-		CALLBACK_CALL(&status);
+		TAPI_INVOKE_NOTI_CALLBACK(&status);
 	} else if (!g_strcmp0(sig, "CallSoundWbamr")) {
 		TelCallSoundWbamrNoti_t status;
 		g_variant_get(param, "(i)", &status);
 		msg("[ check ] (%s) %s : status(%d)", handle->cp_name, "Call Sound Wbamr noti", status);
-		CALLBACK_CALL(&status);
+		TAPI_INVOKE_NOTI_CALLBACK(&status);
 	} else if (!g_strcmp0(sig, "CallSoundNoiseReduction")) {
 		TelCallSoundNoiseReductionNoti_t data;
 		g_variant_get(param, "(i)", &data.status);
 		msg("[ check ] (%s) %s : status(%d)", handle->cp_name, "Call Sound Noise Reduction noti", data.status);
-		CALLBACK_CALL(&data);
+		TAPI_INVOKE_NOTI_CALLBACK(&data);
 	} else if (!g_strcmp0(sig, "CallSoundClockStatus")) {
 		gboolean data;
 		g_variant_get(param, "(b)", &data);
 		msg("[ check ] (%s) %s : status(%d)", handle->cp_name, "Call Sound Clock Status noti", data);
-		CALLBACK_CALL(&data);
+		TAPI_INVOKE_NOTI_CALLBACK(&data);
 	} else if (!g_strcmp0(sig, "CallPreferredVoiceSubscription")) {
 		TelCallPreferredVoiceSubsNoti_t data;
 		g_variant_get(param, "(i)", &data.preferred_subs);
 		dbg("[ check ] %s : Voice preferred_subs(%d)", "Call Preferred Voice Subscription noti", data.preferred_subs);
-		CALLBACK_CALL(&data);
+		TAPI_INVOKE_NOTI_CALLBACK(&data);
 	} else {
 		dbg("not handled Call noti[%s]", sig);
 	}
@@ -364,37 +374,14 @@ static void _process_sat_event(const gchar *sig, GVariant *param,
 		gint command_id, item_cnt;
 		gboolean b_present, b_helpinfo, b_updated;
 		GVariant *items = NULL;
-
-#if defined(TIZEN_SUPPORT_SAT_ICON)
-		GVariant *icon_id = NULL;
-		GVariant *icon_list = NULL;
-		int sat_index = 0, icon_index = 0;
-		GVariantIter *iter, *iter2;
-		GVariant *unbox = NULL;
-		/* Used to get icon data */
-		gboolean is_exist;
-		gint icon_quali, icon_identifier, width, height, ics, icon_data_len;
-		gchar *icon_data = NULL;
-		/* Used to get icon list data */
-		GVariant *unbox_list, *unbox_list_info ;
-		GVariant *icon_list_info;
-		gboolean is_list_exist;
-		gint icon_list_quali, list_cnt, icon_list_identifier, list_width, list_height, list_ics, icon_list_data_len;
-		gchar *icon_list_data = NULL;
-#else
 		int sat_index = 0;
 		GVariant *unbox;
 		GVariantIter *iter;
-#endif
+
 		memset(&setup_menu, 0, sizeof(TelSatSetupMenuInfo_t));
 
-#if defined(TIZEN_SUPPORT_SAT_ICON)
-		g_variant_get(param, "(ibs@vibb@v@v)", &command_id, &b_present, &title, &items, &item_cnt,
-					&b_helpinfo, &b_updated, &icon_id, &icon_list);
-#else
 		g_variant_get(param, "(ibs@vibb)", &command_id, &b_present, &title, &items, &item_cnt,
 			&b_helpinfo, &b_updated);
-#endif
 
 		setup_menu.commandId = command_id;
 		setup_menu.bIsMainMenuPresent = (b_present ? 1 : 0);
@@ -422,60 +409,6 @@ static void _process_sat_event(const gchar *sig, GVariant *param,
 		setup_menu.bIsSatMainMenuHelpInfo = (b_helpinfo ? 1 : 0);
 		setup_menu.bIsUpdatedSatMainMenu = (b_updated ? 1 : 0);
 
-#if defined(TIZEN_SUPPORT_SAT_ICON)
-		if (icon_id) {
-			unbox = g_variant_get_variant(icon_id);
-			g_variant_get(unbox, "a(biiiiiis)", &iter);
-
-			while (g_variant_iter_loop(iter, "(biiiiiis)", &is_exist, &icon_quali, &icon_identifier, &width, &height, &ics, &icon_data_len, &icon_data)) {
-				if (!is_exist)
-					break;
-				setup_menu.iconId.bIsPresent = is_exist;
-				setup_menu.iconId.iconQualifier = icon_quali;
-				setup_menu.iconId.iconIdentifier = icon_identifier;
-				setup_menu.iconId.iconInfo.width = width;
-				setup_menu.iconId.iconInfo.height = height;
-				setup_menu.iconId.iconInfo.ics = ics;
-				if (icon_data_len > 0) {
-					setup_menu.iconId.iconInfo.iconDataLen = icon_data_len;
-					memcpy(setup_menu.iconId.iconInfo.iconFile, icon_data, icon_data_len);
-				}
-				dbg("icon exist(%d), icon_quali: (%d), icon_id: (%d), width: (%d), height: (%d), ics: (%d), icon_data_len: (%d)", setup_menu.iconId.bIsPresent, setup_menu.iconId.iconQualifier, setup_menu.iconId.iconIdentifier, setup_menu.iconId.iconInfo.width,
-					setup_menu.iconId.iconInfo.height, setup_menu.iconId.iconInfo.ics, setup_menu.iconId.iconInfo.iconDataLen);
-			}
-			g_variant_iter_free(iter);
-		}
-
-		if (icon_list) {
-			unbox_list = g_variant_get_variant(icon_list);
-			g_variant_get(unbox_list, "a(biiv)", &iter);
-
-			while (g_variant_iter_loop(iter, "(biiv)", &is_list_exist, &icon_list_quali, &list_cnt, &icon_list_info)) {
-				if (!is_list_exist)
-					break;
-				setup_menu.iconIdList.bIsPresent = is_list_exist;
-				setup_menu.iconIdList.iconListQualifier = icon_list_quali;
-				setup_menu.iconIdList.iconCount = list_cnt;
-
-				unbox_list_info = g_variant_get_variant(icon_list_info);
-				g_variant_get(unbox_list_info, "a(iiiiis)", &iter2);
-
-				while (g_variant_iter_loop(iter2, "(iiiiis)", &icon_list_identifier, &list_width, &list_height, &list_ics, &icon_list_data_len, &icon_list_data)) {
-					setup_menu.iconIdList.iconIdentifierList[icon_index] = icon_identifier;
-					setup_menu.iconIdList.iconInfo[icon_index].width = list_width;
-					setup_menu.iconIdList.iconInfo[icon_index].height = list_height;
-					setup_menu.iconIdList.iconInfo[icon_index].ics = list_ics;
-					if (icon_list_data_len > 0) {
-						setup_menu.iconIdList.iconInfo[icon_index].iconDataLen = icon_list_data_len;
-						memcpy(setup_menu.iconIdList.iconInfo[icon_index].iconFile, icon_list_data, icon_list_data_len);
-					}
-					icon_index++;
-				}
-				g_variant_iter_free(iter2);
-			}
-			g_variant_iter_free(iter);
-		}
-#endif
 		dbg("command id (%d)", setup_menu.commandId);
 		dbg("menu present (%d)", setup_menu.bIsMainMenuPresent);
 		dbg("menu title (%s)", setup_menu.satMainTitle);
@@ -486,30 +419,18 @@ static void _process_sat_event(const gchar *sig, GVariant *param,
 		dbg("icon exist(%d), icon_quali: (%d), icon_id: (%d), width: (%d), height: (%d), ics: (%d), icon_data_len: (%d)", setup_menu.iconId.bIsPresent, setup_menu.iconId.iconQualifier, setup_menu.iconId.iconIdentifier, setup_menu.iconId.iconInfo.width,
 			setup_menu.iconId.iconInfo.height, setup_menu.iconId.iconInfo.ics, setup_menu.iconId.iconInfo.iconDataLen);
 
-		CALLBACK_CALL(&setup_menu);
+		TAPI_INVOKE_NOTI_CALLBACK(&setup_menu);
 	} else if (!g_strcmp0(sig, "DisplayText")) {
 		TelSatDisplayTextInd_t display_text;
 		gchar *text;
 		gint command_id, text_len, duration;
 		gboolean high_priority, user_rsp_required, immediately_rsp;
 
-#if defined(TIZEN_SUPPORT_SAT_ICON)
-		GVariant *unbox = NULL;
-		gboolean is_exist;
-		gint icon_quali, icon_identifier, width, height, ics, icon_data_len;
-		gchar *icon_data = NULL;
-		GVariant *icon_id = NULL;
-		GVariantIter *iter;
-#endif
 		memset(&display_text, 0, sizeof(TelSatDisplayTextInd_t));
 
-#if defined(TIZEN_SUPPORT_SAT_ICON)
-		g_variant_get(param, "(isiibbb@v)", &command_id, &text, &text_len, &duration,
-			&high_priority, &user_rsp_required, &immediately_rsp, &icon_id);
-#else
 		g_variant_get(param, "(isiibbb)", &command_id, &text, &text_len, &duration,
 			&high_priority, &user_rsp_required, &immediately_rsp);
-#endif
+
 		display_text.commandId = command_id;
 		memcpy(display_text.text.string, text, TAPI_SAT_DEF_TEXT_STRING_LEN_MAX+1);
 		g_free(text);
@@ -519,30 +440,6 @@ static void _process_sat_event(const gchar *sig, GVariant *param,
 		display_text.bIsUserRespRequired = (user_rsp_required ? 1 : 0);
 		display_text.b_immediately_resp = (immediately_rsp ? 1 : 0);
 
-#if defined(TIZEN_SUPPORT_SAT_ICON)
-		if (icon_id) {
-			unbox = g_variant_get_variant(icon_id);
-			g_variant_get(unbox, "a(biiiiiis)", &iter);
-
-			while (g_variant_iter_loop(iter, "(biiiiiis)", &is_exist, &icon_quali, &icon_identifier, &width, &height, &ics, &icon_data_len, &icon_data)) {
-				if (!is_exist)
-					break;
-				display_text.iconId.bIsPresent = is_exist;
-				display_text.iconId.iconQualifier = icon_quali;
-				display_text.iconId.iconIdentifier = icon_identifier;
-				display_text.iconId.iconInfo.width = width;
-				display_text.iconId.iconInfo.height = height;
-				display_text.iconId.iconInfo.ics = ics;
-				if (icon_data_len > 0) {
-					display_text.iconId.iconInfo.iconDataLen = icon_data_len;
-					memcpy(display_text.iconId.iconInfo.iconFile, icon_data, icon_data_len);
-				}
-				dbg("icon exist(%d), icon_quali: (%d), icon_id: (%d), width: (%d), height: (%d), ics: (%d), icon_data_len: (%d)", display_text.iconId.bIsPresent, display_text.iconId.iconQualifier, display_text.iconId.iconIdentifier, display_text.iconId.iconInfo.width,
-					display_text.iconId.iconInfo.height, display_text.iconId.iconInfo.ics, display_text.iconId.iconInfo.iconDataLen);
-			}
-			g_variant_iter_free(iter);
-		}
-#endif
 		dbg("command id (%d)", display_text.commandId);
 		dbg("display text (%s)", display_text.text.string);
 		dbg("string len(%d)", display_text.text.stringLen);
@@ -551,7 +448,7 @@ static void _process_sat_event(const gchar *sig, GVariant *param,
 		dbg("user response required(%d)", display_text.bIsUserRespRequired);
 		dbg("immediately response (%d)", display_text.b_immediately_resp);
 
-		CALLBACK_CALL(&display_text);
+		TAPI_INVOKE_NOTI_CALLBACK(&display_text);
 	} else if (!g_strcmp0(sig, "SelectItem")) {
 		TelSatSelectItemInd_t select_item;
 
@@ -559,35 +456,15 @@ static void _process_sat_event(const gchar *sig, GVariant *param,
 		gchar *selected_text;
 		gint command_id, default_item_id, menu_cnt, text_len = 0;
 		GVariant *menu_items;
-#if defined(TIZEN_SUPPORT_SAT_ICON)
-		GVariantIter *iter, *iter2;
-		GVariant *unbox = NULL;
-		gboolean is_exist;
-		gint icon_quali, icon_identifier, width, height, ics, icon_data_len;
-		gchar *icon_data = NULL;
-		GVariant *icon_id = NULL;
-		GVariant *icon_list = NULL;
-		int select_item_index = 0, icon_index = 0;
-		/* Used to get icon list data */
-		GVariant *unbox_list, *unbox_list_info ;
-		GVariant *icon_list_info;
-		gboolean is_list_exist;
-		gint icon_list_quali, list_cnt, icon_list_identifier, list_width, list_height, list_ics, icon_list_data_len;
-		gchar *icon_list_data = NULL;
-#else
 		int select_item_index = 0;
 		GVariant *unbox;
 		GVariantIter *iter;
-#endif
+
 		memset(&select_item, 0, sizeof(TelSatSelectItemInd_t));
 
-#if defined(TIZEN_SUPPORT_SAT_ICON)
-		g_variant_get(param, "(ibsiii@v@v@v)", &command_id, &help_info, &selected_text,
-			&text_len, &default_item_id, &menu_cnt, &menu_items, &icon_id, &icon_list);
-#else
 		g_variant_get(param, "(ibsiii@v)", &command_id, &help_info, &selected_text,
 			&text_len, &default_item_id, &menu_cnt, &menu_items);
-#endif
+
 		select_item.commandId = command_id;
 		select_item.bIsHelpInfoAvailable = (help_info ? 1 : 0);
 		memcpy(select_item.text.string, selected_text, TAPI_SAT_DEF_TITLE_LEN_MAX+1);
@@ -613,60 +490,6 @@ static void _process_sat_event(const gchar *sig, GVariant *param,
 			g_variant_iter_free(iter);
 		}
 
-#if defined(TIZEN_SUPPORT_SAT_ICON)
-		if (icon_id) {
-			unbox = g_variant_get_variant(icon_id);
-			g_variant_get(unbox, "a(biiiiiis)", &iter);
-
-			while (g_variant_iter_loop(iter, "(biiiiiis)", &is_exist, &icon_quali, &icon_identifier, &width, &height, &ics, &icon_data_len, &icon_data)) {
-				if (!is_exist)
-					break;
-				select_item.iconId.bIsPresent = is_exist;
-				select_item.iconId.iconQualifier = icon_quali;
-				select_item.iconId.iconIdentifier = icon_identifier;
-				select_item.iconId.iconInfo.width = width;
-				select_item.iconId.iconInfo.height = height;
-				select_item.iconId.iconInfo.ics = ics;
-				if (icon_data_len > 0) {
-					select_item.iconId.iconInfo.iconDataLen = icon_data_len;
-					memcpy(select_item.iconId.iconInfo.iconFile, icon_data, icon_data_len);
-				}
-				dbg("icon exist(%d), icon_quali: (%d), icon_id: (%d), width: (%d), height: (%d), ics: (%d), icon_data_len: (%d)", select_item.iconId.bIsPresent, select_item.iconId.iconQualifier, select_item.iconId.iconIdentifier, select_item.iconId.iconInfo.width,
-						select_item.iconId.iconInfo.height, select_item.iconId.iconInfo.ics, select_item.iconId.iconInfo.iconDataLen);
-			}
-			g_variant_iter_free(iter);
-		}
-
-		if (icon_list) {
-			unbox_list = g_variant_get_variant(icon_list);
-			g_variant_get(unbox_list, "a(biiv)", &iter);
-
-			while (g_variant_iter_loop(iter, "(biiv)", &is_list_exist, &icon_list_quali, &list_cnt, &icon_list_info)) {
-				if (!is_list_exist)
-					break;
-				select_item.iconIdList.bIsPresent = is_list_exist;
-				select_item.iconIdList.iconListQualifier = icon_list_quali;
-				select_item.iconIdList.iconCount = list_cnt;
-
-				unbox_list_info = g_variant_get_variant(icon_list_info);
-				g_variant_get(unbox_list_info, "a(iiiiis)", &iter2);
-
-				while (g_variant_iter_loop(iter2, "(iiiiis)", &icon_list_identifier, &list_width, &list_height, &list_ics, &icon_list_data_len, &icon_list_data)) {
-					select_item.iconIdList.iconIdentifierList[icon_index] = icon_identifier;
-					select_item.iconIdList.iconInfo[icon_index].width = list_width;
-					select_item.iconIdList.iconInfo[icon_index].height = list_height;
-					select_item.iconIdList.iconInfo[icon_index].ics = list_ics;
-					if (icon_list_data_len > 0) {
-						select_item.iconIdList.iconInfo[icon_index].iconDataLen = icon_list_data_len;
-						memcpy(select_item.iconIdList.iconInfo[icon_index].iconFile, icon_list_data, icon_list_data_len);
-					}
-					icon_index++;
-				}
-				g_variant_iter_free(iter2);
-			}
-			g_variant_iter_free(iter);
-		}
-#endif
 		dbg("command id (%d)", select_item.commandId);
 		dbg("help info(%d)", select_item.bIsHelpInfoAvailable);
 		dbg("selected item string(%s)", select_item.text.string);
@@ -674,7 +497,7 @@ static void _process_sat_event(const gchar *sig, GVariant *param,
 		dbg("default item index(%d)", select_item.defaultItemIndex);
 		dbg("item count(%d)", select_item.menuItemCount);
 
-		CALLBACK_CALL(&select_item);
+		TAPI_INVOKE_NOTI_CALLBACK(&select_item);
 	} else if (!g_strcmp0(sig, "GetInkey")) {
 		TelSatGetInkeyInd_t get_inkey;
 
@@ -682,23 +505,12 @@ static void _process_sat_event(const gchar *sig, GVariant *param,
 		gint text_len, duration;
 		gboolean b_numeric, b_help_info;
 		gchar *text = NULL;
-#if defined(TIZEN_SUPPORT_SAT_ICON)
-		GVariant *unbox = NULL;
-		gboolean is_exist;
-		gint icon_quali, icon_identifier, width, height, ics, icon_data_len;
-		gchar *icon_data = NULL;
-		GVariant *icon_id = NULL;
-		GVariantIter *iter;
-#endif
+
 		memset(&get_inkey, 0, sizeof(TelSatGetInkeyInd_t));
 
-#if defined(TIZEN_SUPPORT_SAT_ICON)
-		g_variant_get(param, "(iiibbsii@v)", &command_id, &key_type, &input_character_mode,
-			&b_numeric, &b_help_info, &text, &text_len, &duration, &icon_id);
-#else
 		g_variant_get(param, "(iiibbsii)", &command_id, &key_type, &input_character_mode,
 			&b_numeric, &b_help_info, &text, &text_len, &duration);
-#endif
+
 		get_inkey.commandId = command_id;
 		get_inkey.keyType = key_type;
 		get_inkey.inputCharMode = input_character_mode;
@@ -709,30 +521,6 @@ static void _process_sat_event(const gchar *sig, GVariant *param,
 		get_inkey.text.stringLen = text_len;
 		get_inkey.duration = duration;
 
-#if defined(TIZEN_SUPPORT_SAT_ICON)
-		if (icon_id) {
-			unbox = g_variant_get_variant(icon_id);
-			g_variant_get(unbox, "a(biiiiiis)", &iter);
-
-			while (g_variant_iter_loop(iter, "(biiiiiis)", &is_exist, &icon_quali, &icon_identifier, &width, &height, &ics, &icon_data_len, &icon_data)) {
-				if (!is_exist)
-					break;
-				get_inkey.iconId.bIsPresent = is_exist;
-				get_inkey.iconId.iconQualifier = icon_quali;
-				get_inkey.iconId.iconIdentifier = icon_identifier;
-				get_inkey.iconId.iconInfo.width = width;
-				get_inkey.iconId.iconInfo.height = height;
-				get_inkey.iconId.iconInfo.ics = ics;
-				if (icon_data_len > 0) {
-					get_inkey.iconId.iconInfo.iconDataLen = icon_data_len;
-					memcpy(get_inkey.iconId.iconInfo.iconFile, icon_data, icon_data_len);
-				}
-				dbg("icon exist(%d), icon_quali: (%d), icon_id: (%d), width: (%d), height: (%d), ics: (%d), icon_data_len: (%d)", get_inkey.iconId.bIsPresent, get_inkey.iconId.iconQualifier, get_inkey.iconId.iconIdentifier, get_inkey.iconId.iconInfo.width,
-					get_inkey.iconId.iconInfo.height, get_inkey.iconId.iconInfo.ics, get_inkey.iconId.iconInfo.iconDataLen);
-			}
-			g_variant_iter_free(iter);
-		}
-#endif
 		dbg("command id(%d)", get_inkey.commandId);
 		dbg("key type(%d)", get_inkey.keyType);
 		dbg("input character mode(%d)", get_inkey.inputCharMode);
@@ -742,7 +530,7 @@ static void _process_sat_event(const gchar *sig, GVariant *param,
 		dbg("text length", get_inkey.text.stringLen);
 		dbg("duration", get_inkey.duration);
 
-		CALLBACK_CALL(&get_inkey);
+		TAPI_INVOKE_NOTI_CALLBACK(&get_inkey);
 	} else if (!g_strcmp0(sig, "GetInput")) {
 		TelSatGetInputInd_t get_input;
 
@@ -750,23 +538,12 @@ static void _process_sat_event(const gchar *sig, GVariant *param,
 		gint text_len, def_text_len, rsp_len_min, rsp_len_max;
 		gboolean b_numeric, b_help_info, b_echo_input;
 		gchar *text = NULL, *def_text = NULL;
-#if defined(TIZEN_SUPPORT_SAT_ICON)
-		GVariant *unbox = NULL;
-		gboolean is_exist;
-		gint icon_quali, icon_identifier, width, height, ics, icon_data_len;
-		gchar *icon_data = NULL;
-		GVariant *icon_id = NULL;
-		GVariantIter *iter;
-#endif
+
 		memset(&get_input, 0, sizeof(TelSatGetInputInd_t));
 
-#if defined(TIZEN_SUPPORT_SAT_ICON)
-		g_variant_get(param, "(iibbbsiiisi@v)", &command_id, &input_character_mode, &b_numeric, &b_help_info, &b_echo_input,
-			&text, &text_len, &rsp_len_max, &rsp_len_min, &def_text, &def_text_len, &icon_id);
-#else
 		g_variant_get(param, "(iibbbsiiisi)", &command_id, &input_character_mode, &b_numeric, &b_help_info, &b_echo_input,
 			&text, &text_len, &rsp_len_max, &rsp_len_min, &def_text, &def_text_len);
-#endif
+
 		get_input.commandId = command_id;
 		get_input.inputCharMode = input_character_mode;
 		get_input.bIsNumeric = (b_numeric ? 1 : 0);
@@ -781,30 +558,6 @@ static void _process_sat_event(const gchar *sig, GVariant *param,
 		g_free(def_text);
 		get_input.defaultText.stringLen = def_text_len;
 
-#if defined(TIZEN_SUPPORT_SAT_ICON)
-		if (icon_id) {
-			unbox = g_variant_get_variant(icon_id);
-			g_variant_get(unbox, "a(biiiiiis)", &iter);
-
-			while (g_variant_iter_loop(iter, "(biiiiiis)", &is_exist, &icon_quali, &icon_identifier, &width, &height, &ics, &icon_data_len, &icon_data)) {
-				if (!is_exist)
-					break;
-				get_input.iconId.bIsPresent = is_exist;
-				get_input.iconId.iconQualifier = icon_quali;
-				get_input.iconId.iconIdentifier = icon_identifier;
-				get_input.iconId.iconInfo.width = width;
-				get_input.iconId.iconInfo.height = height;
-				get_input.iconId.iconInfo.ics = ics;
-				if (icon_data_len > 0) {
-					get_input.iconId.iconInfo.iconDataLen = icon_data_len;
-					memcpy(get_input.iconId.iconInfo.iconFile, icon_data, icon_data_len);
-				}
-				dbg("icon exist(%d), icon_quali: (%d), icon_id: (%d), width: (%d), height: (%d), ics: (%d), icon_data_len: (%d)", get_input.iconId.bIsPresent, get_input.iconId.iconQualifier, get_input.iconId.iconIdentifier, get_input.iconId.iconInfo.width,
-					get_input.iconId.iconInfo.height, get_input.iconId.iconInfo.ics, get_input.iconId.iconInfo.iconDataLen);
-			}
-			g_variant_iter_free(iter);
-		}
-#endif
 		dbg("command id(%d)", get_input.commandId);
 		dbg("input character mode(%d)", get_input.inputCharMode);
 		dbg("numeric(%d)", get_input.bIsNumeric);
@@ -817,7 +570,7 @@ static void _process_sat_event(const gchar *sig, GVariant *param,
 		dbg("default text(%s)", get_input.defaultText.string);
 		dbg("default text length(%d)", get_input.defaultText.stringLen);
 
-		CALLBACK_CALL(&get_input);
+		TAPI_INVOKE_NOTI_CALLBACK(&get_input);
 	} else if (!g_strcmp0(sig, "SendSMS")) {
 		TelSatSendSmsIndSmsData_t send_sms;
 
@@ -873,7 +626,7 @@ static void _process_sat_event(const gchar *sig, GVariant *param,
 		dbg("tpdu type (%d)", send_sms.smsTpdu.tpduType);
 		dbg("tpdu length (%d)", send_sms.smsTpdu.dataLen);
 
-		CALLBACK_CALL(&send_sms);
+		TAPI_INVOKE_NOTI_CALLBACK(&send_sms);
 	} else if (!g_strcmp0(sig, "SetupEventList")) {
 		int g_index = 0;
 		gint event_cnt;
@@ -916,7 +669,7 @@ static void _process_sat_event(const gchar *sig, GVariant *param,
 
 		dbg("event list cnt(%d)", event_cnt);
 
-		CALLBACK_CALL(&event_list);
+		TAPI_INVOKE_NOTI_CALLBACK(&event_list);
 	} else if (!g_strcmp0(sig, "Refresh")) {
 		TelSatRefreshInd_t refresh_info;
 
@@ -957,7 +710,7 @@ static void _process_sat_event(const gchar *sig, GVariant *param,
 
 		dbg("refresh event/file cnt(%d)", refresh_info.fileCount);
 
-		CALLBACK_CALL(&refresh_info);
+		TAPI_INVOKE_NOTI_CALLBACK(&refresh_info);
 	} else if (!g_strcmp0(sig, "SendDtmf")) {
 		TelSatSendDtmfIndDtmfData_t send_dtmf;
 
@@ -981,13 +734,13 @@ static void _process_sat_event(const gchar *sig, GVariant *param,
 		dbg("dtmf event command id(%d)", send_dtmf.commandId);
 		dbg("dtmf event dtmf(%s)", send_dtmf.dtmfString.string);
 
-		CALLBACK_CALL(&send_dtmf);
+		TAPI_INVOKE_NOTI_CALLBACK(&send_dtmf);
 	} else if (!g_strcmp0(sig, "EndProactiveSession")) {
 		int command_type = 0;
 
 		g_variant_get(param, "(i)", &command_type);
 		dbg("end session evt : command type(%d)", command_type);
-		CALLBACK_CALL(&command_type);
+		TAPI_INVOKE_NOTI_CALLBACK(&command_type);
 	} else if (!g_strcmp0(sig, "CallControlResult")) {
 		TelSatCallCtrlIndData_t call_ctrl_result_ind;
 		gint call_ctrl_result = 0, disp_len = 0;
@@ -1037,7 +790,7 @@ static void _process_sat_event(const gchar *sig, GVariant *param,
 			goto EXIT;
 		}
 
-		CALLBACK_CALL(&call_ctrl_result_ind);
+		TAPI_INVOKE_NOTI_CALLBACK(&call_ctrl_result_ind);
 
 EXIT:
 		g_free(call_num);
@@ -1081,7 +834,33 @@ EXIT:
 		g_free(rp_dst_call_num);
 		g_free(tp_dst_call_num);
 
-		CALLBACK_CALL(&mo_sm_ctrl_result_ind);
+		TAPI_INVOKE_NOTI_CALLBACK(&mo_sm_ctrl_result_ind);
+	} else if (!g_strcmp0(sig, "SetupCall")) {
+		TelSatSetupCallIndCallData_t setup_call_data;
+		gint command_type = 0, confirm_text_len = 0;
+		gint text_len = 0, call_type = 0, duration = 0;
+		gchar *confirm_text = NULL, *text = NULL, *call_number = NULL;
+
+		dbg("setupcall event");
+		memset(&setup_call_data, 0x00, sizeof(TelSatSetupCallIndCallData_t));
+
+		g_variant_get(param, "(isisiisi)", &command_type, &confirm_text,
+			&confirm_text_len, &text, &text_len, &call_type, &call_number, &duration);
+
+
+		setup_call_data.commandId = command_type;
+		setup_call_data.calltype = call_type;
+		memcpy(&setup_call_data.dispText.string, text, strlen(text));
+		setup_call_data.dispText.stringLen = text_len;
+		memcpy(&setup_call_data.callNumber.string, call_number, strlen(call_number));
+		setup_call_data.callNumber.stringLen = strlen(call_number); /* Number length */
+		setup_call_data.duration = duration;
+
+		g_free(confirm_text);
+		g_free(text);
+		g_free(call_number);
+
+		TAPI_INVOKE_NOTI_CALLBACK(&setup_call_data);
 	} else {
 		dbg("not handled Sat noti[%s]", sig);
 	}
@@ -1095,11 +874,11 @@ static void _process_sim_event(const gchar *sig, GVariant *param,
 	if (!g_strcmp0(sig, "Status")) {
 		int status = 0;
 		g_variant_get(param, "(i)", &status);
-		CALLBACK_CALL(&status);
+		TAPI_INVOKE_NOTI_CALLBACK(&status);
 	} else if (!g_strcmp0(sig, "Refreshed")) {
 		int type = 0;
 		g_variant_get(param, "(i)", &type);
-		CALLBACK_CALL(&type);
+		TAPI_INVOKE_NOTI_CALLBACK(&type);
 	} else {
 		dbg("not handled SIM noti[%s]", sig);
 	}
@@ -1123,7 +902,7 @@ static void _process_pb_event(const gchar *sig, GVariant *param,
 
 		msg("(%s) init[%d] fdn[%d] adn[%d] sdn[%d] usim[%d] aas[%d] gas[%d]",
 			handle->cp_name, status.init_completed, status.pb_list.b_fdn, status.pb_list.b_adn, status.pb_list.b_sdn, status.pb_list.b_3g, status.pb_list.b_aas, status.pb_list.b_gas);
-		CALLBACK_CALL(&status);
+		TAPI_INVOKE_NOTI_CALLBACK(&status);
 	} else if (!g_strcmp0(sig, "ContactChange")) {
 		TelSimPbContactChangeInfo_t ContactChange;
 		g_variant_get(param, "(iqi)",
@@ -1133,7 +912,7 @@ static void _process_pb_event(const gchar *sig, GVariant *param,
 
 		msg("(%s) type[%d] index[%d] operation[%d]",
 			handle->cp_name, ContactChange.pb_type, ContactChange.index, ContactChange.operation);
-		CALLBACK_CALL(&ContactChange);
+		TAPI_INVOKE_NOTI_CALLBACK(&ContactChange);
 	} else {
 		dbg("not handled Phonebook noti[%s]", sig);
 	}
@@ -1147,11 +926,11 @@ static void _process_sap_event(const gchar *sig, GVariant *param,
 	if (!g_strcmp0(sig, "Status")) {
 		int noti = 0;
 		g_variant_get(param, "(i)", &noti);
-		CALLBACK_CALL(&noti);
+		TAPI_INVOKE_NOTI_CALLBACK(&noti);
 	} else if (!g_strcmp0(sig, "Disconnect")) {
 		int disconnect = 0;
 		g_variant_get(param, "(i)", &disconnect);
-		CALLBACK_CALL(&disconnect);
+		TAPI_INVOKE_NOTI_CALLBACK(&disconnect);
 	} else {
 		dbg("not handled SAP noti[%s]", sig);
 	}
@@ -1167,7 +946,7 @@ static void _process_modem_event(const gchar *sig, GVariant *param,
 
 		g_variant_get(param, "(i)", &noti);
 
-		CALLBACK_CALL(&noti);
+		TAPI_INVOKE_NOTI_CALLBACK(&noti);
 	} else {
 		dbg("not handled Modem noti[%s]", sig);
 	}
@@ -1198,14 +977,14 @@ static void _process_ss_event(const gchar *sig, GVariant *param,
 			g_free(str);
 		}
 
-		CALLBACK_CALL(&noti);
+		TAPI_INVOKE_NOTI_CALLBACK(&noti);
 	} else if (!g_strcmp0(sig, "NotifySsInfo")) {
 		TelSsInfo_t noti;
 		memset(&noti, 0, sizeof(TelSsInfo_t));
 
 		g_variant_get(param, "(ii)", &noti.Cause, &noti.SsType);
 
-		CALLBACK_CALL(&noti);
+		TAPI_INVOKE_NOTI_CALLBACK(&noti);
 	} else if (!g_strcmp0(sig, "ReleaseComplete")) {
 		TelSsRelCompMsgInfo_t noti;
 		GVariant *msg = 0;
@@ -1237,7 +1016,7 @@ static void _process_ss_event(const gchar *sig, GVariant *param,
 			g_variant_unref(inner_gv);
 		}
 
-		CALLBACK_CALL(&noti);
+		TAPI_INVOKE_NOTI_CALLBACK(&noti);
 	} else if (!g_strcmp0(sig, "NotifyForwarding")) {
 		TelSsForwardNoti_t noti;
 		memset(&noti, 0, sizeof(TelSsForwardNoti_t));
@@ -1274,7 +1053,7 @@ static void _process_ss_event(const gchar *sig, GVariant *param,
 		}
 		g_variant_iter_free(iter);
 
-		CALLBACK_CALL(&noti);
+		TAPI_INVOKE_NOTI_CALLBACK(&noti);
 
 	} else if (!g_strcmp0(sig, "NotifyWaiting")) {
 
@@ -1301,7 +1080,7 @@ static void _process_ss_event(const gchar *sig, GVariant *param,
 		}
 		g_variant_iter_free(iter);
 
-		CALLBACK_CALL(&noti);
+		TAPI_INVOKE_NOTI_CALLBACK(&noti);
 
 	} else if (!g_strcmp0(sig, "NotifyBarring")) {
 		TelSsBarringNoti_t noti;
@@ -1328,7 +1107,7 @@ static void _process_ss_event(const gchar *sig, GVariant *param,
 		}
 		g_variant_iter_free(iter);
 
-		CALLBACK_CALL(&noti);
+		TAPI_INVOKE_NOTI_CALLBACK(&noti);
 
 	} else {
 		dbg("not handled SS noti[%s]", sig);
@@ -1337,43 +1116,28 @@ static void _process_ss_event(const gchar *sig, GVariant *param,
 	return;
 }
 
-static void _process_gps_event(const gchar *sig, GVariant *param,
-		TapiHandle *handle, char *noti_id, struct tapi_evt_cb *evt_cb_data)
+static void _process_oem_event(const gchar *sig, GVariant *param,
+	TapiHandle *handle, char *noti_id, struct tapi_evt_cb *evt_cb_data)
 {
-	gboolean b_decode_data = FALSE;
-	guchar *decoded_data = NULL;
-
 	TAPI_RETURN_IF_FAIL(evt_cb_data);
 
-	if (!g_strcmp0(sig, "AssistData"))
-		b_decode_data = TRUE;
-	else if (!g_strcmp0(sig, "MeasurePosition"))
-		b_decode_data = TRUE;
-	else if (!g_strcmp0(sig, "ResetAssistData"))
-		/* noting to decode */
-		b_decode_data = FALSE;
-	else if (!g_strcmp0(sig, "FrequencyAiding"))
-		b_decode_data = TRUE;
-	else
-		dbg("not handled Gps noti[%s]", sig);
-
-	/* decoding data */
-	if (b_decode_data) {
+	if (!g_strcmp0(sig, "OemData")) {
+		TelOemNotiData_t oem_data = {0};
 		gchar *data = NULL;
-		gsize length;
-		dbg("[%s] decoding start", sig);
+		gsize decoded_data_len = 0;
 
-		g_variant_get(param, "(s)", &data);
-		decoded_data = g_base64_decode((const gchar *)data, &length);
-		if (decoded_data)
-			CALLBACK_CALL(decoded_data);
+		g_variant_get(param, "(is)", &oem_data.oem_id, &data);
+		oem_data.data = g_base64_decode((const gchar *)data, &decoded_data_len);
+		if (oem_data.data) {
+			oem_data.data_len = (unsigned int)decoded_data_len;
+			msg("[%s] id:[%d] len:[%d]", handle->cp_name, oem_data.oem_id, oem_data.data_len);
+			TAPI_INVOKE_NOTI_CALLBACK(&oem_data);
+
+			g_free(oem_data.data);
+		}
 
 		g_free(data);
-		dbg("length=%d", length);
 	}
-
-	if (decoded_data)
-		g_free(decoded_data);
 }
 
 static void on_prop_callback(GDBusConnection *conn, const gchar *name, const gchar *path, const gchar *interface,
@@ -1455,10 +1219,10 @@ static void on_prop_callback(GDBusConnection *conn, const gchar *name, const gch
 		{
 			int param_i = 0;
 			if (data[0] == 's') {
-				CALLBACK_CALL((void *) (data + 2));
+				TAPI_INVOKE_NOTI_CALLBACK((void *) (data + 2));
 			} else {
 				param_i = atoi(data + 2);
-				CALLBACK_CALL((void *)&param_i);
+				TAPI_INVOKE_NOTI_CALLBACK((void *)&param_i);
 			}
 		}
 		g_variant_unref(value);
@@ -1508,10 +1272,11 @@ static void on_signal_callback(GDBusConnection *conn,
 		_process_modem_event(sig, param, handle, noti_id, evt_cb_data);
 	else if (!g_strcmp0(interface, DBUS_TELEPHONY_SS_INTERFACE))
 		_process_ss_event(sig, param, handle, noti_id, evt_cb_data);
-	else if (!g_strcmp0(interface, DBUS_TELEPHONY_GPS_INTERFACE))
-		_process_gps_event(sig, param, handle, noti_id, evt_cb_data);
 	else if (!g_strcmp0(interface, DBUS_TELEPHONY_NETWORK_INTERFACE))
 		_process_network_event(sig, param, handle, noti_id, evt_cb_data);
+	else if (!g_strcmp0(interface, DBUS_TELEPHONY_OEM_INTERFACE))
+		_process_oem_event(sig, param, handle, noti_id, evt_cb_data);
+
 	g_free(noti_id);
 }
 
@@ -1885,6 +1650,144 @@ EXPORT_API int tel_deregister_noti_event(TapiHandle *handle,
 		dbg("fail to deregister noti event(%s)", noti_id);
 		return TAPI_API_OPERATION_FAILED;
 	}
+
+	return TAPI_API_SUCCESS;
+}
+
+static gpointer _copy_ready_cb_item(gconstpointer src, gpointer data)
+{
+	TelReadyStateCallback_t *orig_data = (TelReadyStateCallback_t *)src;
+	TelReadyStateCallback_t *cb_data = NULL;
+
+	cb_data = g_try_new0(TelReadyStateCallback_t, 1);
+	if (!cb_data)
+		return NULL;
+
+	cb_data->callback = orig_data->callback;
+	cb_data->user_data = orig_data->user_data;
+
+	return cb_data;
+}
+
+static void on_changed_ready_state(keynode_t *key, void *user_data)
+{
+	int value = 0;
+	int res = 0;
+	GSList *list = NULL;
+	GSList *copied_list_head = NULL;
+
+	res = vconf_get_bool(VCONFKEY_TELEPHONY_READY, &value);
+	if (res == VCONF_ERROR) {
+		err("Failed to get vconf state");
+		return;
+	}
+
+	/* Copy callback list.
+	 * As user can deregister callback function
+	 * inside of callback function.
+	 * That logic leads process to deadlock. (Recursive locking) */
+	G_LOCK(state_mutex);
+	copied_list_head = g_slist_copy_deep(state_callback_list, (GCopyFunc)_copy_ready_cb_item, NULL);
+	G_UNLOCK(state_mutex);
+
+	list = copied_list_head;
+	while (list) {
+		TelReadyStateCallback_t *cb_data = (TelReadyStateCallback_t *)list->data;
+
+		if (cb_data && cb_data->callback)
+			cb_data->callback(value, cb_data->user_data);
+
+		list = g_slist_next(list);
+	}
+
+	g_slist_free_full(copied_list_head, g_free);
+}
+
+EXPORT_API int tel_register_ready_state_cb(tapi_state_cb callback, void *user_data)
+{
+	gboolean exist = FALSE;
+	GSList *list = NULL;
+
+	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_INPUT);
+
+	G_LOCK(state_mutex);
+	list = state_callback_list;
+	while (list) {
+		TelReadyStateCallback_t *cb_iter = (TelReadyStateCallback_t *)list->data;
+		if (cb_iter && cb_iter->callback == callback) {
+			exist = TRUE;
+			break;
+		}
+		list = g_slist_next(list);
+	}
+
+	if (!exist) {
+		TelReadyStateCallback_t *cb_data = g_try_new0(TelReadyStateCallback_t, 1);
+		if (!cb_data) {
+			G_UNLOCK(state_mutex);
+			return TAPI_API_OPERATION_FAILED;
+		}
+		cb_data->callback = callback;
+		cb_data->user_data = user_data;
+
+		state_callback_list = g_slist_append(state_callback_list, cb_data);
+	} else {
+		G_UNLOCK(state_mutex);
+		return TAPI_API_OPERATION_FAILED;
+	}
+	G_UNLOCK(state_mutex);
+
+	if (!registered_vconf_cb) {
+		vconf_notify_key_changed(VCONFKEY_TELEPHONY_READY, on_changed_ready_state, NULL);
+		registered_vconf_cb = TRUE;
+	}
+
+	return TAPI_API_SUCCESS;
+}
+
+EXPORT_API int tel_deregister_ready_state_cb(tapi_state_cb callback)
+{
+	GSList *list = NULL;
+	guint count = 0;
+
+	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_INPUT);
+
+	G_LOCK(state_mutex);
+	list = state_callback_list;
+
+	while (list) {
+		TelReadyStateCallback_t *cb_data = (TelReadyStateCallback_t *)list->data;
+
+		if (cb_data && cb_data->callback == callback) {
+			state_callback_list = g_slist_remove(state_callback_list, cb_data);
+			g_free(cb_data);
+			break;
+		}
+		list = g_slist_next(list);
+	}
+	count = g_slist_length(state_callback_list);
+	G_UNLOCK(state_mutex);
+
+	if (count == 0) {
+		vconf_ignore_key_changed(VCONFKEY_TELEPHONY_READY, on_changed_ready_state);
+		registered_vconf_cb = FALSE;
+	}
+
+	return TAPI_API_SUCCESS;
+}
+
+EXPORT_API int tel_get_ready_state(int *state)
+{
+	int res = 0;
+	int value = 0;
+
+	TAPI_RET_ERR_NUM_IF_FAIL(state, TAPI_API_INVALID_INPUT);
+
+	res = vconf_get_bool(VCONFKEY_TELEPHONY_READY, &value);
+	if (res == VCONF_ERROR)
+		return TAPI_API_OPERATION_FAILED;
+
+	*state = (value == 0) ? 0 : 1;
 
 	return TAPI_API_SUCCESS;
 }

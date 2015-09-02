@@ -253,6 +253,112 @@ static int run_sim_get_iccid(MManager *mm, struct menu_data *menu)
 	return 0;
 }
 
+static void on_sim_get_impi(TapiHandle *handle, int result, void *data, void *user_data)
+{
+	TelSimAccessResult_t access_rt = result;
+	TelSimImpi_t *impi = data;
+
+	msg("TAPI_SERVICE_SIM_GET_IMPI response received");
+
+	CHECK_ACCESS_RT(access_rt);
+
+	msg("access_rt[%d]", access_rt);
+	msg("impi[%s]", impi->impi);
+}
+
+static int run_sim_get_impi(MManager *mm, struct menu_data *menu)
+{
+	TapiHandle *handle = menu_manager_ref_user_data(mm);
+	int rt = 0;
+
+	msg("call [%s] tapi service !!!", menu->title);
+
+	rt = tel_get_sim_impi(handle, on_sim_get_impi, NULL);
+	CHECK_RT(rt);
+	return 0;
+}
+
+static void on_sim_get_impu(TapiHandle *handle, int result, void *data, void *user_data)
+{
+	TelSimAccessResult_t access_rt = result;
+	TelSimImpuList_t *impu_list = data;
+	unsigned int i;
+
+	msg("TAPI_SERVICE_SIM_GET_IMPU response received");
+
+	CHECK_ACCESS_RT(access_rt);
+
+	msg("impu_list.count[%d]", impu_list->count);
+
+	for (i = 0; i < impu_list->count; i++)
+		msg("impu_list.list[%d].impu[%s]", i, impu_list->list[i].impu);
+}
+
+static int run_sim_get_impu(MManager *mm, struct menu_data *menu)
+{
+	TapiHandle *handle = menu_manager_ref_user_data(mm);
+	int rt = 0;
+
+	msg("call [%s] tapi service !!!", menu->title);
+
+	rt = tel_get_sim_impu(handle, on_sim_get_impu, NULL);
+	CHECK_RT(rt);
+	return 0;
+}
+
+static void on_sim_get_domain(TapiHandle *handle, int result, void *data, void *user_data)
+{
+	TelSimAccessResult_t access_rt = result;
+	TelSimDomain_t *domain = data;
+
+	msg("TAPI_SERVICE_SIM_GET_DOMAIN response received");
+
+	CHECK_ACCESS_RT(access_rt);
+
+	msg("access_rt[%d]", access_rt);
+	msg("domain[%s]", domain->domain);
+}
+
+static int run_sim_get_domain(MManager *mm, struct menu_data *menu)
+{
+	TapiHandle *handle = menu_manager_ref_user_data(mm);
+	int rt = 0;
+
+	msg("call [%s] tapi service !!!", menu->title);
+
+	rt = tel_get_sim_domain(handle, on_sim_get_domain, NULL);
+	CHECK_RT(rt);
+	return 0;
+}
+
+static void on_sim_get_pcscf(TapiHandle *handle, int result, void *data, void *user_data)
+{
+	TelSimAccessResult_t access_rt = result;
+	TelSimPcscfList_t *pcscf_list = data;
+	unsigned int i;
+
+	msg("TAPI_SERVICE_SIM_GET_PCSCF response received");
+
+	CHECK_ACCESS_RT(access_rt);
+
+	msg("pcscf_list.count[%d]", pcscf_list->count);
+
+	for (i = 0; i < pcscf_list->count; i++)
+		msg("pcscf_list.list[%d].pcscf[%s]", i, pcscf_list->list[i].pcscf);
+}
+
+static int run_sim_get_pcscf(MManager *mm, struct menu_data *menu)
+{
+	TapiHandle *handle = menu_manager_ref_user_data(mm);
+	int rt = 0;
+
+	msg("call [%s] tapi service !!!", menu->title);
+
+	rt = tel_get_sim_pcscf(handle, on_sim_get_pcscf, NULL);
+	CHECK_RT(rt);
+	return 0;
+}
+
 static int run_sim_get_application_list(MManager *mm, struct menu_data *menu)
 {
 	TapiHandle *handle = menu_manager_ref_user_data(mm);
@@ -272,6 +378,43 @@ static int run_sim_get_application_list(MManager *mm, struct menu_data *menu)
 		msg("[CSIM]");
 	if (app_list & TAPI_SIM_APP_TYPE_ISIM)
 		msg("[ISIM]");
+	return 0;
+}
+
+static void on_sim_get_isim_service_table(TapiHandle *handle, int result, void *data, void *user_data)
+{
+	TelSimAccessResult_t access_rt = result;
+	TelSimIST_t *ist = data;
+	int i, size;
+	char *tmp = NULL;
+
+	msg("TAPI_SERVICE_SIM_GET_ISIM_SERVICE_TABLE response received");
+
+	CHECK_ACCESS_RT(access_rt);
+	size = sizeof(TelSimIST_t);
+	tmp = calloc(1, size);
+	if (tmp == NULL)
+		return;
+	memcpy(tmp, &ist->service, size);
+	for (i = 0; i < size; i++) {
+		if (tmp[i] == 1)
+			tmp[i] = '1';
+		else
+			tmp[i] = '0';
+	}
+	msg("ist->service: [%s]", tmp);
+	free(tmp);
+}
+
+static int run_sim_get_isim_service_table(MManager *mm, struct menu_data *menu)
+{
+	TapiHandle *handle = menu_manager_ref_user_data(mm);
+	int rt = 0;
+
+	msg("call [%s] tapi service !!!", menu->title);
+
+	rt = tel_get_sim_isim_service_table(handle, on_sim_get_isim_service_table, NULL);
+	CHECK_RT(rt);
 	return 0;
 }
 
@@ -902,7 +1045,7 @@ static int run_sim_verify_pins(MManager *mm, struct menu_data *menu)
 	pwt.pw_len = strlen(data_sim_verify_pins_pw);
 	pwt.pw = (unsigned char *) data_sim_verify_pins_pw;
 
-	rt = tel_verifiy_sim_pins(handle, &pwt, on_sim_security_op_resp, NULL);
+	rt = tel_verify_sim_pins(handle, &pwt, on_sim_security_op_resp, NULL);
 	CHECK_RT(rt);
 	return 0;
 }
@@ -1323,8 +1466,33 @@ static struct menu_data menu_sim_change_state[] = {
 	{NULL, NULL},
 };
 
+static struct menu_data menu_sim_get_impi[] = {
+	{"1", "run", NULL, run_sim_get_impi, NULL},
+	{NULL, NULL},
+};
+
+static struct menu_data menu_sim_get_impu[] = {
+	{"1", "run", NULL, run_sim_get_impu, NULL},
+	{NULL, NULL},
+};
+
+static struct menu_data menu_sim_get_domain[] = {
+	{"1", "run", NULL, run_sim_get_domain, NULL},
+	{NULL, NULL},
+};
+
+static struct menu_data menu_sim_get_pcscf[] = {
+	{"1", "run", NULL, run_sim_get_pcscf, NULL},
+	{NULL, NULL},
+};
+
 static struct menu_data menu_sim_get_application_list[] = {
 	{"1", "run", NULL, run_sim_get_application_list, NULL},
+	{NULL, NULL},
+};
+
+static struct menu_data menu_sim_get_isim_service_table[] = {
+	{"1", "run", NULL, run_sim_get_isim_service_table, NULL},
 	{NULL, NULL},
 };
 
@@ -1523,7 +1691,12 @@ struct menu_data menu_sim_3gpp[] = {
 	{"28", "atr info", menu_sim_get_atr, NULL, NULL},
 	{"29", "service table", menu_sim_get_service_table, NULL, NULL},
 	{"30", "Change State", menu_sim_change_state, NULL, NULL},
-	{"31", "Get application list", menu_sim_get_application_list, NULL, NULL},
+	{"31", "Get IMPI", menu_sim_get_impi, NULL, NULL},
+	{"32", "Get IMPU", menu_sim_get_impu, NULL, NULL},
+	{"33", "Get Domain", menu_sim_get_domain, NULL, NULL},
+	{"34", "Get P-CSCF", menu_sim_get_pcscf, NULL, NULL},
+	{"35", "Get application list", menu_sim_get_application_list, NULL, NULL},
+	{"36", "Get isim service table", menu_sim_get_isim_service_table, NULL, NULL},
 	{ NULL, NULL, },
 };
 
