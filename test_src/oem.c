@@ -38,14 +38,14 @@
 
 /* Type definition for Common Header */
 typedef struct {
-    short len;
-    char msg_seq;
-    char ack_seq;
-    char main_cmd;
-    char sub_cmd;
-    char cmd_type;
+	short len;
+	char msg_seq;
+	char ack_seq;
+	char main_cmd;
+	char sub_cmd;
+	char cmd_type;
 	unsigned char raw_data[RAW_DATA_MAX_LEN];
-}__attribute__ ((packed)) ipc_type;
+} __attribute__ ((packed)) ipc_type;
 
 typedef struct {
 	char magic;
@@ -67,14 +67,14 @@ static void on_noti_oemdata(TapiHandle *handle, const char *noti_id, void *data,
 	TelOemData_t *pdata = data;
 	ipc_type *noti = NULL;
 
-	if(!pdata) {
+	if (!pdata) {
 		msg("Invalid Data");
 		return;
 	}
 
 	msg("id:[0x%x] data_len:[%d] [%s]", pdata->oem_id, pdata->data_len, noti_id);
 	noti = (ipc_type *)pdata->data;
-	if(!noti) {
+	if (!noti) {
 		msg("Invalid Data");
 		return;
 	}
@@ -86,17 +86,17 @@ static void on_response_oemdata(TapiHandle *handle, int result, void *data, void
 {
 	TelOemData_t *info = data;
 
-	msg ("");
-	msgb ("on_response_oemdata() response receive");
-	msg (" - result = 0x%x", result);
+	msg("");
+	msgb("on_response_oemdata() response receive");
+	msg(" - result = 0x%x", result);
 
 	if (!info) {
-		msg (" - failed");
+		msg(" - failed");
 		return;
 	}
 
-	msg (" - oem_id = 0x%x", info->oem_id);
-	msg (" - data_len = %d", info->data_len);
+	msg(" - oem_id = 0x%x", info->oem_id);
+	msg(" - data_len = %d", info->data_len);
 	menu_print_dump(info->data_len, info->data);
 }
 
@@ -104,40 +104,40 @@ static void on_response_oem_send_external_command(TapiHandle *handle, int result
 {
 	TelOemData_t *info = data;
 
-	msgb ("on_response_oem_send_external_command() response receive");
-	msg ("result = 0x%x", result);
+	msgb("on_response_oem_send_external_command() response receive");
+	msg("result = 0x%x", result);
 
 	if (!info) {
-		msg (" - failed");
+		msg(" - failed");
 		return;
 	}
 
-	msg (" - oem_id = 0x%x", info->oem_id);
-	msg (" - data_len = %d", info->data_len);
-	msg (" - data = %s", info->data);
+	msg(" - oem_id = 0x%x", info->oem_id);
+	msg(" - data_len = %d", info->data_len);
+	msg(" - data = %s", info->data);
 }
 
 static void on_response_access_call_time(TapiHandle *handle, int result, void *data, void *user_data)
 {
 	TelOemData_t *info = data;
 	call_time_access_t *response = NULL;
-	msgb ("on_response_access_call_time() response receive");
-	msg ("result = 0x%x", result);
+	msgb("on_response_access_call_time() response receive");
+	msg("result = 0x%x", result);
 
 	if (!info) {
-		msg (" - failed");
+		msg(" - failed");
 		return;
 	}
 
-	msg (" - oem_id = 0x%x", info->oem_id);
-	msg (" - data_len = %d", info->data_len);
+	msg(" - oem_id = 0x%x", info->oem_id);
+	msg(" - data_len = %d", info->data_len);
 
 	response = (call_time_access_t *)info->data;
 	if (!response) {
-		msg ("Wrong response data");
+		msg("Wrong response data");
 	} else {
-		msg (" - result = %d", response->magic);
-		msg (" - call time = %d", response->calltime);
+		msg(" - result = %d", response->magic);
+		msg(" - call time = %d", response->calltime);
 	}
 
 }
@@ -177,11 +177,11 @@ static int run_oem_send_data(MManager *mm, struct menu_data *menu)
 
 	result = tel_send_oem_data(handle, oem_id, &data, data.len);
 
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	} else {
+	else
 		msg("success. (result = %d)", result);
-	}
+
 	return 0;
 }
 
@@ -208,19 +208,19 @@ static int run_oem_send_data_sync(MManager *mm, struct menu_data *menu)
 
 	result = tel_send_oem_data_sync(handle, oem_id, &data, data.len, &info);
 
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	} else {
+	else
 		msg("success. (result = %d)", result);
-	}
 
-	msg (" - oem_id = 0x%x", info.oem_id);
-	msg (" - data_len = %d", info.data_len);
+	msg(" - oem_id = 0x%x", info.oem_id);
+	msg(" - data_len = %d", info.data_len);
 	menu_print_dump(info.data_len, info.data);
 	msg("");
-	if (info.data_len) {
+
+	if (info.data_len)
 		g_free(info.data);
-	}
+
 	return 0;
 }
 
@@ -246,11 +246,11 @@ static int run_oem_send_data_async(MManager *mm, struct menu_data *menu)
 
 	result = tel_send_oem_data_async(handle, oem_id, &data, data.len, on_response_oemdata, NULL);
 
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	} else {
+	else
 		msg("success. (result = %d)", result);
-	}
+
 	return 0;
 }
 
@@ -280,11 +280,11 @@ static int run_oem_get_thermal_data(MManager *mm, struct menu_data *menu)
 
 	result = tel_send_oem_data(handle, oem_id, &data, data.len);
 
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	} else {
+	else
 		msg("success. (result = %d)", result);
-	}
+
 	return 0;
 }
 
@@ -319,11 +319,11 @@ static int run_oem_set_thermal_noti(MManager *mm, struct menu_data *menu)
 
 	result = tel_send_oem_data(handle, oem_id, &data, data.len);
 
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	} else {
+	else
 		msg("success. (result = %d)", result);
-	}
+
 	return 0;
 }
 
@@ -334,11 +334,11 @@ static int run_oem_send_external_command_data(TapiHandle *handle)
 
 	result = tel_send_oem_data(handle, oem_id, data_at_command, strlen(data_at_command));
 
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	} else {
+	else
 		msg("success. (result = %d)", result);
-	}
+
 	return 0;
 }
 
@@ -350,19 +350,17 @@ static int run_oem_send_external_command_sync(TapiHandle *handle)
 
 	result = tel_send_oem_data_sync(handle, oem_id, data_at_command, strlen(data_at_command), &info);
 
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	} else {
+	else
 		msg("success. (result = %d)", result);
-	}
 
-	msg ("oem_id = 0x%x", info.oem_id);
-	msg ("data_len = %d", info.data_len);
-	msg ("data = %s", info.data);
+	msg("oem_id = 0x%x", info.oem_id);
+	msg("data_len = %d", info.data_len);
+	msg("data = %s", info.data);
 
-	if (info.data_len) {
+	if (info.data_len)
 		g_free(info.data);
-	}
 
 	return 0;
 }
@@ -374,11 +372,11 @@ static int run_oem_send_external_command_async(TapiHandle *handle)
 
 	result = tel_send_oem_data_async(handle, oem_id, data_at_command, strlen(data_at_command), on_response_oem_send_external_command, NULL);
 
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	} else {
+	else
 		msg("success. (result = %d)", result);
-	}
+
 	return 0;
 }
 
@@ -388,18 +386,18 @@ static int run_oem_send_external_command(MManager *mm, struct menu_data *menu)
 	int option = atoi(data_oem_external_cmd_send_option);
 
 	switch (option) {
-		case 1:
-			run_oem_send_external_command_data(handle);
-			break;
-		case 2:
-			run_oem_send_external_command_sync(handle);
-			break;
-		case 3:
-			run_oem_send_external_command_async(handle);
-			break;
-		default:
-			msg("wrong option: calling run_oem_send_external_command_data");
-			run_oem_send_external_command_data(handle);
+	case 1:
+		run_oem_send_external_command_data(handle);
+		break;
+	case 2:
+		run_oem_send_external_command_sync(handle);
+		break;
+	case 3:
+		run_oem_send_external_command_async(handle);
+		break;
+	default:
+		msg("wrong option: calling run_oem_send_external_command_data");
+		run_oem_send_external_command_data(handle);
 	}
 
 	return 0;
@@ -414,28 +412,25 @@ static int run_oem_access_call_time(MManager *mm, struct menu_data *menu)
 	call_time_access_t req_data = {0};
 
 	switch (option) {
-		case 1: {	/* Get */
-			req_data.magic = 0;
-			break;
-		}
-		case 2: {
-			req_data.magic = 1;
-			req_data.calltime = 1405389618;
-			break;
-		}
-		default:
-			msg("wrong option: calling run_oem_send_external_command_data");
-			return 0;
+	case 1: /* Get */
+		req_data.magic = 0;
+		break;
+	case 2:
+		req_data.magic = 1;
+		req_data.calltime = 1405389618;
+		break;
+	default:
+		msg("wrong option: calling run_oem_send_external_command_data");
+		return 0;
 	}
 	msg("magic=%d, time=%d", req_data.magic, req_data.calltime);
 
 	result = tel_send_oem_data_async(handle, oem_id, &req_data, sizeof(call_time_access_t), on_response_access_call_time, NULL);
 
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	} else {
+	else
 		msg("success. (result = %d)", result);
-	}
 
 	return 0;
 }
@@ -466,19 +461,18 @@ static int run_oem_ims_command(MManager *mm, struct menu_data *menu)
 
 	result = tel_send_oem_data_sync(handle, oem_id, &data, data.len, &info);
 
-	if (result != TAPI_API_SUCCESS) {
+	if (result != TAPI_API_SUCCESS)
 		msg("failed. (result = %d)", result);
-	} else {
+	else
 		msg("success. (result = %d)", result);
-	}
 
-	msg (" - oem_id = 0x%x", info.oem_id);
-	msg (" - data_len = %d", info.data_len);
+	msg(" - oem_id = 0x%x", info.oem_id);
+	msg(" - data_len = %d", info.data_len);
 	menu_print_dump(info.data_len, info.data);
 	msg("");
-	if (info.data_len) {
+	if (info.data_len)
 		g_free(info.data);
-	}
+
 	return 0;
 }
 
@@ -548,7 +542,6 @@ void register_oem_event(TapiHandle *handle)
 	int ret;
 
 	ret = tel_register_noti_event(handle, TAPI_NOTI_OEM_DATA, on_noti_oemdata, NULL);
-	if (ret != TAPI_API_SUCCESS) {
+	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
-	}
 }
