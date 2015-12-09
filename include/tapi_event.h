@@ -677,10 +677,17 @@ __BEGIN_DECLS
 
 /**
  * @brief Definition for network ims voice support status notification
- * @since_tizen TBD
- * @remarks TBD
+ * @since_tizen 2.4
+ * @remarks 'int' (0: Not available, 1: Available) will be stored
  */
 #define TAPI_PROP_NETWORK_IMS_VOICE_SUPPORT_STATUS	DBUS_TELEPHONY_NETWORK_INTERFACE":ims_voice_status"
+
+/**
+ * @brief Definition for network volte enable status notification
+ * @since_tizen 2.4
+ * @remarks 'int' (0: Not available, 1: Available) will be stored
+ */
+#define TAPI_PROP_NETWORK_VOLTE_ENABLE			DBUS_TELEPHONY_NETWORK_INTERFACE":volte_enable"
 
 /**
  * @brief Definition for the Ss interface

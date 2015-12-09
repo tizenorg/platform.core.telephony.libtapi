@@ -232,52 +232,52 @@ static void _process_call_event(const gchar *sig, GVariant *param,
 		TelCallInfoWaitingNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		msg("[ check ] (%s) %s : data.id(%d)", handle->cp_name, "Call Info Waiting noti", data.id);
-		TAPI_INVOKE_NOTI_CALLBACK(&data.id);
+		TAPI_INVOKE_NOTI_CALLBACK(&data);
 	} else if (!g_strcmp0(sig, "Forwarded")) {
 		TelCallInfoForwardedNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		msg("[ check ] (%s) %s : data.id(%d)", handle->cp_name, "Call Info Forwarded noti", data.id);
-		TAPI_INVOKE_NOTI_CALLBACK(&data.id);
+		TAPI_INVOKE_NOTI_CALLBACK(&data);
 	} else if (!g_strcmp0(sig, "ForwardedCall")) {
 		TelCallInfoForwardedCallNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		dbg("[ check ] (%s) %s : data.id(%d)", handle->cp_name, "Call Info Forwarded Call noti", data.id);
-		TAPI_INVOKE_NOTI_CALLBACK(&data.id);
+		TAPI_INVOKE_NOTI_CALLBACK(&data);
 	} else if (!g_strcmp0(sig, "BarredIncoming")) {
 		TelCallInfoBarredIncomingNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		msg("[ check ] (%s) %s : data.id(%d)", handle->cp_name, "Call Info Barred Incoming noti", data.id);
-		TAPI_INVOKE_NOTI_CALLBACK(&data.id);
+		TAPI_INVOKE_NOTI_CALLBACK(&data);
 	} else if (!g_strcmp0(sig, "BarredOutgoing")) {
 		TelCallInfoBarredOutgoingNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		msg("[ check ] (%s) %s : data.id(%d)", handle->cp_name, "Call Info Barred Outgoing noti", data.id);
-		TAPI_INVOKE_NOTI_CALLBACK(&data.id);
+		TAPI_INVOKE_NOTI_CALLBACK(&data);
 	} else if (!g_strcmp0(sig, "ForwardConditional")) {
 		TelCallInfoForwardConditionalNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		msg("[ check ] (%s) %s : data.id(%d)", handle->cp_name, "Call Info Forward Conditional noti", data.id);
-		TAPI_INVOKE_NOTI_CALLBACK(&data.id);
+		TAPI_INVOKE_NOTI_CALLBACK(&data);
 	} else if (!g_strcmp0(sig, "ForwardUnconditional")) {
 		TelCallInfoForwardUnconditionalNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		msg("[ check ] (%s) %s : data.id(%d)", handle->cp_name, "Call Info Forward Unconditional noti", data.id);
-		TAPI_INVOKE_NOTI_CALLBACK(&data.id);
+		TAPI_INVOKE_NOTI_CALLBACK(&data);
 	} else if (!g_strcmp0(sig, "CallActive")) {
 		TelCallInfoActiveNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		msg("[ check ] (%s) %s : data.id(%d)", handle->cp_name, "Call Info Call Active noti", data.id);
-		TAPI_INVOKE_NOTI_CALLBACK(&data.id);
+		TAPI_INVOKE_NOTI_CALLBACK(&data);
 	} else if (!g_strcmp0(sig, "CallHeld")) {
 		TelCallInfoHeldNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		msg("[ check ] (%s) %s : data.id(%d)", handle->cp_name, "Call Info Call Held noti", data.id);
-		TAPI_INVOKE_NOTI_CALLBACK(&data.id);
+		TAPI_INVOKE_NOTI_CALLBACK(&data);
 	} else if (!g_strcmp0(sig, "CallJoined")) {
 		TelCallInfoJoinedNoti_t data;
 		g_variant_get(param, "(i)", &data.id);
 		msg("[ check ] (%s) %s : data.id(%d)", handle->cp_name, "Call Info Call Joined noti", data.id);
-		TAPI_INVOKE_NOTI_CALLBACK(&data.id);
+		TAPI_INVOKE_NOTI_CALLBACK(&data);
 	} else if (!g_strcmp0(sig, "CallPrivacyMode")) {
 		TelCallVoicePrivacyNoti_t data;
 		g_variant_get(param, "(i)", &data.privacy_mode);
@@ -1124,12 +1124,10 @@ static void _process_oem_event(const gchar *sig, GVariant *param,
 	if (!g_strcmp0(sig, "OemData")) {
 		TelOemNotiData_t oem_data = {0};
 		gchar *data = NULL;
-		gsize decoded_data_len = 0;
 
 		g_variant_get(param, "(is)", &oem_data.oem_id, &data);
-		oem_data.data = g_base64_decode((const gchar *)data, &decoded_data_len);
+		oem_data.data = g_base64_decode((const gchar *)data, &oem_data.data_len);
 		if (oem_data.data) {
-			oem_data.data_len = (unsigned int)decoded_data_len;
 			msg("[%s] id:[%d] len:[%d]", handle->cp_name, oem_data.oem_id, oem_data.data_len);
 			TAPI_INVOKE_NOTI_CALLBACK(&oem_data);
 
