@@ -62,17 +62,15 @@ static void on_response_oem_data_async(GObject *source_object,
 	GVariant *dbus_result;
 	TelOemData_t oem_data = {0};
 	gchar *data = NULL;
-	gsize decoded_data_len = 0;
 
 	dbus_result = g_dbus_connection_call_finish(G_DBUS_CONNECTION(source_object), res, &error);
 	TAPI_RESP_CHECK_ERROR(error, evt_cb_data);
 
 	g_variant_get(dbus_result, "(is)", &oem_data.oem_id, &data);
 
-	oem_data.data = g_base64_decode((const gchar *)data, &decoded_data_len);
+	oem_data.data = g_base64_decode((const gchar *)data, &oem_data.data_len);
 	if (oem_data.data) {
 		result = TAPI_API_SUCCESS;
-		oem_data.data_len = (unsigned int)decoded_data_len;
 
 		dbg("id:[0x%d] len:[%d]", oem_data.oem_id, oem_data.data_len);
 
@@ -140,7 +138,6 @@ EXPORT_API int tel_send_oem_data_sync(TapiHandle *handle, int oem_id,
 	gchar *encoded_data = NULL;
 	GVariant *rst = NULL;
 	gchar *pdata = NULL;
-	gsize decoded_data_len = 0;
 
 	dbg("oem_id(0x%x) data(%p) data len(%d)", oem_id, data, data_len);
 
@@ -168,11 +165,9 @@ EXPORT_API int tel_send_oem_data_sync(TapiHandle *handle, int oem_id,
 
 	g_variant_get(rst, "(is)", &outparam->oem_id, &pdata);
 
-	outparam->data = g_base64_decode((const gchar *)pdata, &decoded_data_len);
-	if (decoded_data_len) {
-		outparam->data_len = (unsigned int)decoded_data_len;
+	outparam->data = g_base64_decode((const gchar *)pdata, &outparam->data_len);
+	if (outparam->data_len)
 		dbg("id:[0x%x] len:[%d]", outparam->oem_id, outparam->data_len);
-	}
 
 	g_free(pdata);
 	g_variant_unref(rst);

@@ -139,7 +139,7 @@ static void on_response_get_sim_iccid(GObject *source_object, GAsyncResult *res,
 	g_variant_get(dbus_result, "(is)", &result, &iccid);
 	iccid_info.icc_length = strlen((const char *)iccid);
 	if (iccid_info.icc_length > TAPI_SIM_ICCID_LEN_MAX) {
-		dbg("current tapi support 20 byte but received length[%d] so changed");
+		dbg("current tapi support 20 byte but received length[%d] so changed", iccid_info.icc_length);
 		iccid_info.icc_length = TAPI_SIM_ICCID_LEN_MAX;
 	}
 	memcpy(iccid_info.icc_num, iccid, iccid_info.icc_length);

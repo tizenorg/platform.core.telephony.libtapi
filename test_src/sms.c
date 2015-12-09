@@ -200,6 +200,10 @@ static BOOL EncodeCdmaSmsParamUserData(char *SendTxt, ParamUserData_t *ParamUser
 	}
 
 	length = strlen(SendTxt);
+	if (length > MAXLENGTH_SMS_USER_DATA) {
+		printf("[EncodeCdmaSmsParamUserData] Text is too long \n");
+		return ret;
+	}
 
 	ParamUser->param_id = SMS_3GPP2_BSUB_ID_USER_DATA;
 	ParamUser->encoding = SMS_3GPP2_BSUB_UD_ASCII7BIT_ENCODING;
@@ -240,6 +244,7 @@ static BOOL EncodeCdmaSmsSubmitTpdu(MManager *mm,
 	/* Converting Destination number from ASCII to hex*/
 	if (__sms_asciistring_to_hex(diallingNum, hex_string, dialNumLen) == FALSE) {
 		msg("__sms_asciistring_to_hex() failed.");
+		g_free(encoded_msg);
 		return FALSE;
 	}
 
@@ -379,7 +384,7 @@ static BOOL EncodeCdmaSmsSubmitTpdu(MManager *mm,
 	ret = tel_send_sms(handle, &data_package, 0x0, on_resp_send_cdma_msg, NULL);
 	msg("Return Status of CDMA tel_send_sms[%d]", ret);
 
-	free(encoded_msg);
+	g_free(encoded_msg);
 	return TRUE;
 }
 

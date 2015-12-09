@@ -1,6 +1,6 @@
 %define major 0
 %define minor 7
-%define patchlevel 94
+%define patchlevel 95
 
 Name:           libtapi
 Version:        %{major}.%{minor}.%{patchlevel}
