@@ -73,6 +73,16 @@ static void on_prop_lac(TapiHandle *handle, const char *noti_id, void *data, voi
 	msg(" - lac = %d", *lac);
 }
 
+static void on_prop_tac(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
+{
+	int *tac = data;
+
+	msg("");
+	msgp("property(%s) receive !!", TAPI_PROP_NETWORK_TAC);
+
+	msg(" - tac = %d", *tac);
+}
+
 static void on_prop_plmn(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
 	msg("");
@@ -838,6 +848,7 @@ static int show_properties(MManager *mm, struct menu_data *menu)
 {
 	TapiHandle *handle = menu_manager_ref_user_data(mm);
 	int lac = -1,
+		tac = -1,
 		cellid = -1,
 		svc_type = -1,
 		act = -1,
@@ -854,6 +865,7 @@ static int show_properties(MManager *mm, struct menu_data *menu)
 		*s_name = NULL;
 
 	tel_get_property_int(handle, TAPI_PROP_NETWORK_LAC	, &lac);
+	tel_get_property_int(handle, TAPI_PROP_NETWORK_TAC, &tac);
 	tel_get_property_int(handle, TAPI_PROP_NETWORK_CELLID, &cellid);
 	tel_get_property_int(handle, TAPI_PROP_NETWORK_SERVICE_TYPE, &svc_type);
 	tel_get_property_int(handle, TAPI_PROP_NETWORK_ACT, &act);
@@ -869,13 +881,13 @@ static int show_properties(MManager *mm, struct menu_data *menu)
 	tel_get_property_string(handle, TAPI_PROP_NETWORK_SPN_NAME, &s_name);
 	tel_get_property_int(handle, TAPI_PROP_NETWORK_IMS_VOICE_SUPPORT_STATUS, &ims_voice_status);
 
-	msg("  [lac]: 0x%08X   [cellid]: 0x%08X\n"
+	msg("  [lac]: 0x%08X   [tac]: 0x%08X   [cellid]: 0x%08X\n"
 		"  [service_type]: %d    [act]: %d            [plmn]: \"%s\"\n"
 		"  [ps_type]: %d         [cs_status]: %d      [ps_status]: %d\n"
 		"  [sig_dbm]: %d         [sig_level]: %d      [roaming_status]: %d\n"
 		"  [option]: %d  [network_name]: \"%s\"    [spn_name]: \"%s\"\n"
 		"  [ims_voice_status]: %d",
-		lac, cellid,
+		lac, tac, cellid,
 		svc_type, act, plmn,
 		ps_type, cs, ps,
 		sig_dbm, sig_level, roam,
@@ -1009,8 +1021,8 @@ struct menu_data menu_net_3gpp[] = {
 	{ "9g", "GET Neighboring Cell Info", menu_net_get_neighboring_cell_info, NULL, NULL},
 	{ "10", "SET Default Data Subscription", menu_net_set_default_data_subscription, NULL, NULL},
 	{ "11", "GET Default Data Subscription", menu_net_get_default_data_subscription, NULL, NULL},
-	{ "12", "SET Default Subscription (for Voice)", menu_net_set_default_subscription, 0, 0},
-	{ "13", "GET Default Subscription (for Voice)", menu_net_get_default_subscription, 0, 0},
+	{ "12", "SET Default Subscription (for Voice)", menu_net_set_default_subscription, NULL, NULL},
+	{ "13", "GET Default Subscription (for Voice)", menu_net_get_default_subscription, NULL, NULL},
 	{ "*", "<Properties>", NULL, show_properties, NULL },
 	{ NULL, NULL, },
 };
@@ -1098,6 +1110,11 @@ void register_network_event(TapiHandle *handle)
 
 	ret = tel_register_noti_event(handle,
 			TAPI_PROP_NETWORK_LAC, on_prop_lac, NULL);
+	if (ret != TAPI_API_SUCCESS)
+		msg("event register failed(%d)", ret);
+
+	ret = tel_register_noti_event(handle,
+			TAPI_PROP_NETWORK_TAC, on_prop_tac, NULL);
 	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
 
