@@ -572,12 +572,18 @@ __BEGIN_DECLS
 #define TAPI_NOTI_NETWORK_DEFAULT_SUBSCRIPTION	DBUS_TELEPHONY_NETWORK_INTERFACE":DefaultSubscription"
 
 /**
- * @brief Definition for network LAC property (In case of LTE network, it represents Tracking Area Code)
+ * @brief Definition for network LAC (Location Area Code) property
  * @since_tizen 2.3
  * @remarks 'unsigned int' will be stored
  */
-#define TAPI_PROP_NETWORK_LAC	DBUS_TELEPHONY_NETWORK_INTERFACE":lac"
+#define TAPI_PROP_NETWORK_LAC		DBUS_TELEPHONY_NETWORK_INTERFACE":lac"
 
+/**
+ * @brief Definition for network TAC (Tracking Area Code) property (for LTE network)
+ * @since_tizen 2.3
+ * @remarks 'unsigned int' will be stored
+ */
+#define TAPI_PROP_NETWORK_TAC		DBUS_TELEPHONY_NETWORK_INTERFACE":tac"
 /**
  * @brief Definition for network PLMN property
  * @since_tizen 2.3
