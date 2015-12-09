@@ -198,6 +198,17 @@ static void on_prop_ims_voice_status(TapiHandle *handle, const char *noti_id, vo
 		msg(" - ims_voice_support_status = %d", *status);
 }
 
+static void on_noti_volte_enable(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
+{
+	int *status = data;
+
+	msg("");
+	msgp("property(%s) receive !!", TAPI_PROP_NETWORK_VOLTE_ENABLE);
+
+	if (status != NULL)
+		msg(" - volte_enable = %d", *status);
+}
+
 static void on_noti_registration_status(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
 {
 	TelNetworkRegistrationStatus_t *noti = data;
@@ -1175,6 +1186,11 @@ void register_network_event(TapiHandle *handle)
 
 	ret = tel_register_noti_event(handle,
 			TAPI_PROP_NETWORK_IMS_VOICE_SUPPORT_STATUS, on_prop_ims_voice_status, NULL);
+	if (ret != TAPI_API_SUCCESS)
+		msg("event register failed(%d)", ret);
+
+	ret = tel_register_noti_event (handle,
+			TAPI_PROP_NETWORK_VOLTE_ENABLE, on_noti_volte_enable, NULL);
 	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
 }

@@ -463,7 +463,6 @@ static void on_response_set_preferred_voice_subscription(GObject *source_object,
 	g_variant_unref(dbus_result);
 }
 
-
 EXPORT_API int tel_dial_call(TapiHandle *handle, const TelCallDial_t *pParams, tapi_response_cb callback, void *user_data)
 {
 	struct tapi_resp_data *evt_cb_data = 0;
@@ -769,6 +768,7 @@ EXPORT_API int tel_get_call_status(TapiHandle *handle, int callHandle, TelCallSt
 	gboolean call_direction = FALSE;
 	gint call_state = 0;
 	gboolean call_multiparty_state = FALSE;
+	gboolean volte_call = FALSE;
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(out, TAPI_API_INVALID_PTR);
@@ -782,7 +782,9 @@ EXPORT_API int tel_get_call_status(TapiHandle *handle, int callHandle, TelCallSt
 			"GetStatus", param, 0, G_DBUS_CALL_FLAGS_NONE, TAPI_DEFAULT_TIMEOUT, handle->ca, &gerr);
 
 	if (gv) {
-		g_variant_get(gv, "(isibibb)", &callHandle, &call_number, &call_type, &call_direction, &call_state, &call_multiparty_state);
+		g_variant_get(gv, "(isibibb)",  &callHandle,
+			&call_number, &call_type, &call_direction,
+			&call_state, &call_multiparty_state, &volte_call);
 
 		out->CallHandle = (int)callHandle;
 		out->bMoCall = (int)call_direction;
@@ -793,6 +795,7 @@ EXPORT_API int tel_get_call_status(TapiHandle *handle, int callHandle, TelCallSt
 		out->CallType = (TelCallType_t)call_type;
 		out->CallState = (TelCallStates_t)call_state;
 		out->bConferenceState = (int)call_multiparty_state;
+		out->bVolteCall = (int)volte_call;
 
 		g_free(call_number);
 		g_variant_unref(gv);
@@ -828,6 +831,7 @@ EXPORT_API int tel_get_call_status_all(TapiHandle *handle, TelCallStatusCallback
 		gchar *key = 0;
 		GVariant *value = 0;
 
+		memset(&data, 0x0, sizeof(TelCallStatus_t));
 		g_variant_get(gv, "(aa{sv})", &iter);
 
 		while (g_variant_iter_next(iter, "a{sv}", &iter_row)) {
@@ -844,6 +848,8 @@ EXPORT_API int tel_get_call_status_all(TapiHandle *handle, TelCallStatusCallback
 					data.CallState = (int)g_variant_get_int32(value);
 				else if (!g_strcmp0(key, "call_multiparty_state"))
 					data.bConferenceState = (int)g_variant_get_boolean(value);
+				else if (!g_strcmp0(key, "is_volte_call"))
+					data.bVolteCall = (int)g_variant_get_boolean(value);
 			}
 			g_variant_iter_free(iter_row);
 
@@ -1076,4 +1082,3 @@ EXPORT_API int tel_get_call_preferred_voice_subscription(TapiHandle *handle, Tel
 
 	return ret;
 }
-

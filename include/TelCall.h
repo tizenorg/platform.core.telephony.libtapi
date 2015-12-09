@@ -690,6 +690,7 @@ typedef struct {
 	TelCallType_t CallType;	/**< Type of call (voice, data, emergency) */
 	TelCallStates_t CallState;	/**< Current Call state */
 	int bConferenceState;	/**< Whether Call is in Conference */
+	int bVolteCall;							/**< Whether Call is volte call */
 } TelCallStatus_t;
 
 /**

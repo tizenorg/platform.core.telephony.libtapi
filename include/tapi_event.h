@@ -683,6 +683,13 @@ __BEGIN_DECLS
 #define TAPI_PROP_NETWORK_IMS_VOICE_SUPPORT_STATUS	DBUS_TELEPHONY_NETWORK_INTERFACE":ims_voice_status"
 
 /**
+ * @brief Definition for network volte enable status notification
+ * @since_tizen TBD
+ * @remarks TBD
+ */
+#define TAPI_PROP_NETWORK_VOLTE_ENABLE			DBUS_TELEPHONY_NETWORK_INTERFACE":volte_enable"
+
+/**
  * @brief Definition for the Ss interface
  */
 #define DBUS_TELEPHONY_SS_INTERFACE	DBUS_TELEPHONY_SERVICE".Ss"

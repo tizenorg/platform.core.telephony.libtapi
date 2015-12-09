@@ -84,7 +84,7 @@ static void call_status_callback(TelCallStatus_t *status, void *user_data)
 	msg(" - type = %d", status->CallType);
 	msg(" - state = %d[%s]", status->CallState, __get_call_state_string(status->CallState));
 	msg(" - multiparty = %d", status->bConferenceState);
-
+	msg(" - volte = %d", status->bVolteCall);
 }
 
 static void on_noti_call_status_idle(TapiHandle *handle, const char *noti_id, void *data, void *user_data)
