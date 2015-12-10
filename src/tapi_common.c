@@ -1535,6 +1535,8 @@ EXPORT_API int tel_deinit(TapiHandle *handle)
 {
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_INPUT);
 
+	msg("tel_deinit: [%s]", handle->cp_name);
+
 	if (handle->cp_name)
 		g_free(handle->cp_name);
 
@@ -1573,19 +1575,19 @@ EXPORT_API int tel_register_noti_event(TapiHandle *handle, const char *noti_id,
 
 	tmp = g_hash_table_lookup(handle->evt_list, noti_id);
 	if (tmp != NULL) {
-		dbg("noti_id(%s) is already registered", noti_id);
+		dbg("[%s] noti_id(%s) is already registered", handle->cp_name, noti_id);
 		return TAPI_API_INVALID_INPUT;
 	}
 
 	dbus_str = g_strsplit(noti_id, ":", 2);
 	if (!dbus_str) {
-		dbg("invalid noti_id");
+		err("[%s] invalid noti_id", handle->cp_name);
 		return TAPI_API_INVALID_INPUT;
 	}
 
 	if (!dbus_str[0] || !dbus_str[1]) {
 		g_strfreev(dbus_str);
-		dbg("invalid noti_id");
+		err("[%s] invalid noti_id", handle->cp_name);
 		return TAPI_API_INVALID_INPUT;
 	}
 
@@ -1629,10 +1631,27 @@ EXPORT_API int tel_deregister_noti_event(TapiHandle *handle,
 		const char *noti_id)
 {
 	struct tapi_evt_cb *evt_cb_data = NULL;
+	gchar **dbus_str = NULL;
 	gboolean rv = FALSE;
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_INPUT);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle->dbus_connection, TAPI_API_INVALID_INPUT);
+
+	dbus_str = g_strsplit(noti_id, ":", 2);
+	if (!dbus_str) {
+		err("[%s] invalid noti_id", handle->cp_name);
+		return TAPI_API_INVALID_INPUT;
+	}
+
+	if (!dbus_str[0] || !dbus_str[1]) {
+		g_strfreev(dbus_str);
+		err("[%s] invalid noti_id", handle->cp_name);
+		return TAPI_API_INVALID_INPUT;
+	}
+
+	dbg("[%s] signal (%s)", handle->cp_name, dbus_str[1]);
+	g_strfreev(dbus_str);
+	dbus_str = NULL;
 
 	evt_cb_data = g_hash_table_lookup(handle->evt_list, noti_id);
 	if (!evt_cb_data) {
@@ -1645,7 +1664,7 @@ EXPORT_API int tel_deregister_noti_event(TapiHandle *handle,
 
 	rv = g_hash_table_remove(handle->evt_list, noti_id);
 	if (!rv) {
-		dbg("fail to deregister noti event(%s)", noti_id);
+		err("[%s] fail to deregister noti event(%s)", handle->cp_name, noti_id);
 		return TAPI_API_OPERATION_FAILED;
 	}
 
