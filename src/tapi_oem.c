@@ -68,7 +68,7 @@ static void on_response_oem_data_async(GObject *source_object,
 
 	g_variant_get(dbus_result, "(is)", &oem_data.oem_id, &data);
 
-	oem_data.data = g_base64_decode((const gchar *)data, &oem_data.data_len);
+	oem_data.data = g_base64_decode((const gchar *)data, (gsize *)&oem_data.data_len);
 	if (oem_data.data) {
 		result = TAPI_API_SUCCESS;
 
@@ -165,7 +165,7 @@ EXPORT_API int tel_send_oem_data_sync(TapiHandle *handle, int oem_id,
 
 	g_variant_get(rst, "(is)", &outparam->oem_id, &pdata);
 
-	outparam->data = g_base64_decode((const gchar *)pdata, &outparam->data_len);
+	outparam->data = g_base64_decode((const gchar *)pdata, (gsize *)&outparam->data_len);
 	if (outparam->data_len)
 		dbg("id:[0x%x] len:[%d]", outparam->oem_id, outparam->data_len);
 

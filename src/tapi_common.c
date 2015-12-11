@@ -1126,7 +1126,7 @@ static void _process_oem_event(const gchar *sig, GVariant *param,
 		gchar *data = NULL;
 
 		g_variant_get(param, "(is)", &oem_data.oem_id, &data);
-		oem_data.data = g_base64_decode((const gchar *)data, &oem_data.data_len);
+		oem_data.data = g_base64_decode((const gchar *)data, (gsize *)&oem_data.data_len);
 		if (oem_data.data) {
 			msg("[%s] id:[%d] len:[%d]", handle->cp_name, oem_data.oem_id, oem_data.data_len);
 			TAPI_INVOKE_NOTI_CALLBACK(&oem_data);
