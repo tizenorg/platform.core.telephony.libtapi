@@ -1189,7 +1189,7 @@ void register_network_event(TapiHandle *handle)
 	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
 
-	ret = tel_register_noti_event (handle,
+	ret = tel_register_noti_event(handle,
 			TAPI_PROP_NETWORK_VOLTE_ENABLE, on_noti_volte_enable, NULL);
 	if (ret != TAPI_API_SUCCESS)
 		msg("event register failed(%d)", ret);
