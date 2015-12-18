@@ -1375,7 +1375,7 @@ static char *get_property(TapiHandle *handle, const char *property,
 		if (error->code == G_DBUS_ERROR_ACCESS_DENIED) {
 			warn("Access Denied");
 			g_error_free(error);
-			return g_strdup("No access rights");
+			return g_strdup("AccessDenied");
 		} else {
 			warn("dbus error = %d (%s)", error->code, error->message);
 			g_error_free(error);
@@ -1423,7 +1423,7 @@ EXPORT_API int tel_get_property_int (TapiHandle *handle,
 	data = get_property(handle, property, G_VARIANT_TYPE_INT32);
 	if (!data)
 		return TAPI_API_OPERATION_FAILED;
-	else if (!g_strcmp0(data, "No access rights"))
+	else if (!g_strcmp0(data, "AccessDenied"))
 		return TAPI_API_ACCESS_DENIED;
 
 	*result = atoi(data);
@@ -1444,7 +1444,7 @@ EXPORT_API int tel_get_property_string(TapiHandle *handle, const char *property,
 	data = get_property(handle, property, G_VARIANT_TYPE_STRING);
 	if (!data)
 		return TAPI_API_OPERATION_FAILED;
-	else if (!g_strcmp0(data, "No access rights"))
+	else if (!g_strcmp0(data, "AccessDenied"))
 		return TAPI_API_ACCESS_DENIED;
 
 	*result = data;

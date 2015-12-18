@@ -45,7 +45,7 @@ __BEGIN_DECLS
 				&& error->domain == G_IO_ERROR) { \
 			err("Operation CANCELLED"); \
 			/* Do not invoke callback in case of deinit TapiHandle */ \
-		} else if (strstr(error->message, "No access rights")) { \
+		} else if (strstr(error->message, "AccessDenied")) { \
 			err("(%s) Access denied!", (evt_cb_data)->handle->cp_name); \
 			if ((evt_cb_data)->cb_fn) \
 				(evt_cb_data)->cb_fn((evt_cb_data)->handle, TAPI_ERROR_ACCESS_DENIED, NULL, (evt_cb_data)->user_data); \

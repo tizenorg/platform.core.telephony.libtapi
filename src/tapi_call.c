@@ -860,7 +860,7 @@ EXPORT_API int tel_get_call_status_all(TapiHandle *handle, TelCallStatusCallback
 		if (gerr)
 			g_error_free(gerr);
 	} else {
-		if (strstr(gerr->message, "No access rights")) {
+		if (strstr(gerr->message, "AccessDenied")) {
 			err("Permission denied");
 			return TAPI_API_ACCESS_DENIED;
 		} else {
