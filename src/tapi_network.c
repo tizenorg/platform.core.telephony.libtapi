@@ -1179,6 +1179,8 @@ EXPORT_API int tel_get_network_default_data_subscription(TapiHandle *handle, Tel
 		ret = TAPI_API_SUCCESS;
 	} else {
 		err("Get Data Subscription failed: [%s]", gerr->message);
+		if (strstr(gerr->message, "AccessDenied"))
+			ret = TAPI_API_ACCESS_DENIED;
 		g_error_free(gerr);
 	}
 
@@ -1235,6 +1237,8 @@ EXPORT_API int tel_get_network_default_subscription(TapiHandle *handle, TelNetwo
 		ret = TAPI_API_SUCCESS;
 	} else {
 		err("Get 'default' Subscription (for CS) failed: [%s]", gerr->message);
+		if (strstr(gerr->message, "AccessDenied"))
+			ret = TAPI_API_ACCESS_DENIED;
 		g_error_free(gerr);
 	}
 

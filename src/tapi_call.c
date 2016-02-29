@@ -1077,6 +1077,8 @@ EXPORT_API int tel_get_call_preferred_voice_subscription(TapiHandle *handle, Tel
 		ret = TAPI_API_SUCCESS;
 	} else {
 		err("Get 'preferred' Voice Subscription failed: [%s]", gerr->message);
+		if (strstr(gerr->message, "AccessDenied"))
+			ret = TAPI_API_ACCESS_DENIED;
 		g_error_free(gerr);
 	}
 
