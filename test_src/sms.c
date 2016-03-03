@@ -1842,6 +1842,7 @@ static int Setting(MManager *mm, struct menu_data *menu)
 	case 1: { /* Set Service Center Number */
 		TelSmsAddressInfo_t sca = {0, };
 		unsigned char sca_num[TAPI_SIM_SMSP_ADDRESS_LEN + 1];
+		unsigned char buf[TAPI_SIM_SMSP_ADDRESS_LEN + 2];
 		unsigned int sca_length = 0;
 		unsigned int additional_len = 0;
 		unsigned local_index, j;
@@ -1850,11 +1851,17 @@ static int Setting(MManager *mm, struct menu_data *menu)
 
 RETRY:
 		msg("Enter the SCA NUMBER:");
-		ret = scanf("%s", sca_num);
+		/* Limits input length - TAPI_SIM_SMSP_ADDRESS_LEN + 1 */
+		ret = scanf("%21s", buf);
+		ret = strlen((const char*)buf);
 		if (ret > TAPI_SIM_SMSP_ADDRESS_LEN) {
+			int c;
 			msg("Entered SCA is INVALID - SCA length cannot be greater than %d", TAPI_SIM_SMSP_ADDRESS_LEN);
+			/* Flush input buffer */
+			while ((c = getchar()) != '\n' && c != EOF);
 			goto RETRY;
 		}
+		snprintf((char*)sca_num, TAPI_SIM_SMSP_ADDRESS_LEN+1, "%s", buf);
 
 		sca.Npi = TAPI_SIM_NPI_ISDN_TEL;
 		sca.Ton = TAPI_SIM_TON_UNKNOWN;
@@ -1946,6 +1953,7 @@ RETRY:
 	case 5: {
 		unsigned int sca_length;
 		unsigned char sca_num[TAPI_SIM_SMSP_ADDRESS_LEN + 1];
+		unsigned char buf[TAPI_SIM_SMSP_ADDRESS_LEN + 2];
 		const char *name = "AlphaID";
 
 		smsParameters.RecordIndex = 0x00;
@@ -1966,9 +1974,16 @@ RETRY:
 
 		do {
 			msg("Enter the SCA NUMBER:");
-			ret = scanf("%s", sca_num);
-			if (ret > TAPI_SIM_SMSP_ADDRESS_LEN)
+			/* Limits input length - TAPI_SIM_SMSP_ADDRESS_LEN + 1 */
+			ret = scanf("%21s", buf);
+			ret = strlen((const char*)buf);
+			if (ret > TAPI_SIM_SMSP_ADDRESS_LEN) {
+				int c;
 				msg("Entered SCA is INVALID - SCA length cannot be greater than %d", TAPI_SIM_SMSP_ADDRESS_LEN);
+				/* Flush input buffer */
+				while ((c = getchar()) != '\n' && c != EOF);
+			} else
+				snprintf((char*)sca_num, TAPI_SIM_SMSP_ADDRESS_LEN+1, "%s", buf);
 		} while (ret > TAPI_SIM_SMSP_ADDRESS_LEN);
 
 		sca_length = SmsUtilEncodeSca(&(smsParameters.TpSvcCntrAddr), sca_num);

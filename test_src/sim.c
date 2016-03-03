@@ -548,8 +548,8 @@ static int run_sim_set_cf(MManager *mm, struct menu_data *menu)
 		cf.cf_data_u.cf.cfu_status = data_sim_set_cf_cfu_status[0] - '0';
 		cf.cf_data_u.cf.ton = data_sim_set_cf_ton[0] - '0';
 		cf.cf_data_u.cf.npi = data_sim_set_cf_npi[0] - '0';
-		memcpy(&cf.cf_data_u.cf.cfu_num, data_sim_set_cf_number,
-				sizeof(cf.cf_data_u.cf.cfu_num));
+		snprintf(cf.cf_data_u.cf.cfu_num, TAPI_SIM_XDN_DIALING_NUMBER_LEN + 1,
+				"%s", data_sim_set_cf_number);
 		cf.cf_data_u.cf.cc2_id = data_sim_set_cf_cc2_id[0] - '0';
 		cf.cf_data_u.cf.ext7_id = data_sim_set_cf_ext7_id[0] - '0';
 	}
@@ -726,7 +726,8 @@ static int run_sim_set_mb(MManager *mm, struct menu_data *menu)
 			TAPI_SIM_XDN_ALPHA_ID_MAX_LEN);
 	mb.ton = data_sim_set_mb_ton[0] - '0';
 	mb.npi = data_sim_set_mb_npi[0] - '0';
-	memcpy(&mb.num, data_sim_set_mb_number, sizeof(mb.num));
+	snprintf(mb.num, TAPI_SIM_XDN_DIALING_NUMBER_LEN + 1,
+			"%s", data_sim_set_mb_number);
 	mb.cc_id = data_sim_set_mb_cc_id[0] - '0';
 	mb.ext1_id = data_sim_set_mb_ext1_id[0] - '0';
 

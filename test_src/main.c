@@ -82,6 +82,10 @@ static int init(MManager *mm, struct menu_data *menu)
 		msg("already handle exist");
 		return 0;
 	}
+	if (subs_type < 1 || subs_type > cp_count) {
+		msg("CP is not exist");
+		return 0;
+	}
 	if (cp_list[subs_type-1]) {
 		msg("call tel_init(%s)", cp_list[subs_type-1]);
 		handle = tel_init(cp_list[subs_type-1]);
