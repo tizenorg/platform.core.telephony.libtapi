@@ -572,6 +572,62 @@ __BEGIN_DECLS
 #define TAPI_NOTI_NETWORK_DEFAULT_SUBSCRIPTION	DBUS_TELEPHONY_NETWORK_INTERFACE":DefaultSubscription"
 
 /**
+ * @brief Definition for network cell ID
+ * @since_tizen 3.0
+ * @remarks 'int' will be stored
+ */
+#define TAPI_NOTI_NETWORK_CELLID		DBUS_TELEPHONY_NETWORK_INTERFACE":CellId"
+
+/**
+ * @brief Definition for network LAC (Location Area Code)
+ * @since_tizen 3.0
+ * @remarks 'int' will be stored
+ */
+#define TAPI_NOTI_NETWORK_LAC			DBUS_TELEPHONY_NETWORK_INTERFACE":Lac"
+
+/**
+ * @brief Definition for network TAC (Tracking Area Code)
+ * @since_tizen 3.0
+ * @remarks 'int' will be stored
+ */
+#define TAPI_NOTI_NETWORK_TAC			DBUS_TELEPHONY_NETWORK_INTERFACE":Tac"
+
+/**
+ * @brief Definition for network system ID
+ * @since_tizen 3.0
+ * @remarks 'int' will be stored
+ */
+#define TAPI_NOTI_NETWORK_SYSTEM_ID		DBUS_TELEPHONY_NETWORK_INTERFACE":SystemId"
+
+/**
+ * @brief Definition for network network ID
+ * @since_tizen 3.0
+ * @remarks 'int' will be stored
+ */
+#define TAPI_NOTI_NETWORK_NETWORK_ID		DBUS_TELEPHONY_NETWORK_INTERFACE":NetworkId"
+
+/**
+ * @brief Definition for network base station ID
+ * @since_tizen 3.0
+ * @remarks 'int' will be stored
+ */
+#define TAPI_NOTI_NETWORK_BS_ID			DBUS_TELEPHONY_NETWORK_INTERFACE":BsId"
+
+/**
+ * @brief Definition for network base station latitude
+ * @since_tizen 3.0
+ * @remarks 'int' will be stored
+ */
+#define TAPI_NOTI_NETWORK_BS_LATITUDE		DBUS_TELEPHONY_NETWORK_INTERFACE":BsLatitude"
+
+/**
+ * @brief Definition for network base station longitude
+ * @since_tizen 3.0
+ * @remarks 'int' will be stored
+ */
+#define TAPI_NOTI_NETWORK_BS_LONGITUDE		DBUS_TELEPHONY_NETWORK_INTERFACE":BsLongitude"
+
+/**
  * @brief Definition for network LAC (Location Area Code) property
  * @since_tizen 2.3
  * @remarks 'unsigned int' will be stored

@@ -288,6 +288,69 @@ static void on_signal_default_subscription(TapiHandle *handle, GVariant *param,
 	TAPI_INVOKE_NOTI_CALLBACK(&noti);
 }
 
+static void on_signal_cell_id(TapiHandle *handle, GVariant *param,
+	char *noti_id, struct tapi_evt_cb *evt_cb_data)
+{
+	int cell_id;
+	g_variant_get(param, "(i)", &cell_id);
+	TAPI_INVOKE_NOTI_CALLBACK(&cell_id);
+}
+
+static void on_signal_lac(TapiHandle *handle, GVariant *param,
+	char *noti_id, struct tapi_evt_cb *evt_cb_data)
+{
+	int lac;
+	g_variant_get(param, "(i)", &lac);
+	TAPI_INVOKE_NOTI_CALLBACK(&lac);
+}
+
+static void on_signal_tac(TapiHandle *handle, GVariant *param,
+	char *noti_id, struct tapi_evt_cb *evt_cb_data)
+{
+	int tac;
+	g_variant_get(param, "(i)", &tac);
+	TAPI_INVOKE_NOTI_CALLBACK(&tac);
+}
+
+static void on_signal_system_id(TapiHandle *handle, GVariant *param,
+	char *noti_id, struct tapi_evt_cb *evt_cb_data)
+{
+	int system_id;
+	g_variant_get(param, "(i)", &system_id);
+	TAPI_INVOKE_NOTI_CALLBACK(&system_id);
+}
+
+static void on_signal_network_id(TapiHandle *handle, GVariant *param,
+	char *noti_id, struct tapi_evt_cb *evt_cb_data)
+{
+	int network_id;
+	g_variant_get(param, "(i)", &network_id);
+	TAPI_INVOKE_NOTI_CALLBACK(&network_id);
+}
+
+static void on_signal_bs_id(TapiHandle *handle, GVariant *param,
+	char *noti_id, struct tapi_evt_cb *evt_cb_data)
+{
+	int bs_id;
+	g_variant_get(param, "(i)", &bs_id);
+	TAPI_INVOKE_NOTI_CALLBACK(&bs_id);
+}
+
+static void on_signal_bs_latitude(TapiHandle *handle, GVariant *param,
+	char *noti_id, struct tapi_evt_cb *evt_cb_data)
+{
+	int bs_latitude;
+	g_variant_get(param, "(i)", &bs_latitude);
+	TAPI_INVOKE_NOTI_CALLBACK(&bs_latitude);
+}
+
+static void on_signal_bs_longitude(TapiHandle *handle, GVariant *param,
+	char *noti_id, struct tapi_evt_cb *evt_cb_data)
+{
+	int bs_longitude;
+	g_variant_get(param, "(i)", &bs_longitude);
+	TAPI_INVOKE_NOTI_CALLBACK(&bs_longitude);
+}
 
 static struct signal_map signals[] = {
 	{ "RegistrationStatus", on_signal_registration_status },
@@ -299,6 +362,14 @@ static struct signal_map signals[] = {
 	{ "EmergencyCallbackMode", on_emergency_callback_mode },
 	{ "DefaultDataSubscription", on_signal_default_data_subscription },
 	{ "DefaultSubscription", on_signal_default_subscription },
+	{ "CellId", on_signal_cell_id },
+	{ "Lac", on_signal_lac },
+	{ "Tac", on_signal_tac },
+	{ "SystemId", on_signal_system_id },
+	{ "NetworkId", on_signal_network_id },
+	{ "BsId", on_signal_bs_id },
+	{ "BsLatitude", on_signal_bs_latitude },
+	{ "BsLongitude", on_signal_bs_longitude },
 };
 
 void _process_network_event(const gchar *sig, GVariant *param,
