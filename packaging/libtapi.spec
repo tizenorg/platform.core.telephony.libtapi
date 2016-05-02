@@ -1,6 +1,6 @@
 %define major 0
 %define minor 8
-%define patchlevel 1
+%define patchlevel 2
 
 Name:           libtapi
 Version:        %{major}.%{minor}.%{patchlevel}
@@ -61,14 +61,14 @@ mkdir -p %{buildroot}%{_datadir}/license
 
 %files
 %manifest libtapi.manifest
-%defattr(644,system,system,-)
+%defattr(644,root,root,-)
 #%doc COPYING
-%attr(755,system,system) %{_bindir}/tapitest
+%attr(755,root,root) %{_bindir}/tapitest
 %{_libdir}/*.so.*
 %{_datadir}/license/libslp-tapi
 
 %files devel
-%defattr(644,system,system,-)
+%defattr(644,root,root,-)
 %{_includedir}/telephony-client/*.h
 %{_libdir}/pkgconfig/*.pc
 %{_libdir}/*.so
