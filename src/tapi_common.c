@@ -51,6 +51,7 @@ typedef struct {
 	void *user_data;
 } TelReadyStateCallback_t;
 
+/* LCOV_EXCL_START */
 static void _process_sms_event(const gchar *sig, GVariant *param,
 	TapiHandle *handle, char *noti_id, struct tapi_evt_cb *evt_cb_data)
 {
@@ -1277,6 +1278,7 @@ static void on_signal_callback(GDBusConnection *conn,
 
 	g_free(noti_id);
 }
+/* LCOV_EXCL_STOP */
 
 EXPORT_API char **tel_get_cp_name_list(void)
 {
@@ -1671,6 +1673,7 @@ EXPORT_API int tel_deregister_noti_event(TapiHandle *handle,
 	return TAPI_API_SUCCESS;
 }
 
+/* LCOV_EXCL_START */
 static gpointer _copy_ready_cb_item(gconstpointer src, gpointer data)
 {
 	TelReadyStateCallback_t *orig_data = (TelReadyStateCallback_t *)src;
@@ -1719,6 +1722,7 @@ static void on_changed_ready_state(keynode_t *key, void *user_data)
 
 	g_slist_free_full(copied_list_head, g_free);
 }
+/* LCOV_EXCL_STOP */
 
 EXPORT_API int tel_register_ready_state_cb(tapi_state_cb callback, void *user_data)
 {

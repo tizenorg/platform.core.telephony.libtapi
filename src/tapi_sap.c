@@ -31,6 +31,7 @@
 #include "tapi_log.h"
 #include "ITapiSap.h"
 
+/* LCOV_EXCL_START */
 static void on_response_sap_connect(GObject *source_object, GAsyncResult *res, gpointer user_data)
 {
 	GError *error = NULL;
@@ -454,3 +455,4 @@ EXPORT_API int tel_req_sap_cardreader_status(TapiHandle *handle, tapi_response_c
 
 	return TAPI_API_SUCCESS;
 }
+/* LCOV_EXCL_STOP */

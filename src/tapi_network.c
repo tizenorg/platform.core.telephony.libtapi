@@ -155,6 +155,7 @@ static int _convert_act_to_systemtype(int act)
 	return TAPI_NETWORK_SYSTEM_NO_SRV;
 }
 
+/* LCOV_EXCL_START */
 static void on_signal_registration_status(TapiHandle *handle, GVariant *param,
 	char *noti_id, struct tapi_evt_cb *evt_cb_data)
 {
@@ -351,6 +352,7 @@ static void on_signal_bs_longitude(TapiHandle *handle, GVariant *param,
 	g_variant_get(param, "(i)", &bs_longitude);
 	TAPI_INVOKE_NOTI_CALLBACK(&bs_longitude);
 }
+/* LCOV_EXCL_STOP */
 
 static struct signal_map signals[] = {
 	{ "RegistrationStatus", on_signal_registration_status },
