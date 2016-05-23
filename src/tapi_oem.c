@@ -53,6 +53,7 @@ struct oem_resp_data {
 	data->oem_id = oem_id; \
 } while (0)
 
+/* LCOV_EXCL_START */
 static void on_response_oem_data_async(GObject *source_object,
 	GAsyncResult *res, gpointer user_data)
 {
@@ -205,3 +206,4 @@ EXPORT_API int tel_send_oem_data_async(TapiHandle *handle, int oem_id,
 
 	return TAPI_API_SUCCESS;
 }
+/* LCOV_EXCL_STOP */

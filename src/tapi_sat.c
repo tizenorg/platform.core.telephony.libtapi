@@ -32,6 +32,7 @@
 
 extern TelSatEventDownloadType_t g_event_list[TAPI_SAT_EVENT_LIST_MAX_COUNT];
 
+/* LCOV_EXCL_START */
 static GVariant *_tapi_sat_gen_app_exec_result_data(TelSatAppsRetInfo_t *result_info)
 {
 	GVariant *result = NULL;
@@ -287,6 +288,7 @@ static void on_response_download_event_envelop(GObject *source_object, GAsyncRes
 	g_variant_unref(dbus_result);
 	g_free(evt_cb_data);
 }
+/* LCOV_EXCL_STOP */
 
 /**
  *
@@ -312,6 +314,7 @@ EXPORT_API int tel_select_sat_menu(TapiHandle *handle, const TelSatMenuSelection
 	TAPI_RET_ERR_NUM_IF_FAIL(handle->dbus_connection, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pMenuSelect, TAPI_API_INVALID_PTR);
 
+	/* LCOV_EXCL_START */
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
 
 	item_id = pMenuSelect->itemIdentifier;
@@ -326,6 +329,7 @@ EXPORT_API int tel_select_sat_menu(TapiHandle *handle, const TelSatMenuSelection
 	g_variant_unref(inparam);
 
 	return TAPI_API_SUCCESS;
+	/* LCOV_EXCL_STOP */
 }
 
 /**
@@ -354,6 +358,7 @@ EXPORT_API int tel_download_sat_event(TapiHandle *handle, const TelSatEventDownl
 	TAPI_RET_ERR_NUM_IF_FAIL(handle->dbus_connection, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pEventData, TAPI_API_INVALID_PTR);
 
+	/* LCOV_EXCL_START */
 	for (g_index = 0; g_event_list[g_index] > 0; g_index++) {
 		if (pEventData->eventDownloadType == TAPI_EVENT_SAT_DW_TYPE_BROWSER_TERMINATION
 				|| g_event_list[g_index] == pEventData->eventDownloadType) {
@@ -385,6 +390,7 @@ EXPORT_API int tel_download_sat_event(TapiHandle *handle, const TelSatEventDownl
 	g_variant_unref(inparam);
 
 	return TAPI_API_SUCCESS;
+	/* LCOV_EXCL_STOP */
 }
 
 /**
@@ -414,6 +420,7 @@ EXPORT_API int tel_get_sat_main_menu_info(TapiHandle *handle, TelSatSetupMenuInf
 	TAPI_RET_ERR_NUM_IF_FAIL(handle->dbus_connection, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pMainMenu, TAPI_API_INVALID_PTR);
 
+	/* LCOV_EXCL_START */
 	memset(pMainMenu, 0, sizeof(TelSatSetupMenuInfo_t));
 
 	error = NULL;
@@ -479,6 +486,7 @@ EXPORT_API int tel_get_sat_main_menu_info(TapiHandle *handle, TelSatSetupMenuInf
 	dbg("menu updated (%d)", pMainMenu->bIsUpdatedSatMainMenu);
 
 	return TAPI_API_SUCCESS;
+	/* LCOV_EXCL_STOP */
 }
 
 /**
@@ -506,6 +514,7 @@ EXPORT_API int tel_send_sat_ui_display_status(TapiHandle *handle, int commandId,
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle->dbus_connection, TAPI_API_INVALID_PTR);
 
+	/* LCOV_EXCL_START */
 	command_id = commandId;
 	display_status = ((status == TAPI_SAT_DISPLAY_SUCCESS) ? TRUE : FALSE);
 	dbg("command id(%d) display status(%d)", command_id, display_status);
@@ -533,6 +542,7 @@ EXPORT_API int tel_send_sat_ui_display_status(TapiHandle *handle, int commandId,
 	dbg("result (%d)", result);
 
 	return result;
+	/* LCOV_EXCL_STOP */
 }
 
 /**
@@ -567,6 +577,7 @@ EXPORT_API int tel_send_sat_ui_user_confirm(TapiHandle *handle, TelSatUiUserConf
 	TAPI_RET_ERR_NUM_IF_FAIL(handle->dbus_connection, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pUserConfirmData, TAPI_API_INVALID_PTR);
 
+	/* LCOV_EXCL_START */
 	command_id = pUserConfirmData->commandId;
 	command_type = pUserConfirmData->commandType;
 	key_type = pUserConfirmData->keyType;
@@ -606,6 +617,7 @@ EXPORT_API int tel_send_sat_ui_user_confirm(TapiHandle *handle, TelSatUiUserConf
 	dbg("result (%d)", result);
 
 	return result;
+	/* LCOV_EXCL_STOP */
 }
 
 /**
@@ -633,6 +645,7 @@ EXPORT_API int tel_send_sat_app_exec_result(TapiHandle *handle, TelSatAppsRetInf
 	TAPI_RET_ERR_NUM_IF_FAIL(handle->dbus_connection, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pAppRetInfo, TAPI_API_INVALID_PTR);
 
+	/* LCOV_EXCL_START */
 	command_id = pAppRetInfo->commandId;
 	command_type = pAppRetInfo->commandType;
 	app_exec_result = _tapi_sat_gen_app_exec_result_data(pAppRetInfo);
@@ -664,4 +677,5 @@ EXPORT_API int tel_send_sat_app_exec_result(TapiHandle *handle, TelSatAppsRetInf
 	dbg("result (%d)", result);
 
 	return result;
+	/* LCOV_EXCL_STOP */
 }

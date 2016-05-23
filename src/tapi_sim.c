@@ -1033,6 +1033,7 @@ static void on_response_req_sim_authentication(GObject *source_object, GAsyncRes
 	g_variant_unref(dbus_result);
 }
 
+/* LCOV_EXCL_START */
 static void on_response_verify_sim_pins(GObject *source_object, GAsyncResult *res,
 	gpointer user_data)
 {
@@ -1173,6 +1174,7 @@ static void on_response_enable_sim_facility(GObject *source_object, GAsyncResult
 	g_free(evt_cb_data);
 	g_variant_unref(dbus_result);
 }
+/* LCOV_EXCL_STOP */
 
 static void on_response_get_sim_facility(GObject *source_object, GAsyncResult *res,
 	gpointer user_data)
@@ -1979,6 +1981,7 @@ EXPORT_API int tel_req_sim_authentication(TapiHandle *handle,
 	return TAPI_API_SUCCESS;
 }
 
+
 EXPORT_API int tel_verifiy_sim_pins(TapiHandle *handle, const TelSimSecPw_t *pin_data,
 		tapi_response_cb callback, void *user_data)
 {
@@ -1996,6 +1999,7 @@ EXPORT_API int tel_verify_sim_pins(TapiHandle *handle, const TelSimSecPw_t *pin_
 	TAPI_RET_ERR_NUM_IF_FAIL(pin_data, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pin_data->pw, TAPI_API_INVALID_PTR);
 
+	/* LCOV_EXCL_START */
 	TAPI_SIM_CHECK_TAPI_STATE();
 
 	msg("pin type[%d]", pin_data->type);
@@ -2026,6 +2030,7 @@ EXPORT_API int tel_verify_sim_pins(TapiHandle *handle, const TelSimSecPw_t *pin_
 		free(gpw);
 
 	return TAPI_API_SUCCESS;
+	/* LCOV_EXCL_STOP */
 }
 
 EXPORT_API int tel_verify_sim_puks(TapiHandle *handle, const TelSimSecPw_t *puk_data,
@@ -2040,6 +2045,7 @@ EXPORT_API int tel_verify_sim_puks(TapiHandle *handle, const TelSimSecPw_t *puk_
 	TAPI_RET_ERR_NUM_IF_FAIL((puk_data != NULL && new_pin_data != NULL), TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL((puk_data->pw != NULL && new_pin_data->pw != NULL), TAPI_API_INVALID_PTR);
 
+	/* LCOV_EXCL_START */
 	TAPI_SIM_CHECK_TAPI_STATE();
 
 	msg("puk type[%d] pin type[%d]", puk_data->type, new_pin_data->type);
@@ -2086,6 +2092,7 @@ EXPORT_API int tel_verify_sim_puks(TapiHandle *handle, const TelSimSecPw_t *puk_
 		free(gpuk);
 
 	return TAPI_API_SUCCESS;
+	/* LCOV_EXCL_STOP */
 }
 
 EXPORT_API int tel_change_sim_pins(TapiHandle *handle, const TelSimSecPw_t *old_pin,
@@ -2100,6 +2107,7 @@ EXPORT_API int tel_change_sim_pins(TapiHandle *handle, const TelSimSecPw_t *old_
 	TAPI_RET_ERR_NUM_IF_FAIL((old_pin != NULL && new_pin != NULL), TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL((old_pin->pw != NULL && new_pin->pw != NULL), TAPI_API_INVALID_PTR);
 
+	/* LCOV_EXCL_START */
 	TAPI_SIM_CHECK_TAPI_STATE();
 
 	msg("old_pin type[%d], new_pin type[%d]", old_pin->type, new_pin->type);
@@ -2148,6 +2156,7 @@ EXPORT_API int tel_change_sim_pins(TapiHandle *handle, const TelSimSecPw_t *old_
 		free(gpin_n);
 
 	return TAPI_API_SUCCESS;
+	/* LCOV_EXCL_STOP */
 }
 
 EXPORT_API int tel_disable_sim_facility(TapiHandle *handle, TelSimFacilityPw_t *pw,
@@ -2161,6 +2170,7 @@ EXPORT_API int tel_disable_sim_facility(TapiHandle *handle, TelSimFacilityPw_t *
 	TAPI_RET_ERR_NUM_IF_FAIL(pw, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pw->pw, TAPI_API_INVALID_PTR);
 
+	/* LCOV_EXCL_START */
 	TAPI_SIM_CHECK_TAPI_STATE();
 
 	dbg("facility type[%d]", pw->lock_type);
@@ -2191,6 +2201,7 @@ EXPORT_API int tel_disable_sim_facility(TapiHandle *handle, TelSimFacilityPw_t *
 		free(gpw);
 
 	return TAPI_API_SUCCESS;
+	/* LCOV_EXCL_STOP */
 }
 
 EXPORT_API int tel_enable_sim_facility(TapiHandle *handle, TelSimFacilityPw_t *pw,
@@ -2204,6 +2215,7 @@ EXPORT_API int tel_enable_sim_facility(TapiHandle *handle, TelSimFacilityPw_t *p
 	TAPI_RET_ERR_NUM_IF_FAIL(pw, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pw->pw, TAPI_API_INVALID_PTR);
 
+	/* LCOV_EXCL_START */
 	TAPI_SIM_CHECK_TAPI_STATE();
 
 	msg("facility type[%d]", pw->lock_type);
@@ -2234,6 +2246,7 @@ EXPORT_API int tel_enable_sim_facility(TapiHandle *handle, TelSimFacilityPw_t *p
 		free(gpw);
 
 	return TAPI_API_SUCCESS;
+	/* LCOV_EXCL_STOP */
 }
 
 EXPORT_API int tel_get_sim_facility(TapiHandle *handle, TelSimLockType_t type,
