@@ -418,6 +418,7 @@ EXPORT_API int tel_send_sms(struct tapi_handle *handle,
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pDataPackage, TAPI_API_INVALID_PTR);
@@ -460,6 +461,7 @@ EXPORT_API int tel_read_sms_in_sim(struct tapi_handle *handle, int read_index, t
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
@@ -493,6 +495,7 @@ EXPORT_API int tel_write_sms_in_sim(struct tapi_handle *handle, const TelSmsData
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pWriteData, TAPI_API_INVALID_PTR);
@@ -533,6 +536,7 @@ EXPORT_API int tel_delete_sms_in_sim(struct tapi_handle *handle, int del_index, 
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
@@ -560,6 +564,7 @@ EXPORT_API int tel_get_sms_count(struct tapi_handle *handle, tapi_response_cb ca
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
@@ -581,6 +586,7 @@ EXPORT_API int tel_get_sms_sca(struct tapi_handle *handle, int sca_index, tapi_r
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
@@ -612,6 +618,7 @@ EXPORT_API int tel_set_sms_sca(struct tapi_handle *handle, const TelSmsAddressIn
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pSCA, TAPI_API_INVALID_PTR);
 
@@ -649,6 +656,7 @@ EXPORT_API int tel_get_sms_cb_config(struct tapi_handle *handle, tapi_response_c
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
@@ -673,6 +681,7 @@ EXPORT_API int tel_set_sms_cb_config(struct tapi_handle *handle, const TelSmsCbC
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pCBConfig, TAPI_API_INVALID_PTR);
 
@@ -728,6 +737,7 @@ EXPORT_API int tel_set_sms_memory_status(struct tapi_handle *handle, int memoryS
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	if ((memoryStatus < TAPI_NETTEXT_PDA_MEMORY_STATUS_AVAILABLE) || (memoryStatus > TAPI_NETTEXT_PDA_MEMORY_STATUS_FULL)) {
@@ -760,6 +770,7 @@ EXPORT_API int tel_send_sms_deliver_report(struct tapi_handle *handle,
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pDataPackage, TAPI_API_INVALID_PTR);
@@ -805,6 +816,7 @@ EXPORT_API int tel_set_sms_message_status(struct tapi_handle *handle, int set_in
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	if ((set_index < 0) || (set_index > TAPI_NETTEXT_MAX_INDEX) ||
@@ -833,6 +845,7 @@ EXPORT_API int tel_get_sms_parameters(struct tapi_handle *handle, int get_index,
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
@@ -866,6 +879,7 @@ EXPORT_API int tel_set_sms_parameters(struct tapi_handle *handle, const TelSmsPa
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pSmsSetParameters, TAPI_API_INVALID_PTR);
 
@@ -921,6 +935,7 @@ EXPORT_API int tel_get_sms_parameter_count(struct tapi_handle *handle, tapi_resp
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
@@ -942,6 +957,7 @@ EXPORT_API int tel_check_sms_device_status(struct tapi_handle *handle, int *pRea
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pReadyStatus, TAPI_API_INVALID_PTR);
 

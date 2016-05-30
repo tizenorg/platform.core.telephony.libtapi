@@ -1403,6 +1403,7 @@ EXPORT_API int tel_get_sim_init_info(TapiHandle *handle,
 	TelSimCardStatus_t init_status = 0;
 	int changed = FALSE;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(sim_status, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(card_changed, TAPI_API_INVALID_PTR);
@@ -1432,6 +1433,7 @@ EXPORT_API int tel_get_sim_type(TapiHandle *handle, TelSimCardType_t *card_type)
 	GError *gerr = NULL;
 	GVariant *sync_gv = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(card_type, TAPI_API_INVALID_PTR);
 
@@ -1455,6 +1457,7 @@ EXPORT_API int tel_get_sim_imsi(TapiHandle *handle, TelSimImsiInfo_t *imsi)
 	GError *gerr = NULL;
 	GVariant *sync_gv = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(imsi, TAPI_API_INVALID_PTR);
 
@@ -1504,6 +1507,7 @@ EXPORT_API int tel_get_sim_ecc(TapiHandle *handle, TelSimEccList_t *ecc)
 	const gchar *str_value = NULL;
 	int i = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(ecc, TAPI_API_INVALID_PTR);
 
@@ -1550,6 +1554,7 @@ EXPORT_API int tel_get_sim_iccid(TapiHandle *handle, tapi_response_cb callback, 
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_SIM_CHECK_TAPI_STATE();
@@ -1567,6 +1572,7 @@ EXPORT_API int tel_get_sim_language(TapiHandle *handle, tapi_response_cb callbac
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_SIM_CHECK_TAPI_STATE();
@@ -1586,6 +1592,7 @@ EXPORT_API int tel_set_sim_language(TapiHandle *handle, TelSimLanguagePreference
 	struct tapi_resp_data *evt_cb_data = NULL;
 	GVariant *param = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_SIM_CHECK_TAPI_STATE();
@@ -1606,6 +1613,7 @@ EXPORT_API int tel_get_sim_callforwarding_info(TapiHandle *handle, tapi_response
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_SIM_CHECK_TAPI_STATE();
@@ -1626,6 +1634,7 @@ EXPORT_API int tel_set_sim_callforwarding_info(TapiHandle *handle, TelSimCallFor
 	GVariant *param = NULL;
 	gchar *g_number = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(req_cf, TAPI_API_INVALID_PTR);
 
@@ -1671,6 +1680,7 @@ EXPORT_API int tel_get_sim_messagewaiting_info(TapiHandle *handle, tapi_response
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_SIM_CHECK_TAPI_STATE();
@@ -1690,6 +1700,7 @@ EXPORT_API int tel_set_sim_messagewaiting_info(TapiHandle *handle, TelSimMessage
 	struct tapi_resp_data *evt_cb_data = NULL;
 	GVariant *param = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(req_mw, TAPI_API_INVALID_PTR);
 
@@ -1738,6 +1749,7 @@ EXPORT_API int tel_get_sim_mailbox_info(TapiHandle *handle, tapi_response_cb cal
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_SIM_CHECK_TAPI_STATE();
@@ -1759,6 +1771,7 @@ EXPORT_API int tel_set_sim_mailbox_info(TapiHandle *handle, TelSimMailBoxNumber_
 	gchar *g_alpha = NULL;
 	gchar *g_number = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(req_mb, TAPI_API_INVALID_PTR);
 
@@ -1829,6 +1842,7 @@ EXPORT_API int tel_get_sim_cphs_info(TapiHandle *handle, tapi_response_cb callba
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_SIM_CHECK_TAPI_STATE();
@@ -1847,6 +1861,7 @@ EXPORT_API int tel_get_sim_service_table(TapiHandle *handle, tapi_response_cb ca
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_SIM_CHECK_TAPI_STATE();
@@ -1864,6 +1879,7 @@ EXPORT_API int tel_get_sim_msisdn(TapiHandle *handle, tapi_response_cb callback,
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_SIM_CHECK_TAPI_STATE();
@@ -1882,6 +1898,7 @@ EXPORT_API int tel_get_sim_oplmnwact(TapiHandle *handle, tapi_response_cb callba
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_SIM_CHECK_TAPI_STATE();
@@ -1900,6 +1917,7 @@ EXPORT_API int tel_get_sim_spn(TapiHandle *handle, tapi_response_cb callback,
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_SIM_CHECK_TAPI_STATE();
@@ -1918,6 +1936,7 @@ EXPORT_API int tel_get_sim_cphs_netname(TapiHandle *handle, tapi_response_cb cal
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_SIM_CHECK_TAPI_STATE();
@@ -1941,6 +1960,7 @@ EXPORT_API int tel_req_sim_authentication(TapiHandle *handle,
 	GVariant *autn_gv = NULL;
 	int i = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(authentication_data, TAPI_API_INVALID_PTR);
 
@@ -1995,6 +2015,7 @@ EXPORT_API int tel_verify_sim_pins(TapiHandle *handle, const TelSimSecPw_t *pin_
 	GVariant *param = NULL;
 	gchar *gpw = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pin_data, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pin_data->pw, TAPI_API_INVALID_PTR);
@@ -2041,6 +2062,7 @@ EXPORT_API int tel_verify_sim_puks(TapiHandle *handle, const TelSimSecPw_t *puk_
 	gchar *gpin = NULL;
 	gchar *gpuk = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL((puk_data != NULL && new_pin_data != NULL), TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL((puk_data->pw != NULL && new_pin_data->pw != NULL), TAPI_API_INVALID_PTR);
@@ -2103,6 +2125,7 @@ EXPORT_API int tel_change_sim_pins(TapiHandle *handle, const TelSimSecPw_t *old_
 	gchar *gpin_o = NULL;
 	gchar *gpin_n = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL((old_pin != NULL && new_pin != NULL), TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL((old_pin->pw != NULL && new_pin->pw != NULL), TAPI_API_INVALID_PTR);
@@ -2166,6 +2189,7 @@ EXPORT_API int tel_disable_sim_facility(TapiHandle *handle, TelSimFacilityPw_t *
 	GVariant *param = NULL;
 	gchar *gpw = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pw, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pw->pw, TAPI_API_INVALID_PTR);
@@ -2211,6 +2235,7 @@ EXPORT_API int tel_enable_sim_facility(TapiHandle *handle, TelSimFacilityPw_t *p
 	GVariant *param = NULL;
 	gchar *gpw = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pw, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pw->pw, TAPI_API_INVALID_PTR);
@@ -2255,6 +2280,7 @@ EXPORT_API int tel_get_sim_facility(TapiHandle *handle, TelSimLockType_t type,
 	struct tapi_resp_data *evt_cb_data = NULL;
 	GVariant *param = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_SIM_CHECK_TAPI_STATE();
@@ -2280,6 +2306,7 @@ EXPORT_API int tel_get_sim_lock_info(TapiHandle *handle, TelSimLockType_t type,
 	struct tapi_resp_data *evt_cb_data = NULL;
 	GVariant *param = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_SIM_CHECK_TAPI_STATE();
@@ -2305,6 +2332,7 @@ EXPORT_API int tel_set_sim_power_state(TapiHandle *handle, TelSimPowerState_t st
 	struct tapi_resp_data *evt_cb_data = NULL;
 	GVariant *param = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	dbg("Func Enterance. cp_name[%s], state[%d]", handle->cp_name, state);
@@ -2333,6 +2361,7 @@ EXPORT_API int tel_req_sim_apdu(TapiHandle *handle, TelSimApdu_t* apdu_data,
 	GVariant *inner_gv = NULL;
 	int i = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(apdu_data, TAPI_API_INVALID_PTR);
 
@@ -2357,6 +2386,7 @@ EXPORT_API int tel_req_sim_atr(TapiHandle *handle, tapi_response_cb callback, vo
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_SIM_CHECK_TAPI_STATE();
@@ -2376,6 +2406,7 @@ EXPORT_API int tel_get_sim_impi(TapiHandle *handle, tapi_response_cb callback, v
 
 	dbg("Func Entrance");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -2395,6 +2426,7 @@ EXPORT_API int tel_get_sim_impu(TapiHandle *handle, tapi_response_cb callback, v
 
 	dbg("Func Entrance");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -2414,6 +2446,7 @@ EXPORT_API int tel_get_sim_domain(TapiHandle *handle, tapi_response_cb callback,
 
 	dbg("Func Entrance");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -2433,6 +2466,7 @@ EXPORT_API int tel_get_sim_pcscf(TapiHandle *handle, tapi_response_cb callback, 
 
 	dbg("Func Entrance");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -2453,6 +2487,7 @@ EXPORT_API int tel_get_sim_application_list(TapiHandle *handle, unsigned char *a
 
 	dbg("Func Entrance");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(app_list, TAPI_API_INVALID_PTR);
 
@@ -2477,6 +2512,7 @@ EXPORT_API int tel_get_sim_isim_service_table(TapiHandle *handle,
 
 	dbg("Func Entrance");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);

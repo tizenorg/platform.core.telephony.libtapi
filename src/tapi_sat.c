@@ -310,6 +310,7 @@ EXPORT_API int tel_select_sat_menu(TapiHandle *handle, const TelSatMenuSelection
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle->dbus_connection, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pMenuSelect, TAPI_API_INVALID_PTR);
@@ -354,6 +355,7 @@ EXPORT_API int tel_download_sat_event(TapiHandle *handle, const TelSatEventDownl
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle->dbus_connection, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pEventData, TAPI_API_INVALID_PTR);
@@ -417,6 +419,7 @@ EXPORT_API int tel_get_sat_main_menu_info(TapiHandle *handle, TelSatSetupMenuInf
 	dbg("Func Entrance ");
 
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle->dbus_connection, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pMainMenu, TAPI_API_INVALID_PTR);
 
@@ -511,6 +514,7 @@ EXPORT_API int tel_send_sat_ui_display_status(TapiHandle *handle, int commandId,
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle->dbus_connection, TAPI_API_INVALID_PTR);
 
@@ -573,6 +577,7 @@ EXPORT_API int tel_send_sat_ui_user_confirm(TapiHandle *handle, TelSatUiUserConf
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle->dbus_connection, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pUserConfirmData, TAPI_API_INVALID_PTR);
@@ -641,6 +646,7 @@ EXPORT_API int tel_send_sat_app_exec_result(TapiHandle *handle, TelSatAppsRetInf
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle->dbus_connection, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pAppRetInfo, TAPI_API_INVALID_PTR);

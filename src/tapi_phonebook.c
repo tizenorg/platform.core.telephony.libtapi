@@ -305,6 +305,7 @@ EXPORT_API int tel_get_sim_pb_init_info(TapiHandle *handle, int *init_completed,
 	GVariant *sync_gv = NULL;
 	int init_status = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(init_completed, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pb_list, TAPI_API_INVALID_PTR);
@@ -343,6 +344,7 @@ EXPORT_API int tel_get_sim_pb_count(TapiHandle *handle, TelSimPbType_t pb_type, 
 
 	dbg("Func Entrance");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
@@ -370,6 +372,7 @@ EXPORT_API int tel_get_sim_pb_meta_info(TapiHandle *handle, TelSimPbType_t pb_ty
 
 	dbg("Func Entrance");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
@@ -397,6 +400,7 @@ EXPORT_API int tel_get_sim_pb_usim_meta_info(TapiHandle *handle, tapi_response_c
 
 	dbg("Func Entrance");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
@@ -418,6 +422,7 @@ EXPORT_API int tel_read_sim_pb_record(TapiHandle *handle, TelSimPbType_t pb_type
 
 	msg("read type:[%d] index:[%d]", pb_type, pb_index);
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
@@ -448,6 +453,7 @@ EXPORT_API int tel_update_sim_pb_record(TapiHandle *handle, const TelSimPbRecord
 
 	dbg("Func Entrance");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL((req_data != NULL) , TAPI_API_INVALID_PTR);
 
@@ -513,8 +519,8 @@ EXPORT_API int tel_delete_sim_pb_record(TapiHandle *handle, TelSimPbType_t pb_ty
 
 	msg("delete type:[%d] index:[%d]", pb_type, pb_index);
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
-
 
 	if (pb_index == 0)
 		return TAPI_API_INVALID_INPUT;

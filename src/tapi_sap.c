@@ -63,6 +63,7 @@ EXPORT_API int tel_req_sap_connect(TapiHandle *handle, int max_msg_size, tapi_re
 
 	dbg("Func Entrance w/ max_msg_size[%d]", max_msg_size);
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -107,6 +108,7 @@ EXPORT_API int tel_req_sap_disconnect(TapiHandle *handle, tapi_response_cb callb
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -150,6 +152,7 @@ EXPORT_API int tel_req_sap_connection_status(TapiHandle *handle, tapi_response_c
 
 	dbg("Func Entrance");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -213,6 +216,7 @@ EXPORT_API int tel_req_sap_transfer_atr(TapiHandle *handle, tapi_response_cb cal
 
 	dbg("Func Entrance");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -279,6 +283,7 @@ EXPORT_API int tel_req_sap_transfer_apdu(TapiHandle *handle, TelSapApduData_t *a
 
 	dbg("Func Entrance");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(apdu_data, TAPI_API_INVALID_PTR);
 
@@ -333,6 +338,7 @@ EXPORT_API int tel_req_sap_transport_protocol(TapiHandle *handle,
 
 	dbg("Func Entrance w/ protocol[%d]", protocol);
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -379,6 +385,7 @@ EXPORT_API int tel_req_sap_power_operation(TapiHandle *handle,
 	gint mode = 0;
 	dbg("Func Entrance w/ power_mode[%d]", power_mode);
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -442,6 +449,7 @@ EXPORT_API int tel_req_sap_cardreader_status(TapiHandle *handle, tapi_response_c
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);

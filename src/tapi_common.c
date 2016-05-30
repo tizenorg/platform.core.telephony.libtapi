@@ -1295,6 +1295,8 @@ EXPORT_API char **tel_get_cp_name_list(void)
 	int i = 0, element_cnt = 0;
 	gchar **cp_list = NULL;
 
+	TAPI_RET_ERR_NULL_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
+
 	d_conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
 	if (!d_conn) {
 		err("Error creating dbus connection: %s\n", error->message);
@@ -1418,6 +1420,7 @@ EXPORT_API int tel_get_property_int (TapiHandle *handle,
 {
 	char *data;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_INPUT);
 	TAPI_RET_ERR_NUM_IF_FAIL(property, TAPI_API_INVALID_INPUT);
 	TAPI_RET_ERR_NUM_IF_FAIL(result, TAPI_API_INVALID_INPUT);
@@ -1439,6 +1442,7 @@ EXPORT_API int tel_get_property_string(TapiHandle *handle, const char *property,
 {
 	char *data;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_INPUT);
 	TAPI_RET_ERR_NUM_IF_FAIL(property, TAPI_API_INVALID_INPUT);
 	TAPI_RET_ERR_NUM_IF_FAIL(result, TAPI_API_INVALID_INPUT);
@@ -1458,6 +1462,8 @@ EXPORT_API TapiHandle *tel_init(const char *cp_name)
 {
 	GError *error = NULL;
 	struct tapi_handle *handle;
+
+	TAPI_RET_ERR_NULL_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 
 #if !GLIB_CHECK_VERSION(2, 35, 0)
 	g_type_init();
@@ -1535,6 +1541,7 @@ static gboolean _unregister_noti(gpointer key, gpointer value, gpointer user_dat
 
 EXPORT_API int tel_deinit(TapiHandle *handle)
 {
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_INPUT);
 
 	msg("tel_deinit: [%s]", handle->cp_name);
@@ -1570,6 +1577,7 @@ EXPORT_API int tel_register_noti_event(TapiHandle *handle, const char *noti_id,
 	gpointer tmp = NULL;
 	struct tapi_evt_cb *evt_cb_data = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_INPUT);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle->dbus_connection, TAPI_API_INVALID_INPUT);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_INPUT);
@@ -1636,6 +1644,7 @@ EXPORT_API int tel_deregister_noti_event(TapiHandle *handle,
 	gchar **dbus_str = NULL;
 	gboolean rv = FALSE;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_INPUT);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle->dbus_connection, TAPI_API_INVALID_INPUT);
 
@@ -1729,6 +1738,7 @@ EXPORT_API int tel_register_ready_state_cb(tapi_state_cb callback, void *user_da
 	gboolean exist = FALSE;
 	GSList *list = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_INPUT);
 
 	G_LOCK(state_mutex);
@@ -1771,6 +1781,7 @@ EXPORT_API int tel_deregister_ready_state_cb(tapi_state_cb callback)
 	GSList *list = NULL;
 	guint count = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_INPUT);
 
 	G_LOCK(state_mutex);
@@ -1802,6 +1813,7 @@ EXPORT_API int tel_get_ready_state(int *state)
 	int res = 0;
 	int value = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(state, TAPI_API_INVALID_INPUT);
 
 	res = vconf_get_bool(VCONFKEY_TELEPHONY_READY, &value);
