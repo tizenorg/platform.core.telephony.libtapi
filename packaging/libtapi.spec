@@ -13,6 +13,7 @@ BuildRequires:  cmake
 BuildRequires:  pkgconfig(dlog)
 BuildRequires:  pkgconfig(glib-2.0)
 BuildRequires:  pkgconfig(vconf)
+BuildRequires:  pkgconfig(capi-system-info)
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 

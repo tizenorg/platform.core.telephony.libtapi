@@ -99,6 +99,7 @@ EXPORT_API int tel_send_oem_data(TapiHandle *handle, int oem_id,
 
 	dbg("oem_id(0x%x) data(%p) data len(%d)", oem_id, data, data_len);
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle->dbus_connection, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(data, TAPI_API_INVALID_PTR);
@@ -142,6 +143,7 @@ EXPORT_API int tel_send_oem_data_sync(TapiHandle *handle, int oem_id,
 
 	dbg("oem_id(0x%x) data(%p) data len(%d)", oem_id, data, data_len);
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle->dbus_connection, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(data, TAPI_API_INVALID_PTR);
@@ -183,6 +185,7 @@ EXPORT_API int tel_send_oem_data_async(TapiHandle *handle, int oem_id,
 	gchar *encoded_data = NULL;
 	struct oem_resp_data *evt_cb_data = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle->dbus_connection, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(data, TAPI_API_INVALID_PTR);

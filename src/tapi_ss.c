@@ -286,6 +286,7 @@ EXPORT_API int tel_set_ss_barring(TapiHandle *handle, TelSsBarringInfo_t *info, 
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(info, TAPI_API_INVALID_PTR);
 
@@ -319,6 +320,7 @@ EXPORT_API int tel_get_ss_barring_status(TapiHandle *handle, TelSsClass_t class,
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
@@ -357,6 +359,7 @@ EXPORT_API int tel_change_ss_barring_password(TapiHandle *handle,
 
 	msg("barring_password change request");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(old_password, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(new_password, TAPI_API_INVALID_PTR);
@@ -392,6 +395,7 @@ EXPORT_API int tel_set_ss_forward(TapiHandle *handle, const TelSsForwardInfo_t *
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(info, TAPI_API_INVALID_PTR);
 
@@ -456,6 +460,7 @@ EXPORT_API int tel_get_ss_forward_status(TapiHandle *handle, TelSsClass_t class,
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
@@ -489,6 +494,7 @@ EXPORT_API int tel_set_ss_waiting(TapiHandle *handle, const TelSsWaitingInfo_t *
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(info, TAPI_API_INVALID_PTR);
 
@@ -530,6 +536,7 @@ EXPORT_API int tel_get_ss_waiting_status(TapiHandle *handle, const TelSsClass_t 
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
@@ -562,6 +569,7 @@ EXPORT_API int tel_set_ss_cli_status(TapiHandle *handle, TelSsCliType_t type, Te
 
 	msg("set cli type:[%d] status:[%d]", type, status);
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
@@ -594,6 +602,7 @@ EXPORT_API int tel_get_ss_cli_status(TapiHandle *handle, TelSsCliType_t type, ta
 
 	dbg("Func Entrance ");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
@@ -625,6 +634,7 @@ EXPORT_API int tel_send_ss_ussd_request(TapiHandle *handle, const TelSsUssdMsgIn
 	struct tapi_resp_data *evt_cb_data = 0;
 	GVariant *param = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(info, TAPI_API_INVALID_PTR);
 

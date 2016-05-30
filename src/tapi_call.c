@@ -468,6 +468,7 @@ EXPORT_API int tel_dial_call(TapiHandle *handle, const TelCallDial_t *pParams, t
 	struct tapi_resp_data *evt_cb_data = 0;
 	GVariant *param = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pParams, TAPI_API_INVALID_PTR);
 
@@ -492,6 +493,7 @@ EXPORT_API int tel_answer_call(TapiHandle *handle, unsigned int CallHandle, TelC
 	struct tapi_resp_data *evt_cb_data = 0;
 	GVariant *param = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	if (AnsType > TAPI_CALL_ANSWER_HOLD_AND_ACCEPT)
@@ -517,6 +519,7 @@ EXPORT_API int tel_end_call(TapiHandle *handle, unsigned int CallHandle, TelCall
 	struct tapi_resp_data *evt_cb_data = 0;
 	GVariant *param = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	if (EndType > TAPI_CALL_END_HOLD_ALL)
@@ -542,6 +545,7 @@ EXPORT_API int tel_hold_call(TapiHandle *handle, unsigned int CallHandle, tapi_r
 	struct tapi_resp_data *evt_cb_data = 0;
 	GVariant *param = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -564,6 +568,7 @@ EXPORT_API int tel_active_call(TapiHandle *handle, unsigned int CallHandle, tapi
 	struct tapi_resp_data *evt_cb_data = 0;
 	GVariant *param = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -586,6 +591,7 @@ EXPORT_API int tel_swap_call(TapiHandle *handle, unsigned int CallHandle1, unsig
 	struct tapi_resp_data *evt_cb_data = 0;
 	GVariant *param = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -608,6 +614,7 @@ EXPORT_API int tel_join_call(TapiHandle *handle, unsigned int CallHandle1, unsig
 	struct tapi_resp_data *evt_cb_data = 0;
 	GVariant *param = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -630,6 +637,7 @@ EXPORT_API int tel_split_call(TapiHandle *handle, unsigned int CallHandle, tapi_
 	struct tapi_resp_data *evt_cb_data = 0;
 	GVariant *param = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -652,6 +660,7 @@ EXPORT_API int tel_transfer_call(TapiHandle *handle, unsigned int CallHandle, ta
 	struct tapi_resp_data *evt_cb_data = 0;
 	GVariant *param = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -674,6 +683,7 @@ EXPORT_API int tel_start_call_cont_dtmf(TapiHandle *handle, unsigned char dtmf_d
 	struct tapi_resp_data *evt_cb_data = 0;
 	GVariant *param = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -695,6 +705,7 @@ EXPORT_API int tel_stop_call_cont_dtmf(TapiHandle *handle, tapi_response_cb call
 {
 	struct tapi_resp_data *evt_cb_data = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -715,6 +726,7 @@ EXPORT_API int tel_send_call_burst_dtmf(TapiHandle *handle, const TelCallBurstDt
 	struct tapi_resp_data *evt_cb_data = 0;
 	GVariant *param = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(info, TAPI_API_INVALID_PTR);
 
@@ -738,6 +750,7 @@ EXPORT_API int tel_deflect_call(TapiHandle *handle, unsigned int CallHandle, con
 	struct tapi_resp_data *evt_cb_data = 0;
 	GVariant *param = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(pInfo, TAPI_API_INVALID_PTR);
 
@@ -770,6 +783,7 @@ EXPORT_API int tel_get_call_status(TapiHandle *handle, int callHandle, TelCallSt
 	gboolean call_multiparty_state = FALSE;
 	gboolean volte_call = FALSE;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(out, TAPI_API_INVALID_PTR);
 
@@ -816,6 +830,7 @@ EXPORT_API int tel_get_call_status_all(TapiHandle *handle, TelCallStatusCallback
 	GVariantIter *iter = 0, *iter_row = 0;
 	GError *gerr = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(cb, TAPI_API_INVALID_PTR);
 
@@ -876,6 +891,7 @@ EXPORT_API int tel_get_call_privacy_mode(TapiHandle *handle, tapi_response_cb ca
 {
 	struct tapi_resp_data *evt_cb_data = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -896,6 +912,7 @@ EXPORT_API int tel_set_call_privacy_mode(TapiHandle *handle, TelCallPrivacyMode_
 	struct tapi_resp_data *evt_cb_data = 0;
 	GVariant *pParam = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -918,6 +935,7 @@ EXPORT_API int tel_get_call_volume_info(TapiHandle *handle, TelSoundDevice_t dev
 	struct tapi_resp_data *evt_cb_data = 0;
 	GVariant *param = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -940,6 +958,7 @@ EXPORT_API int tel_set_call_volume_info(TapiHandle *handle, TelCallVolumeInfo_t 
 	struct tapi_resp_data *evt_cb_data = 0;
 	GVariant *param = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(info, TAPI_API_INVALID_PTR);
 
@@ -964,6 +983,7 @@ EXPORT_API int tel_set_call_sound_path(TapiHandle *handle, TelCallSoundPathInfo_
 	struct tapi_resp_data *evt_cb_data = 0;
 	GVariant *param = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(info, TAPI_API_INVALID_PTR);
 
@@ -987,6 +1007,7 @@ EXPORT_API int tel_set_call_mute_status(TapiHandle *handle, TelSoundMuteStatus_t
 	struct tapi_resp_data *evt_cb_data = 0;
 	GVariant *param = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	TAPI_MAKE_RESP_CB_DATA(evt_cb_data, handle, callback, user_data);
@@ -1008,6 +1029,7 @@ EXPORT_API int tel_get_call_mute_status(TapiHandle *handle, tapi_response_cb cal
 {
 	struct tapi_resp_data *evt_cb_data = 0;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
@@ -1030,6 +1052,7 @@ EXPORT_API int tel_set_call_preferred_voice_subscription(TapiHandle *handle, Tel
 	struct tapi_resp_data *evt_cb_data = NULL;
 	GVariant *param = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
@@ -1057,6 +1080,7 @@ EXPORT_API int tel_get_call_preferred_voice_subscription(TapiHandle *handle, Tel
 	int result = 0;
 	TapiResult_t ret = TAPI_API_OPERATION_FAILED;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(preferred_subscription, TAPI_API_INVALID_PTR);
 

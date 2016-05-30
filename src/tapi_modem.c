@@ -228,6 +228,7 @@ EXPORT_API int tel_process_power_command(TapiHandle *handle, tapi_power_phone_cm
 	struct tapi_resp_data *evt_cb_data = NULL;
 	GVariant *param;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	msg("[%s] tel_process_power_command:[%d] (0:ON,1:OFF,2:RST,3:LOW)", handle->cp_name, cmd);
@@ -264,6 +265,7 @@ EXPORT_API int tel_set_flight_mode(TapiHandle *handle, tapi_power_flight_mode_ty
 	GVariant *param;
 	gboolean b_mode;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 
 	msg("[%s] requested flight mode:[%d] (1:enter, 2:leave)", handle->cp_name, mode);
@@ -294,6 +296,7 @@ EXPORT_API int tel_get_flight_mode(TapiHandle *handle, tapi_response_cb callback
 
 	dbg("Func Entrance");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
@@ -314,6 +317,7 @@ EXPORT_API int tel_get_misc_me_version(TapiHandle *handle, tapi_response_cb call
 
 	dbg("Func Entrance");
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
@@ -338,6 +342,7 @@ EXPORT_API TelMiscVersionInformation *tel_get_misc_me_version_sync(TapiHandle *h
 
 	dbg("Func Entrance");
 
+	TAPI_RET_ERR_NULL_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, NULL);
 
 	dbus_result = g_dbus_connection_call_sync(handle->dbus_connection,
@@ -388,6 +393,7 @@ EXPORT_API int tel_get_misc_me_imei(TapiHandle *handle, tapi_response_cb callbac
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
@@ -411,6 +417,7 @@ EXPORT_API char *tel_get_misc_me_imei_sync(TapiHandle *handle)
 	char *imei = NULL;
 	int result = 0;
 
+	TAPI_RET_ERR_NULL_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, NULL);
 
 	sdbg("[%s] Func Entrance", handle->cp_name);
@@ -443,6 +450,7 @@ EXPORT_API int tel_get_misc_me_sn(TapiHandle *handle, tapi_response_cb callback,
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(callback, TAPI_API_INVALID_PTR);
 
@@ -467,6 +475,7 @@ EXPORT_API TelMiscSNInformation *tel_get_misc_me_sn_sync(TapiHandle *handle)
 	TelMiscSNInformation *data = NULL;
 	int result = 0;
 
+	TAPI_RET_ERR_NULL_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, NULL);
 
 	sdbg("[%s] Func Entrance", handle->cp_name);
@@ -511,6 +520,7 @@ EXPORT_API int tel_check_modem_power_status(TapiHandle *handle, int *result)
 {
 	int ret = TAPI_API_SUCCESS;
 
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 	TAPI_RET_ERR_NUM_IF_FAIL(handle, TAPI_API_INVALID_PTR);
 	TAPI_RET_ERR_NUM_IF_FAIL(result, TAPI_API_INVALID_PTR);
 
@@ -530,6 +540,8 @@ EXPORT_API int tel_check_modem_power_status(TapiHandle *handle, int *result)
 EXPORT_API int tel_get_device_info(TapiHandle *handle, tapi_response_cb callback, void *user_data)
 {
 	struct tapi_resp_data *evt_cb_data = NULL;
+
+	TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(TELEPHONY_FEATURE);
 
 	dbg("Func Entrance");
 
