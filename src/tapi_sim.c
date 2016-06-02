@@ -29,6 +29,7 @@
 #include "common.h"
 #include "tapi_log.h"
 #include "ITapiSim.h"
+#include "tapi_private.h"
 
 #define DBUS_SIM_STATUS_ERROR "SIM STATUS ERROR"
 #define DBUS_SIM_NOT_FOUND "SIM NOT FOUND"

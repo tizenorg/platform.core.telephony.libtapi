@@ -29,6 +29,7 @@
 #include "tapi_log.h"
 #include "ITapiOem.h"
 #include "TelOem.h"
+#include "tapi_private.h"
 
 #define OEM_DATA_LEN_MAX	(10 * 1024)
 #define OEM_DEFAULT_TIMEOUT	(30 * 1000)

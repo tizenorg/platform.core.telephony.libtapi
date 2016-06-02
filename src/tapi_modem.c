@@ -31,6 +31,7 @@
 
 #include "common.h"
 #include "tapi_log.h"
+#include "tapi_private.h"
 
 static void on_response_default_set(GObject *source_object, GAsyncResult *res, gpointer user_data)
 {

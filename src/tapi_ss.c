@@ -30,6 +30,7 @@
 #include "common.h"
 #include "tapi_log.h"
 #include "ITapiSs.h"
+#include "tapi_private.h"
 
 static void on_response_get_ss_barring_status(GObject *source_object, GAsyncResult *res, gpointer user_data)
 {

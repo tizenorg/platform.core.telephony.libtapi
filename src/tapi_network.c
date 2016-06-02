@@ -29,6 +29,7 @@
 #include "common.h"
 #include "tapi_log.h"
 #include "ITapiNetwork.h"
+#include "tapi_private.h"
 
 static int _convert_systemtype_to_act(int type)
 {

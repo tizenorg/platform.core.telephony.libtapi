@@ -30,6 +30,7 @@
 #include "common.h"
 #include "tapi_log.h"
 #include "ITapiPhonebook.h"
+#include "tapi_private.h"
 
 static void move_str(char *dest, unsigned int len, gchar *src)
 {

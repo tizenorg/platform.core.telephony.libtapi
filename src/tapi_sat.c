@@ -29,6 +29,7 @@
 #include "common.h"
 #include "tapi_log.h"
 #include "ITapiSat.h"
+#include "tapi_private.h"
 
 extern TelSatEventDownloadType_t g_event_list[TAPI_SAT_EVENT_LIST_MAX_COUNT];
 

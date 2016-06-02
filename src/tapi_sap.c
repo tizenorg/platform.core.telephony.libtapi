@@ -30,6 +30,7 @@
 #include "common.h"
 #include "tapi_log.h"
 #include "ITapiSap.h"
+#include "tapi_private.h"
 
 /* LCOV_EXCL_START */
 static void on_response_sap_connect(GObject *source_object, GAsyncResult *res, gpointer user_data)

@@ -29,6 +29,7 @@
 #include "common.h"
 #include "tapi_log.h"
 #include "ITapiNetText.h"
+#include "tapi_private.h"
 
 static void on_response_default(GObject *source_object, GAsyncResult *res, gpointer user_data)
 {

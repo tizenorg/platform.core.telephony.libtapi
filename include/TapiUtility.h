@@ -30,8 +30,6 @@
 #ifndef _TEL_UTILITY_H_
 #define _TEL_UTILITY_H_
 
-#include <system_info.h>
-
 __BEGIN_DECLS
 
 /**
@@ -124,34 +122,6 @@ typedef enum {
 	TAPI_API_MISC_INPUTPARM_ERROR = -802, /**< MISC input parameter error */
 	TAPI_API_MISC_OUTPARAM_NULL = -803, /**< MISC output parameter NULL */
 } TapiResult_t;
-
-#define TELEPHONY_FEATURE "http://tizen.org/feature/network.telephony"
-
-#define TAPI_RET_ERR_NUM_IF_NOT_SUPPORTED(feature_name) { \
-	bool telephony_supported = FALSE; \
-	if (!system_info_get_platform_bool(feature_name, &telephony_supported)) { \
-		if (telephony_supported == FALSE) { \
-			err("telephony feature is disabled"); \
-			return TAPI_API_NOT_SUPPORTED; \
-		} \
-	} else { \
-		err("Error - Feature getting from System Info"); \
-		return TAPI_API_OPERATION_FAILED; \
-	} \
-}
-
-#define TAPI_RET_ERR_NULL_IF_NOT_SUPPORTED(feature_name) { \
-	bool telephony_supported = FALSE; \
-	if (!system_info_get_platform_bool(feature_name, &telephony_supported)) { \
-		if (telephony_supported == FALSE) { \
-			err("telephony feature is disabled"); \
-			return NULL; \
-		} \
-	} else { \
-		err("Error - Feature getting from System Info"); \
-		return NULL; \
-	} \
-}
 
 /**
  * @brief Checks the 'scalar_exp' for TRUE, if failed then it returns 'err_value' from the function.
