@@ -738,7 +738,7 @@ static int DecodeSmsDeliverTpdu(int tpdu_len, char *pTPDU)
 
 static int DecodeSmsStatusReportTpdu(int tpdu_len, char *pTPDU)
 {
-	TPDU_SMS_STATUS_REPORT status_report;
+	TPDU_SMS_STATUS_REPORT status_report = {0,};
 
 	TmDateTime SCTimeStamp;
 	TmDateTime DischargeTime;
